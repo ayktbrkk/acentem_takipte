@@ -127,6 +127,23 @@ class ATPolicy(Document):
             self.commission_amount,
             flt(self.fx_rate),
         )
+        self._validate_commission_distribution_total()
+
+    def _validate_commission_distribution_total(self) -> None:
+        """Ensure commission distribution total equals commission_amount."""
+        if not self.commission_distribution or self.commission_distribution == "[]":
+            return
+        import json
+        entries = json.loads(self.commission_distribution)
+        total = sum(flt(e.get("amount", 0)) for e in entries)
+        if total <= 0:
+            return
+        if abs(total - flt(self.commission_amount)) > 0.01:
+            frappe.throw(
+                _("Commission distribution total ({0}) does not match commission amount ({1}).").format(
+                    round(total, 2), round(flt(self.commission_amount), 2)
+                )
+            )
 
     def _validate_company_policy_number_uniqueness(self) -> None:
         if not self.policy_no or not self.insurance_company:
@@ -445,20 +462,23 @@ def _build_commission_distribution(
     current_entity: str | None = sales_entity
     visited: set[str] = set()
     non_root_total = 0.0
+    remaining = commission
     root_entry: dict | None = None
     while current_entity and current_entity not in visited:
         visited.add(current_entity)
         entity_data = frappe.db.get_value(
             "AT Sales Entity",
             current_entity,
-            ["commission_share_pct", "full_name", "parent_entity"],
+            ["commission_share_pct", "full_name", "parent_entity", "office_branch", "is_root"],
             as_dict=True,
         ) or {}
-        share_pct = flt(entity_data.get("commission_share_pct") or 100)
+        share_pct = flt(entity_data.get("commission_share_pct") or 0)
         share_pct = max(0.0, min(100.0, share_pct))
+        is_root = entity_data.get("is_root")
         parent = entity_data.get("parent_entity")
         entity_name = entity_data.get("full_name") or current_entity
-        if not parent:
+        office_branch = entity_data.get("office_branch")
+        if is_root:
             root_entry = {
                 "entity": current_entity,
                 "entity_name": entity_name,
@@ -467,10 +487,13 @@ def _build_commission_distribution(
                 "amount": 0.0,
                 "amount_try": 0.0,
                 "status": "Accrued",
+                "office_branch": office_branch,
+                "is_root": True,
             }
             break
         entry_amount = round(commission * share_pct / 100, 2)
         non_root_total = round(non_root_total + entry_amount, 2)
+        remaining = round(remaining - entry_amount, 2)
         entry_amount_try = round(entry_amount * fx, 2)
         entries.append({
             "entity": current_entity,
@@ -480,7 +503,11 @@ def _build_commission_distribution(
             "amount": entry_amount,
             "amount_try": entry_amount_try,
             "status": "Accrued",
+            "office_branch": office_branch,
+            "is_root": False,
         })
+        if remaining <= 0.01:
+            break
         current_entity = parent
         level += 1
         if level > 20:

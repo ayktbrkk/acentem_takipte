@@ -96,6 +96,27 @@ class ATSalesEntity(Document):
         if parent_branch and office_branch and parent_branch != office_branch:
             frappe.throw(_("Parent sales entity must belong to the same office branch."))
 
+        self._validate_no_parent_cycle(parent_name)
+
+    def _validate_no_parent_cycle(self, parent_name: str) -> None:
+        """Prevent cycles in the parent hierarchy by walking the chain upward."""
+        current_name = (self.name or "").strip()
+        if not current_name:
+            return
+        visited: set[str] = set()
+        chain = parent_name
+        depth = 0
+        while chain and chain not in visited:
+            if chain == current_name:
+                frappe.throw(_("Assigning this parent would create a cycle in the sales entity hierarchy."))
+            visited.add(chain)
+            chain = (
+                frappe.db.get_value("AT Sales Entity", chain, "parent_entity") or ""
+            ).strip()
+            depth += 1
+            if depth > 50:
+                frappe.throw(_("Parent hierarchy depth exceeds maximum allowed (50 levels)."))
+
     def _validate_pool_constraints(self) -> None:
         if not frappe.db.has_column("AT Sales Entity", "is_pool"):
             return
