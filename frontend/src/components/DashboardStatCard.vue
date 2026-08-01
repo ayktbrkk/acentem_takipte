@@ -15,7 +15,7 @@
 
     <div class="relative mt-8 flex items-center justify-between border-t border-slate-50 pt-4">
       <div class="flex items-center gap-1.5">
-        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+        <span class="h-1.5 w-1.5 rounded-full bg-at-green"></span>
         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
           {{ t("quickStatStatusLabel") }}
         </span>

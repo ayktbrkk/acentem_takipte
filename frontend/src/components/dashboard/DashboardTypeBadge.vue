@@ -28,22 +28,24 @@ const LABEL_KEYS = {
   todo: "dashboardBadgeTask",
 };
 
+// Semantic token palette: every record type maps to an AT status token by
+// meaning, so colors stay consistent with the rest of the app.
 const PALETTE = {
-  activity: "bg-slate-200 text-slate-700",
-  call_note: "bg-sky-100 text-sky-700",
-  claim: "bg-emerald-100 text-emerald-700",
-  inbound: "bg-emerald-100 text-emerald-700",
-  lead: "bg-fuchsia-100 text-fuchsia-700",
-  offer: "bg-sky-100 text-sky-700",
-  outbound: "bg-rose-100 text-rose-700",
-  payment: "bg-slate-200 text-slate-700",
-  policy: "bg-emerald-100 text-emerald-700",
-  reconciliation: "bg-violet-100 text-violet-700",
-  reminder: "bg-amber-100 text-amber-700",
-  renewal: "bg-orange-100 text-orange-700",
-  risk: "bg-amber-100 text-amber-700",
-  task: "bg-indigo-100 text-indigo-700",
-  todo: "bg-indigo-100 text-indigo-700",
+  activity: "bg-status-draft-bg text-status-draft-text",
+  call_note: "bg-status-open-bg text-status-open-text",
+  claim: "bg-status-active-bg text-status-active-text",
+  inbound: "bg-status-active-bg text-status-active-text",
+  lead: "bg-status-open-bg text-status-open-text",
+  offer: "bg-status-open-bg text-status-open-text",
+  outbound: "bg-status-cancel-bg text-status-cancel-text",
+  payment: "bg-status-draft-bg text-status-draft-text",
+  policy: "bg-status-active-bg text-status-active-text",
+  reconciliation: "bg-status-draft-bg text-status-draft-text",
+  reminder: "bg-status-waiting-bg text-status-waiting-text",
+  renewal: "bg-status-waiting-bg text-status-waiting-text",
+  risk: "bg-status-cancel-bg text-status-cancel-text",
+  task: "bg-status-open-bg text-status-open-text",
+  todo: "bg-status-open-bg text-status-open-text",
 };
 
 const normalizedKind = computed(() => String(props.kind || "").trim().toLowerCase());
@@ -57,7 +59,7 @@ const resolvedLabel = computed(() => {
 });
 
 const badgeClass = computed(() => {
-  const palette = PALETTE[normalizedKind.value] || "bg-slate-200 text-slate-700";
+  const palette = PALETTE[normalizedKind.value] || "bg-status-draft-bg text-status-draft-text";
   return `inline-flex min-h-5 shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-none ${palette}`;
 });
 </script>

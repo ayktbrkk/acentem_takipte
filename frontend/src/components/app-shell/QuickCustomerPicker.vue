@@ -8,7 +8,7 @@
       <div class="space-y-2">
         <label class="field-label block">
           {{ text(customerLabel) }}
-          <span class="text-amber-500">*</span>
+          <span class="text-at-amber">*</span>
         </label>
 
         <input
@@ -84,7 +84,7 @@
         <div class="md:col-span-2">
           <label class="field-label block">
             {{ text(customerTypeLabel) }}
-            <span class="text-amber-500">*</span>
+            <span class="text-at-amber">*</span>
           </label>
           <select v-model="model[customerTypeFieldName]" class="qc-control bg-white/80" :disabled="disabled">
             <option value="Individual">{{ text(individualLabel) }}</option>
@@ -98,7 +98,7 @@
         <div>
           <label class="field-label block">
             {{ identityLabel }}
-            <span class="text-amber-500">*</span>
+            <span class="text-at-amber">*</span>
           </label>
           <input
             v-model="model[identityFieldName]"

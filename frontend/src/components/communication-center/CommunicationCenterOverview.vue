@@ -150,7 +150,7 @@
           {{ state.returnToLabel }}
         </ActionButton>
         <div class="h-6 w-px bg-slate-200 mx-1"></div>
-        <ActionButton variant="ghost" size="sm" class="!text-rose-600 hover:!bg-rose-50" @click="runtime.clearContextFilters">
+        <ActionButton variant="ghost" size="sm" class="!text-at-red hover:!bg-status-cancel-bg" @click="runtime.clearContextFilters">
           {{ t('clearContext') }}
         </ActionButton>
       </div>

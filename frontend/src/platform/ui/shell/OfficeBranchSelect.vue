@@ -33,7 +33,7 @@
         @keydown="onTriggerKeydown"
       >
         <span class="flex min-w-0 items-center gap-2">
-          <span class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-sky-500 shadow-sm shadow-sky-300/60"></span>
+          <span class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-brand-500 shadow-sm shadow-brand-300/60"></span>
           <span class="min-w-0">
             <span class="block truncate text-[13px] font-semibold">{{ selectedLabel }}</span>
             <span v-if="selectedMeta" class="block truncate text-[11px] text-slate-500">{{ selectedMeta }}</span>
@@ -93,11 +93,11 @@
         type="button"
         role="option"
         :ref="(el) => setOptionRef(el, index)"
-        class="flex w-full items-start justify-between gap-2 px-2.5 py-2 text-left text-[13px] transition"
+        class="flex w-full cursor-pointer items-start justify-between gap-2 px-2.5 py-2 text-left text-[13px] transition"
         :class="highlightedIndex === index
-          ? 'bg-sky-100/80 text-sky-900'
+          ? 'bg-brand-50 text-brand-800'
           : String(option.value ?? '') === selectedValue
-          ? 'bg-sky-50 text-sky-900'
+          ? 'bg-brand-50/60 text-brand-800'
           : 'text-slate-700 hover:bg-slate-50'"
         :aria-selected="String(option.value ?? '') === selectedValue ? 'true' : 'false'"
         :data-testid="`branch-option-${option.value === null ? 'all' : option.value}`"
@@ -120,7 +120,7 @@
         </span>
         <span
           v-if="String(option.value ?? '') === selectedValue"
-          class="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold text-brand-700"
+          class="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold text-brand-700"
         >
           {{ t("selected") }}
         </span>

@@ -110,7 +110,9 @@
               </ul>
               <p v-if="linkSearching" class="link-searching">{{ translateLabel('linkSearching') }}</p>
             </div>
-            <span v-if="linkName" class="link-selected">✓ {{ linkName }}</span>
+            <span v-if="linkName" class="link-selected inline-flex items-center gap-1">
+              <FeatherIcon name="check" class="h-3.5 w-3.5" /> {{ linkName }}
+            </span>
           </div>
         </div>
       </section>
@@ -187,6 +189,7 @@
 
 <script setup>
 import { computed, ref, watch, onMounted } from "vue";
+import { FeatherIcon } from "frappe-ui";
 import { useAuthStore } from "../../stores/auth";
 import ATQuickEntryModal from "../app-shell/ATQuickEntryModal.vue";
 import { WORKBENCH_FILE_UPLOAD_TRANSLATIONS } from "../../config/workbench_file_upload_translations";

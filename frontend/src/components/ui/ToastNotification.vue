@@ -18,7 +18,7 @@
             <FeatherIcon
               :name="type === 'success' ? 'check-circle' : 'alert-circle'"
               class="h-6 w-6"
-              :class="type === 'success' ? 'text-emerald-500' : 'text-rose-500'"
+              :class="type === 'success' ? 'text-at-green' : 'text-at-red'"
             />
           </div>
           <div class="ml-3 w-0 flex-1 pt-0.5">

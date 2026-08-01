@@ -97,8 +97,8 @@
 
     <div class="space-y-3 border-t border-slate-100 pt-3">
       <div class="flex items-center justify-between">
-        <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">{{ t('alerts') }}</span>
-        <ActionButton variant="link" size="xs" class="!text-[10px] !font-semibold !text-indigo-600 hover:!text-indigo-800 !uppercase !no-underline" @click="addAlert">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-brand-600">{{ t('alerts') }}</span>
+        <ActionButton variant="link" size="xs" class="!text-[10px] !font-semibold !text-brand-600 hover:!text-brand-800 !uppercase !no-underline" @click="addAlert">
           + {{ t('add_alert') }}
         </ActionButton>
       </div>
@@ -108,7 +108,7 @@
           <button 
             type="button" 
             :aria-label="t('remove_alert')"
-            class="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-sm hover:bg-rose-600 transition-colors"
+            class="absolute -top-2 -right-2 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-at-red text-white shadow-sm transition-colors hover:brightness-90"
             @click="removeAlert(idx)"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -161,7 +161,7 @@
         variant="primary"
         size="sm"
         type="submit"
-        class="!rounded-xl !bg-indigo-600 hover:!bg-indigo-700 !px-6 !py-2 !font-semibold !shadow-md"
+        class="!rounded-xl !bg-brand-600 hover:!bg-brand-700 !px-6 !py-2 !font-semibold !shadow-md"
       >
         {{ saveLabel }}
       </ActionButton>

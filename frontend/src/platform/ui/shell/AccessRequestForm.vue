@@ -18,7 +18,7 @@
         <!-- Request Kind Selection -->
         <div>
           <label class="mb-2 block text-sm font-semibold text-slate-700">
-            {{ t('requestType') }} <span class="text-red-500">*</span>
+            {{ t('requestType') }} <span class="text-at-red">*</span>
           </label>
           <div class="space-y-2">
             <label class="flex items-center gap-3 cursor-pointer">
@@ -65,7 +65,7 @@
         <!-- Justification -->
         <div>
           <label for="justification" class="mb-2 block text-sm font-semibold text-slate-700">
-            {{ t('justification') }} <span class="text-red-500">*</span>
+            {{ t('justification') }} <span class="text-at-red">*</span>
           </label>
           <textarea
             id="justification"
@@ -76,7 +76,7 @@
             :disabled="isSubmitting"
           />
           <div class="mt-1 flex items-center justify-between">
-            <p v-if="formError" class="text-sm text-red-600">{{ formError }}</p>
+            <p v-if="formError" class="text-sm text-at-red">{{ formError }}</p>
             <p class="text-xs text-slate-500">{{ formData.justification.length }}/500</p>
           </div>
         </div>
@@ -105,9 +105,9 @@
         </div>
 
         <!-- Success Message -->
-        <div v-if="showSuccess" class="rounded-lg border border-green-200 bg-green-50 p-3">
-          <p class="text-sm font-medium text-green-900">{{ t('successTitle') }}</p>
-          <p class="mt-1 text-xs text-green-700">{{ t('successDesc') }}</p>
+        <div v-if="showSuccess" class="rounded-lg border border-status-active-bg bg-status-active-bg p-3">
+          <p class="text-sm font-medium text-status-active-text">{{ t('successTitle') }}</p>
+          <p class="mt-1 text-xs text-status-active-text">{{ t('successDesc') }}</p>
         </div>
       </form>
     </div>

@@ -23,7 +23,7 @@ function valueClass(variant) {
       lg: "hero-value-lg",
       accent: "hero-value-accent",
       warn: "hero-value-warn",
-      success: "hero-value text-green-700 font-medium",
+      success: "hero-value text-status-active-text font-medium",
       "success-pill": "hero-value-pill hero-value-pill-success",
       "waiting-pill": "hero-value-pill hero-value-pill-waiting",
       "cancel-pill": "hero-value-pill hero-value-pill-cancel",

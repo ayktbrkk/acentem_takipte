@@ -17,7 +17,7 @@
         <template #trailing>
           <div class="text-right">
             <p class="text-xs text-slate-500">{{ props.t("dueDate") }}: {{ row.due_date || props.t("unspecified") }}</p>
-            <p class="text-xs text-amber-700">{{ statusLabel(row.status) }}</p>
+            <p class="text-xs text-at-amber">{{ statusLabel(row.status) }}</p>
           </div>
         </template>
       </MetaListCard>
@@ -39,45 +39,45 @@
         </div>
         <div class="flex h-3 gap-1 rounded-full overflow-hidden">
           <div v-if="props.commissionAging.buckets.current > 0"
-               class="h-full bg-emerald-400"
+               class="h-full bg-at-green"
                :style="{ width: `${pct(props.commissionAging.buckets.current)}%` }"
                :title="`${props.t('agingCurrent')}: ${props.formatMoney(props.commissionAging.buckets.current)}`" />
           <div v-if="props.commissionAging.buckets['1_30'] > 0"
-               class="h-full bg-amber-400"
+               class="h-full bg-at-amber"
                :style="{ width: `${pct(props.commissionAging.buckets['1_30'])}%` }"
                :title="`${props.t('aging1to30')}: ${props.formatMoney(props.commissionAging.buckets['1_30'])}`" />
           <div v-if="props.commissionAging.buckets['31_60'] > 0"
-               class="h-full bg-orange-400"
+               class="h-full bg-at-amber/60"
                :style="{ width: `${pct(props.commissionAging.buckets['31_60'])}%` }"
                :title="`${props.t('aging31to60')}: ${props.formatMoney(props.commissionAging.buckets['31_60'])}`" />
           <div v-if="props.commissionAging.buckets['61_90'] > 0"
-               class="h-full bg-red-400"
+               class="h-full bg-at-red/80"
                :style="{ width: `${pct(props.commissionAging.buckets['61_90'])}%` }"
                :title="`${props.t('aging61to90')}: ${props.formatMoney(props.commissionAging.buckets['61_90'])}`" />
           <div v-if="props.commissionAging.buckets['90_plus'] > 0"
-               class="h-full bg-red-600"
+               class="h-full bg-at-red"
                :style="{ width: `${pct(props.commissionAging.buckets['90_plus'])}%` }"
                :title="`${props.t('aging90plus')}: ${props.formatMoney(props.commissionAging.buckets['90_plus'])}`" />
         </div>
         <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
           <span v-if="props.commissionAging.buckets.current > 0" class="flex items-center gap-1">
-            <span class="inline-block h-2 w-2 rounded-full bg-emerald-400" />
+            <span class="inline-block h-2 w-2 rounded-full bg-at-green" />
             {{ props.t('agingCurrentLabel') }}: {{ props.formatMoney(props.commissionAging.buckets.current) }}
           </span>
           <span class="flex items-center gap-1">
-            <span class="inline-block h-2 w-2 rounded-full bg-amber-400" />
+            <span class="inline-block h-2 w-2 rounded-full bg-at-amber" />
             {{ props.t('aging1to30Label') }}: {{ props.formatMoney(props.commissionAging.buckets['1_30']) }}
           </span>
           <span class="flex items-center gap-1">
-            <span class="inline-block h-2 w-2 rounded-full bg-orange-400" />
+            <span class="inline-block h-2 w-2 rounded-full bg-at-amber/60" />
             {{ props.t('aging31to60Label') }}: {{ props.formatMoney(props.commissionAging.buckets['31_60']) }}
           </span>
           <span class="flex items-center gap-1">
-            <span class="inline-block h-2 w-2 rounded-full bg-red-400" />
+            <span class="inline-block h-2 w-2 rounded-full bg-at-red/80" />
             {{ props.t('aging61to90Label') }}: {{ props.formatMoney(props.commissionAging.buckets['61_90']) }}
           </span>
           <span class="flex items-center gap-1">
-            <span class="inline-block h-2 w-2 rounded-full bg-red-600" />
+            <span class="inline-block h-2 w-2 rounded-full bg-at-red" />
             {{ props.t('aging90plusLabel') }}: {{ props.formatMoney(props.commissionAging.buckets['90_plus']) }}
           </span>
         </div>

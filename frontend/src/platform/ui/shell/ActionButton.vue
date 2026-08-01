@@ -66,9 +66,9 @@ const buttonClass = computed(() => {
 
   if (props.pressed) {
     if (props.tone === "amber") {
-      return `${base} border border-amber-400 bg-amber-200 text-amber-900${sizeClass}`;
+      return `${base} border border-at-amber bg-at-amber/20 text-status-waiting-text${sizeClass}`;
     }
-    return `${base} border border-sky-200 bg-sky-50 text-brand-700${sizeClass}`;
+    return `${base} border border-brand-200 bg-brand-50 text-brand-700${sizeClass}`;
   }
 
   return `${base} border border-slate-300 text-slate-700 hover:bg-slate-100${sizeClass}`;

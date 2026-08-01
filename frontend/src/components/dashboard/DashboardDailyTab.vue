@@ -36,7 +36,7 @@
               <template #caption>
                 <div class="flex items-center gap-1.5 overflow-hidden">
                   <DashboardTypeBadge :kind="followUpType(item)" :t="t" />
-                  <span v-if="followUpDelay(item)" class="truncate text-[10px] font-semibold text-red-600">{{ followUpDelay(item) }}</span>
+                  <span v-if="followUpDelay(item)" class="truncate text-[10px] font-semibold text-at-red">{{ followUpDelay(item) }}</span>
                 </div>
               </template>
               <template #date>
@@ -82,7 +82,7 @@
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
                 <DashboardTypeBadge kind="renewal" :t="t" />
-                <span v-if="renewalAlertDelay(task)" class="truncate text-[10px] font-semibold text-red-600">{{ renewalAlertDelay(task) }}</span>
+                <span v-if="renewalAlertDelay(task)" class="truncate text-[10px] font-semibold text-at-red">{{ renewalAlertDelay(task) }}</span>
               </div>
             </template>
             <template #date>
@@ -130,7 +130,7 @@
                 <template #caption>
                   <div class="flex items-center gap-1.5 overflow-hidden">
                     <DashboardTypeBadge :kind="task.task_type || 'task'" :t="t" />
-                    <span v-if="taskDelayLabel(task)" class="truncate text-[10px] font-semibold text-red-600">{{ taskDelayLabel(task) }}</span>
+                    <span v-if="taskDelayLabel(task)" class="truncate text-[10px] font-semibold text-at-red">{{ taskDelayLabel(task) }}</span>
                   </div>
                 </template>
                 <template #date>
@@ -175,7 +175,7 @@
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
                 <DashboardTypeBadge :kind="activity.activity_type || 'activity'" :t="t" />
-                <span v-if="activityDelayLabel(activity)" class="truncate text-[10px] font-semibold text-red-600">{{ activityDelayLabel(activity) }}</span>
+                <span v-if="activityDelayLabel(activity)" class="truncate text-[10px] font-semibold text-at-red">{{ activityDelayLabel(activity) }}</span>
               </div>
             </template>
             <template #date>
@@ -218,7 +218,7 @@
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
                 <DashboardTypeBadge kind="claim" :t="t" />
-                <span v-if="claimDelayLabel(claim)" class="truncate text-[10px] font-semibold text-red-600">{{ claimDelayLabel(claim) }}</span>
+                <span v-if="claimDelayLabel(claim)" class="truncate text-[10px] font-semibold text-at-red">{{ claimDelayLabel(claim) }}</span>
               </div>
             </template>
             <template #footer>

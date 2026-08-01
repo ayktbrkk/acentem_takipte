@@ -251,7 +251,7 @@
                 </div>
                 <button
                   v-if="ic.remaining > 0"
-                  class="text-[10px] px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 hover:bg-brand-100 font-medium focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+                  class="cursor-pointer text-[10px] px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 hover:bg-brand-100 font-medium focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
                   @click="quickAddPayment(ic.name, ic.remaining)"
                 >
                   <FeatherIcon name="plus" class="h-2.5 w-2.5" />

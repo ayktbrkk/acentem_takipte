@@ -28,7 +28,7 @@
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
                 <DashboardTypeBadge :kind="payment.payment_direction || 'payment'" :t="t" />
-                <span v-if="paymentDelayLabel(payment)" class="truncate text-[10px] font-semibold text-red-600">{{ paymentDelayLabel(payment) }}</span>
+                <span v-if="paymentDelayLabel(payment)" class="truncate text-[10px] font-semibold text-at-red">{{ paymentDelayLabel(payment) }}</span>
               </div>
             </template>
             <template #footer>
@@ -70,7 +70,7 @@
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
                 <DashboardTypeBadge :kind="payment.payment_direction || 'payment'" :t="t" />
-                <span v-if="paymentDelayLabel(payment)" class="truncate text-[10px] font-semibold text-red-600">{{ paymentDelayLabel(payment) }}</span>
+                <span v-if="paymentDelayLabel(payment)" class="truncate text-[10px] font-semibold text-at-red">{{ paymentDelayLabel(payment) }}</span>
               </div>
             </template>
             <template #footer>
@@ -153,7 +153,7 @@
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
                 <DashboardTypeBadge kind="risk" :t="t" />
-                <span v-if="riskDelayLabel(row)" class="truncate text-[10px] font-semibold text-red-600">{{ riskDelayLabel(row) }}</span>
+                <span v-if="riskDelayLabel(row)" class="truncate text-[10px] font-semibold text-at-red">{{ riskDelayLabel(row) }}</span>
               </div>
             </template>
             <template #date>
@@ -193,7 +193,7 @@
               <template #caption>
                 <div class="flex items-center gap-1.5 overflow-hidden">
                   <DashboardTypeBadge kind="reconciliation" :t="t" />
-                  <span v-if="reconciliationDelayLabel(row)" class="truncate text-[10px] font-semibold text-red-600">{{ reconciliationDelayLabel(row) }}</span>
+                  <span v-if="reconciliationDelayLabel(row)" class="truncate text-[10px] font-semibold text-at-red">{{ reconciliationDelayLabel(row) }}</span>
                 </div>
               </template>
               <template #date>

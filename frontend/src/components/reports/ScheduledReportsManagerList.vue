@@ -17,7 +17,7 @@
         <div class="text-sm font-semibold text-slate-900">{{ reportLabel(item.report_key) }}</div>
         <span
           class="rounded-full px-2.5 py-1 text-[11px] font-medium"
-          :class="item.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'"
+          :class="item.enabled ? 'bg-status-active-bg text-status-active-text' : 'bg-status-draft-bg text-status-draft-text'"
         >
           {{ item.enabled ? enabledLabel : disabledLabel }}
         </span>

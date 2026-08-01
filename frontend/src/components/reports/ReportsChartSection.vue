@@ -29,7 +29,7 @@
       </div>
 
       <!-- Subtle Background Decorative Element -->
-      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-sky-50/70 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-brand-50/70 rounded-full blur-3xl pointer-events-none"></div>
     </div>
   </div>
 </template>

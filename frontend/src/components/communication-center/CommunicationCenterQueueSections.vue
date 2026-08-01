@@ -42,7 +42,7 @@
           />
           <span v-if="draft.reference_name">{{ draft.reference_name }}</span>
         </div>
-        <p v-if="draft.error_message" class="mt-2 max-h-10 overflow-hidden text-xs text-rose-600">
+        <p v-if="draft.error_message" class="mt-2 max-h-10 overflow-hidden text-xs text-at-red">
           {{ draft.error_message }}
         </p>
         <InlineActionRow class="mt-3">

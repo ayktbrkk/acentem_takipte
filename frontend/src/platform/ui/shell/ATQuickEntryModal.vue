@@ -24,10 +24,10 @@
 
         <!-- Error Banner -->
         <transition name="fade">
-          <div v-if="error" class="qc-error-banner mt-6 shadow-sm border-amber-100 bg-amber-50" role="alert">
+          <div v-if="error" class="qc-error-banner mt-6 shadow-sm border-at-amber/40 bg-status-waiting-bg" role="alert">
             <div class="flex items-center gap-3">
-              <div class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></div>
-              <p class="text-sm font-semibold text-amber-900">{{ error }}</p>
+              <div class="h-2 w-2 rounded-full bg-at-amber animate-pulse"></div>
+              <p class="text-sm font-semibold text-status-waiting-text">{{ error }}</p>
             </div>
           </div>
         </transition>

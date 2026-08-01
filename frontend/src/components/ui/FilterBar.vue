@@ -28,7 +28,7 @@
 
     <button
       v-if="activeCount > 0"
-      class="flex h-8 items-center gap-1 rounded-md border border-gray-200 px-2.5 text-xs text-gray-500 transition-colors hover:bg-gray-50"
+      class="flex h-8 cursor-pointer items-center gap-1 rounded-md border border-gray-200 px-2.5 text-xs text-gray-500 transition-colors hover:bg-gray-50"
       @click="$emit('reset')"
     >
       {{ t('reset') }}

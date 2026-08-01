@@ -1,8 +1,8 @@
 <template>
   <div class="dashboard-hero flex flex-col rounded-3xl px-8 py-10 text-white shadow-lg overflow-hidden relative mb-6">
     <!-- Decorative background elements -->
-    <div class="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-emerald-400/10 blur-3xl"></div>
-    <div class="absolute bottom-0 left-0 -ml-20 -mb-20 h-64 w-64 rounded-full bg-sky-400/10 blur-3xl"></div>
+    <div class="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-brand-400/10 blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 -ml-20 -mb-20 h-64 w-64 rounded-full bg-brand-200/10 blur-3xl"></div>
 
     <div class="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
       <div class="min-w-0">
@@ -10,8 +10,8 @@
         <h1 class="at-hero-title tracking-tight">{{ heroTitle }}</h1>
         <p class="at-hero-subtitle mt-2 opacity-90 font-medium">{{ heroSubtitle }}</p>
         <div class="mt-6 flex items-center gap-3">
-          <div class="flex h-6 items-center gap-2 rounded-full bg-white/10 px-3 text-[10px] font-bold uppercase tracking-widest text-emerald-100 backdrop-blur-md border border-white/10">
-            <span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div class="flex h-6 items-center gap-2 rounded-full bg-white/10 px-3 text-[10px] font-bold uppercase tracking-widest text-white/90 backdrop-blur-md border border-white/10">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-at-green animate-pulse"></span>
             {{ rangeLabelText }}: {{ visibleRange }}
           </div>
         </div>
@@ -47,7 +47,7 @@
             v-if="showNewLeadAction"
             variant="primary"
             size="sm"
-            class="!flex !h-9 !items-center !gap-2 !rounded-xl !bg-emerald-500 !px-5 !text-xs !font-bold !text-white !shadow-lg !shadow-emerald-500/20 hover:!bg-emerald-400"
+            class="!flex !h-9 !items-center !gap-2 !rounded-xl !bg-brand-600 !px-5 !text-xs !font-bold !text-white !shadow-lg !shadow-brand-500/20 hover:!bg-brand-500"
             @click="$emit('new-lead')"
           >
             <FeatherIcon name="plus" class="h-4 w-4" />

@@ -20,7 +20,7 @@
           <div v-for="field in fields" :key="field.key" class="space-y-1.5" :class="{ 'opacity-60 cursor-not-allowed': field.disabled }">
             <label :for="field.key" class="field-label flex items-center justify-between">
               <span>{{ field.label }}</span>
-              <span v-if="field.required" class="text-rose-500">*</span>
+              <span v-if="field.required" class="text-at-red">*</span>
             </label>
 
             <!-- Text / Phone / TCKN Input -->
@@ -36,7 +36,7 @@
                 :disabled="field.disabled"
                 @input="clearError(field.key)"
               />
-              <p v-if="errors[field.key]" class="mt-1 text-xs font-medium text-rose-500">
+              <p v-if="errors[field.key]" class="mt-1 text-xs font-medium text-at-red">
                 {{ errors[field.key] }}
               </p>
             </div>
@@ -113,12 +113,12 @@
               <div v-if="editData[field.key] && !activeDropdown" class="mt-1.5 flex items-center gap-2 px-1">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600">{{ t('selected') }}:</span>
                 <span class="text-[11px] font-semibold text-slate-900 truncate max-w-[200px]">{{ getOptionLabel(field) }}</span>
-                <button type="button" @click="clearSelection(field.key)" class="text-slate-400 hover:text-rose-500 transition-colors">
+                <button type="button" @click="clearSelection(field.key)" class="text-slate-400 hover:text-at-red transition-colors">
                   <FeatherIcon name="x" class="h-3 w-3" />
                 </button>
               </div>
 
-              <p v-if="errors[field.key]" class="mt-1 text-xs font-medium text-rose-500">
+              <p v-if="errors[field.key]" class="mt-1 text-xs font-medium text-at-red">
                 {{ errors[field.key] }}
               </p>
             </div>

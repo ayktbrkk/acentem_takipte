@@ -2,23 +2,23 @@
   <div class="app-shell min-h-screen w-full">
     <div
       v-if="scopeRefreshNotice"
-      class="fixed right-4 top-4 z-50 flex max-w-sm items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 shadow"
+      class="fixed right-4 top-4 z-50 flex max-w-sm items-start gap-3 rounded-lg border border-at-amber/40 bg-status-waiting-bg px-4 py-3 text-sm font-medium text-status-waiting-text shadow"
       role="alert"
       aria-live="assertive"
     >
       <span class="flex-1">{{ scopeRefreshNotice }}</span>
       <button
-        class="shrink-0 rounded bg-amber-600 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+        class="shrink-0 cursor-pointer rounded bg-at-amber px-2 py-1 text-xs font-semibold text-white transition-colors hover:brightness-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-at-amber"
         @click="confirmScopeRefresh"
       >
         {{ locale === 'tr' ? 'Yenile' : 'Refresh' }}
       </button>
       <button
-        class="shrink-0 text-amber-700 hover:text-amber-900 focus:outline-none"
+        class="shrink-0 cursor-pointer text-status-waiting-text hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-at-amber"
         :aria-label="locale === 'tr' ? 'Kapat' : 'Dismiss'"
         @click="dismissScopeNotice"
       >
-        &times;
+        <FeatherIcon name="x" class="h-4 w-4" />
       </button>
     </div>
     <div class="flex min-h-screen w-full">
@@ -40,6 +40,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, unref, watch } from "vue";
+import { FeatherIcon } from "frappe-ui";
 import { useRoute } from "vue-router";
 import Sidebar from "./Sidebar.vue";
 import Topbar from "./Topbar.vue";

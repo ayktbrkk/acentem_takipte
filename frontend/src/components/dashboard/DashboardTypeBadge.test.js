@@ -16,7 +16,7 @@ describe("DashboardTypeBadge", () => {
     });
 
     expect(wrapper.text()).toBe("Yenileme");
-    expect(wrapper.classes().join(" ")).toContain("bg-orange-100");
+    expect(wrapper.classes().join(" ")).toContain("bg-status-waiting-bg");
   });
 
   it("falls back to the shared record label for unknown kinds", () => {

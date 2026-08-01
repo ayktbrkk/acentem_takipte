@@ -44,10 +44,10 @@
         </div>
       </div>
 
-      <div class="mt-3 rounded-xl border border-amber-200 bg-amber-50/50 p-3">
+      <div class="mt-3 rounded-xl border border-status-waiting-bg bg-status-waiting-bg p-3">
         <div class="flex items-center justify-between gap-2">
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-amber-700">{{ t("groupBy") }}</p>
-            <span v-if="groupByColumn" class="rounded-full bg-amber-200 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-at-amber">{{ t("groupBy") }}</p>
+            <span v-if="groupByColumn" class="rounded-full bg-at-amber/20 px-2 py-0.5 text-[11px] font-semibold text-at-amber">
             {{ getColumnLabel(groupByColumn) }}
           </span>
         </div>

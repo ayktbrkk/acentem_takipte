@@ -52,11 +52,11 @@
           </article>
           <article class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
             <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">{{ props.t("importMatchedRows") }}</p>
-            <p class="text-xl font-bold text-emerald-600">{{ props.summary.matched_rows || 0 }}</p>
+            <p class="text-xl font-bold text-at-green">{{ props.summary.matched_rows || 0 }}</p>
           </article>
           <article class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
             <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">{{ props.t("importUnmatchedRows") }}</p>
-            <p class="text-xl font-bold text-amber-600">{{ props.summary.unmatched_rows || 0 }}</p>
+            <p class="text-xl font-bold text-at-amber">{{ props.summary.unmatched_rows || 0 }}</p>
           </article>
           <article class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
             <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">{{ props.t("importAmount") }}</p>
@@ -90,7 +90,7 @@
             <span>{{ row.policy_no || props.t('unspecified') }}</span>
             <span>{{ row.payment_no || props.t('unspecified') }}</span>
             <span class="text-right font-mono">{{ props.formatMoney(row.amount_try || 0) }}</span>
-            <span class="font-semibold" :class="row.match_status === 'Matched' ? 'text-emerald-600' : 'text-amber-600'">{{ matchStatusLabel(row.match_status) }}</span>
+            <span class="font-semibold" :class="row.match_status === 'Matched' ? 'text-at-green' : 'text-at-amber'">{{ matchStatusLabel(row.match_status) }}</span>
           </div>
         </div>
       </section>

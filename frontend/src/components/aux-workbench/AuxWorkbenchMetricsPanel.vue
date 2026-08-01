@@ -35,7 +35,7 @@
             </div>
             <div class="flex justify-between items-center text-xs">
               <span class="text-slate-500">{{ highRiskSnapshotsLabel }}</span>
-              <span class="font-bold text-rose-600">{{ row.highRisk }}</span>
+              <span class="font-bold text-at-red">{{ row.highRisk }}</span>
             </div>
           </div>
         </div>

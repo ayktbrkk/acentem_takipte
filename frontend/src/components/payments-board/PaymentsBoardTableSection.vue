@@ -12,7 +12,7 @@
     </div>
     <article v-else-if="errorText" class="qc-error-banner mt-4">
       <div class="flex items-start gap-3">
-        <FeatherIcon name="alert-circle" class="h-5 w-5 text-amber-600 mt-0.5" />
+        <FeatherIcon name="alert-circle" class="h-5 w-5 text-at-amber mt-0.5" />
         <div>
           <p class="qc-error-banner__text font-bold">{{ t("loadErrorTitle") }}</p>
           <p class="qc-error-banner__text mt-0.5">{{ errorText }}</p>

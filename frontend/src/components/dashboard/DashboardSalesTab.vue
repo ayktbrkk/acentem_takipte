@@ -29,7 +29,7 @@
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
                 <DashboardTypeBadge kind="offer" :t="t" />
-                <span v-if="offerDelayLabel(offer)" class="truncate text-[10px] font-semibold text-red-600">{{ offerDelayLabel(offer) }}</span>
+                <span v-if="offerDelayLabel(offer)" class="truncate text-[10px] font-semibold text-at-red">{{ offerDelayLabel(offer) }}</span>
               </div>
             </template>
             <template #footer>
@@ -70,7 +70,7 @@
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
                 <DashboardTypeBadge kind="offer" :t="t" />
-                <span v-if="offerDelayLabel(offer)" class="truncate text-[10px] font-semibold text-red-600">{{ offerDelayLabel(offer) }}</span>
+                <span v-if="offerDelayLabel(offer)" class="truncate text-[10px] font-semibold text-at-red">{{ offerDelayLabel(offer) }}</span>
               </div>
             </template>
             <template #footer>
@@ -155,7 +155,7 @@
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
                 <DashboardTypeBadge :kind="action.kind || 'task'" :t="t" />
-                <span v-if="salesActionDelayLabel(action)" class="truncate text-[10px] font-semibold text-red-600">{{ salesActionDelayLabel(action) }}</span>
+                <span v-if="salesActionDelayLabel(action)" class="truncate text-[10px] font-semibold text-at-red">{{ salesActionDelayLabel(action) }}</span>
               </div>
             </template>
             <template #date>

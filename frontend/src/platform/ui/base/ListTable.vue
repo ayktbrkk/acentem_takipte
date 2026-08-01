@@ -143,7 +143,7 @@
             <div v-else-if="col.type === 'status-meta'" class="min-w-[220px]">
               <StatusBadge v-if="row[col.key]" :domain="col.domain" :status="row[col.key]" :locale="locale" />
               <span v-else class="text-slate-700">-</span>
-              <p v-if="col.metaKey && row[col.metaKey]" class="mt-1 max-w-[320px] truncate text-xs text-rose-600">
+              <p v-if="col.metaKey && row[col.metaKey]" class="mt-1 max-w-[320px] truncate text-xs text-at-red">
                 {{ row[col.metaKey] }}
               </p>
             </div>

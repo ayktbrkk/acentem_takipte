@@ -19,8 +19,8 @@
         :key="metric.label"
         class="rounded-2xl bg-brand-50/50 p-4 border border-brand-100"
       >
-        <p class="text-[11px] font-normal text-blue-400 uppercase tracking-wider">{{ t(metric.label) }}</p>
-        <p class="text-xl font-black text-blue-900 mt-1">
+        <p class="text-[11px] font-normal text-brand-400 uppercase tracking-wider">{{ t(metric.label) }}</p>
+        <p class="text-xl font-black text-brand-900 mt-1">
           {{ formatValue(metric.value, metric.currency) }}
         </p>
       </div>

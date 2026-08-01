@@ -11,7 +11,7 @@
           :key="range.value"
           type="button"
           class="px-3 py-1.5 text-xs font-semibold rounded-xl transition-all"
-          :class="activeRange === range.value ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'"
+          :class="activeRange === range.value ? 'bg-brand-600 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'"
           :aria-pressed="activeRange === range.value"
           @click="activeRange = range.value"
         >
@@ -41,7 +41,7 @@
       >
         <div class="flex items-center justify-between mb-3">
           <div class="flex flex-col">
-            <span class="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider">{{ formatDayName(day.date) }}</span>
+            <span class="text-[10px] font-semibold text-brand-600 uppercase tracking-wider">{{ formatDayName(day.date) }}</span>
             <span class="text-sm font-semibold text-slate-900">{{ formatDateDisplay(day.date) }}</span>
           </div>
           <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-50 text-[11px] font-semibold text-slate-600 border border-slate-100">
@@ -133,8 +133,8 @@ function formatDateDisplay(dateStr) {
 }
 
 function formatBadgeClass(format) {
-  if (format === 'pdf') return 'bg-rose-50 text-rose-600 border border-rose-100';
-  return 'bg-emerald-50 text-emerald-600 border border-emerald-100';
+  if (format === 'pdf') return 'bg-status-cancel-bg text-status-cancel-text border border-status-cancel-bg';
+  return 'bg-status-active-bg text-status-active-text border border-status-active-bg';
 }
 
 onMounted(() => {

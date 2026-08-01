@@ -15,7 +15,7 @@ const props = defineProps({
   label: { type: String, default: "-" },
   value: { type: [String, Number], default: "-" },
   ratio: { type: [String, Number], default: 0 },
-  barClass: { type: String, default: "bg-emerald-500" },
+  barClass: { type: String, default: "bg-at-green" },
   leftWidth: { type: String, default: "90px" },
   rightWidth: { type: String, default: "120px" },
 });

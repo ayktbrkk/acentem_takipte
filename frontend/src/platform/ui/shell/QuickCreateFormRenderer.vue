@@ -10,7 +10,7 @@
       <div v-else class="at-input-group">
         <label class="at-label block">
           {{ fieldLabel(field) }}
-          <span v-if="isFieldRequired(field)" class="text-amber-500">*</span>
+          <span v-if="isFieldRequired(field)" class="text-at-amber">*</span>
         </label>
 
         <div v-if="field.type === 'select'">
@@ -195,11 +195,11 @@ function handleInput(event, field) {
 }
 
 .qc-remote-no-options {
-  @apply px-3 py-2 text-xs text-amber-700;
+  @apply px-3 py-2 text-xs text-status-waiting-text;
 }
 
 .qc-remote-create-action {
-  @apply w-full px-3 py-2 text-left text-xs font-semibold text-brand-700 hover:bg-sky-50;
+  @apply w-full px-3 py-2 text-left text-xs font-semibold text-brand-700 hover:bg-brand-50;
 }
 </style>
 
