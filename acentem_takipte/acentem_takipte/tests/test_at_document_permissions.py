@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.doctype.at_document import at_document
+from acentem_takipte.acentem_takipte.doctype import at_document
 
 
 def test_at_document_query_reuses_linked_record_scope(monkeypatch):

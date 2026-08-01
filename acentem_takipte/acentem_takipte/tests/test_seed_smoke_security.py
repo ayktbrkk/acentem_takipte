@@ -7,7 +7,7 @@ from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 import acentem_takipte.acentem_takipte.platform.api.seed as seed_api
 import acentem_takipte.acentem_takipte.platform.api.smoke as smoke_api
-from acentem_takipte.acentem_takipte.domains.customers.services.quick_create import quick_create_customer_flow
+from acentem_takipte.acentem_takipte.domains.customers.services import quick_create as quick_create_customer_flow
 
 
 class TestSeedSmokeSecurity(IntegrationTestCase):

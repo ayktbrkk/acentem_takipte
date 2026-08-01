@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 import acentem_takipte.acentem_takipte.domains.reports.api.endpoints as reports
-from acentem_takipte.acentem_takipte.domains.reports.services.scheduled import scheduled_reports
+from acentem_takipte.acentem_takipte.domains.reports.services import scheduled as scheduled_reports
 
 
 def test_get_scheduled_report_configs_returns_summary(monkeypatch):

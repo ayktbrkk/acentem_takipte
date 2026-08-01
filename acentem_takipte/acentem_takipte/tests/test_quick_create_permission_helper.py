@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from frappe import _
 
-from acentem_takipte.acentem_takipte.platform.services.quick_create_helpers import quick_create_helpers
+from acentem_takipte.acentem_takipte.platform.services import quick_create_helpers
 import acentem_takipte.acentem_takipte.platform.api.quick_create as quick_create_api
 
 
