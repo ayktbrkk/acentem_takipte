@@ -712,6 +712,38 @@ class TestHeadOfficeDistribution(FrappeTestCase):
         total = sum(e["amount"] for e in result)
         assert total == 1000
 
+    @patch("frappe.db.get_value")
+    def test_rootless_chain_top_entity_absorbs_remainder(self, mock_db_get_value):
+        """When no is_root entity exists in the chain, the top-most entity absorbs
+        the remainder so the distribution always totals commission_amount."""
+        from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import (
+            _build_commission_distribution,
+        )
+
+        entity_data = {
+            "REP-001": {"commission_share_pct": 40, "full_name": "Alt Temsilci", "parent_entity": "SUB-001", "is_root": 0},
+            "SUB-001": {"commission_share_pct": 30, "full_name": "Alt Acente", "parent_entity": None, "is_root": 0},
+        }
+
+        def db_get_value_side_effect(doctype, name, fields=None, as_dict=False):
+            if doctype == "AT Sales Entity" and name in entity_data:
+                data = entity_data[name]
+                if as_dict:
+                    return data
+                return data.get(fields) if isinstance(fields, str) else data
+            return None
+
+        mock_db_get_value.side_effect = db_get_value_side_effect
+
+        result = json.loads(_build_commission_distribution("REP-001", 1000, 1))
+
+        assert len(result) == 2
+        assert result[0]["amount"] == 400  # REP-001: 1000 * 40%
+        assert result[1]["amount"] == 600  # SUB-001: 300 + remainder 300 = 600
+        assert result[1]["is_root"] is True  # promoted to effective root
+        total = sum(e["amount"] for e in result)
+        assert total == 1000
+
 
 class TestCommissionEndpoints(FrappeTestCase):
     def test_get_balances_endpoint(self):

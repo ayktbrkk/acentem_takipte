@@ -39,10 +39,15 @@ class ATSalesEntity(Document):
         if not office_branch:
             return
 
-        # Track all non-root entities in this branch
+        # Pool entities are fallback records, not commission earners; they are
+        # excluded from the share distribution total.
+        if self.is_pool:
+            return
+
+        # Track all non-root, non-pool active entities in this branch
         all_non_root = frappe.get_all(
             "AT Sales Entity",
-            filters={"office_branch": office_branch, "is_root": 0, "is_active": 1},
+            filters={"office_branch": office_branch, "is_root": 0, "is_active": 1, "is_pool": 0},
             fields=["name", "commission_share_pct"],
             limit_page_length=0,
         )
@@ -143,7 +148,7 @@ class ATSalesEntity(Document):
                     )
                 )
 
-        if branch_is_active and not self.is_pool and not existing_pool:
+        if branch_is_active and not self.is_pool and not self.is_root and not existing_pool:
             frappe.throw(
                 _("Each active office branch must have exactly one pool sales entity.")
             )

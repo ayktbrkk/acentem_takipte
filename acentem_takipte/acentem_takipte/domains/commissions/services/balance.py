@@ -819,4 +819,12 @@ def build_commission_distribution(
         root_entry["amount"] = root_amount
         root_entry["amount_try"] = round(root_amount * fx, 2)
         entries.append(root_entry)
+    elif entries and non_root_total < commission - 0.01:
+        # No explicit is_root entity found; the top-most entity in the chain
+        # (no parent) is the effective root and absorbs the remainder so the
+        # distribution always totals commission_amount.
+        remainder = round(commission - non_root_total, 2)
+        entries[-1]["amount"] = round(entries[-1]["amount"] + remainder, 2)
+        entries[-1]["amount_try"] = round(entries[-1]["amount"] * fx, 2)
+        entries[-1]["is_root"] = True
     return json.dumps(entries)

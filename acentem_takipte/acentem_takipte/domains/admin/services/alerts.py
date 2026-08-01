@@ -20,6 +20,15 @@ DEFAULT_INTEGRATION_KEYWORDS = (
     "provider router",
 )
 
+# Security-relevant break-glass audit entries are always within alert scope,
+# regardless of configured integration keywords.
+BREAK_GLASS_KEYWORDS = (
+    "break-glass",
+    "break glass",
+    "breakglass",
+    "emergency access",
+)
+
 
 def run_error_log_alert_monitor() -> dict[str, Any]:
     site_config = frappe.get_site_config()
@@ -150,24 +159,8 @@ def _matches_alert_scope(*, haystack: str, keywords: list[str]) -> bool:
     if not normalized_keywords:
         normalized_keywords = _default_keywords()
 
-    break_glass_keywords = [
-        keyword for keyword in normalized_keywords if keyword in ()
-    ]
-    integration_keywords = [
-        keyword for keyword in normalized_keywords if keyword in DEFAULT_INTEGRATION_KEYWORDS
-    ]
-
-    custom_keywords = [
-        keyword
-        for keyword in normalized_keywords
-        if keyword not in () and keyword not in DEFAULT_INTEGRATION_KEYWORDS
-    ]
-
-    return (
-        any(keyword in haystack for keyword in break_glass_keywords)
-        or any(keyword in haystack for keyword in integration_keywords)
-        or any(keyword in haystack for keyword in custom_keywords)
-    )
+    match_terms = [*normalized_keywords, *BREAK_GLASS_KEYWORDS]
+    return any(term in haystack for term in match_terms)
 
 
 def _excerpt(message: str, limit: int = 220) -> str:

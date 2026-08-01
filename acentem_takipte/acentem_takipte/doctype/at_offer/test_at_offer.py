@@ -118,12 +118,16 @@ def _create_dependencies() -> dict[str, str]:
             }
         ).insert(ignore_permissions=True).name
 
+    from acentem_takipte.acentem_takipte.tests.test_utils import ensure_pool_for_branch
+    ensure_pool_for_branch(office_branch_name)
+
     sales_entity = frappe.get_doc(
         {
             "doctype": "AT Sales Entity",
             "entity_type": "Agency",
             "full_name": f"Test Agency {suffix}",
             "office_branch": office_branch_name,
+            "commission_share_pct": 10,
         }
     ).insert(ignore_permissions=True)
 
