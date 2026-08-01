@@ -37,3 +37,40 @@ def ensure_pool_for_branch(office_branch: str) -> str:
             }
         ).insert(ignore_permissions=True)
     return create_pool_sales_entity(office_branch)
+
+
+def ensure_test_office_branch(suffix: str) -> str:
+    """Create a deterministic, isolated test office branch with root + pool.
+
+    Creates a non-head-office child branch under the (find-or-create) head
+    office. Each call returns a fresh branch so tests never depend on ambient
+    seed data or on which active branch `get_value` happens to return.
+    """
+    head_office = frappe.db.get_value(
+        "AT Office Branch", {"is_head_office": 1}, "name", order_by="name asc"
+    )
+    if not head_office:
+        head_office = frappe.get_doc(
+            {
+                "doctype": "AT Office Branch",
+                "office_branch_name": "Test Head Office",
+                "office_branch_code": "THO",
+                "city": "Istanbul",
+                "is_active": 1,
+                "is_head_office": 1,
+            }
+        ).insert(ignore_permissions=True).name
+
+    branch_name = frappe.get_doc(
+        {
+            "doctype": "AT Office Branch",
+            "office_branch_name": f"Test Branch {suffix}",
+            "office_branch_code": f"TB{suffix[:4]}",
+            "city": "Istanbul",
+            "is_active": 1,
+            "is_head_office": 0,
+            "parent_office_branch": head_office,
+        }
+    ).insert(ignore_permissions=True).name
+    ensure_pool_for_branch(branch_name)
+    return branch_name

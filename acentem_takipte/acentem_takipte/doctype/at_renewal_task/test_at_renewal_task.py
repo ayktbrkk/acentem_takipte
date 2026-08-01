@@ -96,12 +96,13 @@ class TestATRenewalTask(IntegrationTestCase):
             [],
         ]
         with patch.object(dashboard_api.frappe.db, "sql", side_effect=sql_rows):
-            with patch.object(dashboard_api.frappe, "get_all", return_value=[]):
-                payload = dashboard_api._renewal_status_and_buckets(
-                    office_branch=None,
-                    branch=None,
-                    allowed_customers=None,
-                )
+            with patch.object(dashboard_api.frappe.utils.data, "get_system_timezone", return_value="Europe/Istanbul"):
+                with patch.object(dashboard_api.frappe, "get_all", return_value=[]):
+                    payload = dashboard_api._renewal_status_and_buckets(
+                        office_branch=None,
+                        branch=None,
+                        allowed_customers=None,
+                    )
 
         counts = {row["status"]: row["total"] for row in payload["status_rows"]}
         self.assertEqual(counts["Done"], 2)
@@ -174,21 +175,8 @@ def _create_dependencies() -> dict[str, str]:
         }
     ).insert(ignore_permissions=True)
 
-    office_branch_name = frappe.db.get_value("AT Office Branch", {"is_active": 1}, "name")
-    if not office_branch_name:
-        office_branch_name = frappe.get_doc(
-            {
-                "doctype": "AT Office Branch",
-                "office_branch_name": f"Renewal Office {suffix}",
-                "office_branch_code": f"ROB{suffix[:4]}",
-                "city": "Istanbul",
-                "is_active": 1,
-                "is_head_office": 1,
-            }
-        ).insert(ignore_permissions=True).name
-
-    from acentem_takipte.acentem_takipte.tests.test_utils import ensure_pool_for_branch
-    ensure_pool_for_branch(office_branch_name)
+    from acentem_takipte.acentem_takipte.tests.test_utils import ensure_test_office_branch
+    office_branch_name = ensure_test_office_branch(suffix)
 
     sales_entity = frappe.get_doc(
         {
