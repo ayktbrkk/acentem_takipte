@@ -143,26 +143,18 @@
     </div>
 
     <div v-else class="detail-body">
-      <div class="flex flex-1 flex-col min-w-0">
-        <AuxRecordDetailContent
-          v-model:active-detail-tab="activeDetailTab"
-          :detail-tabs="detailTabs"
-          :visible-groups="visibleGroups"
-          :related-record-cards="relatedRecordCards"
-          :activity-items="activityItems"
-          :visible-text-blocks="visibleTextBlocks"
-          :group-title="groupTitle"
-          :group-items="groupItems"
-          :field-label="fieldLabel"
-          :t="t"
-        />
-        <div class="px-5 pb-5" :class="{ hidden: screenKey !== 'sales-entities' }">
-          <HierarchyPanel
-            ref="hierarchyPanelRef"
-            :office-branch="doc?.office_branch"
-          />
-        </div>
-      </div>
+      <AuxRecordDetailContent
+        v-model:active-detail-tab="activeDetailTab"
+        :detail-tabs="detailTabs"
+        :visible-groups="visibleGroups"
+        :related-record-cards="relatedRecordCards"
+        :activity-items="activityItems"
+        :visible-text-blocks="visibleTextBlocks"
+        :group-title="groupTitle"
+        :group-items="groupItems"
+        :field-label="fieldLabel"
+        :t="t"
+      />
 
       <AuxRecordDetailSidebar
         :special-badges="specialBadges"
@@ -172,6 +164,14 @@
         :no-decision-context-text="t('noDecisionContext')"
       />
     </div>
+
+    <HierarchyPanel
+      v-if="screenKey === 'sales-entities'"
+      ref="hierarchyPanelRef"
+      :office-branch="doc?.office_branch"
+      class="px-5 pb-5"
+    />
+
     <AuxRecordDetailQuickEditDialog
       v-model="showQuickEditDialog"
       :quick-edit-config="quickEditConfig"
@@ -409,7 +409,7 @@ const detailQuickDialogs = useAuxRecordDetailQuickDialogs({
 
 const hierarchyPanelRef = ref(null);
 watch(() => doc.value?.modified, () => {
-  hierarchyPanelRef.value?.reload();
+  hierarchyPanelRef.value?.reload?.();
 });
 
 const {

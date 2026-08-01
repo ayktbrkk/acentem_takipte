@@ -628,6 +628,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -658,6 +659,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -690,6 +692,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -728,6 +731,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -778,6 +782,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -836,6 +841,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -884,6 +890,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -913,6 +920,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -944,6 +952,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -980,6 +989,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -1016,6 +1026,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -1052,6 +1063,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -1086,6 +1098,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -1115,6 +1128,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -1155,6 +1169,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -1193,6 +1208,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -1229,6 +1245,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
       global: {
         stubs: {
+          HierarchyPanel: true,
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
@@ -1258,6 +1275,7 @@ describe("AuxRecordDetail customer and document detail pages", () => {
     ActionButton: ActionButtonStub,
     DetailActionRow: genericStub,
     DetailTabsBar: DetailTabsBarStub,
+    HierarchyPanel: true,
     MetaListCard: genericStub,
     QuickCreateManagedDialog: true,
     StatusBadge: true,
@@ -1374,6 +1392,7 @@ describe("AuxRecordDetail master data detail pages", () => {
     ActionButton: ActionButtonStub,
     DetailActionRow: genericStub,
     DetailTabsBar: DetailTabsBarStub,
+    HierarchyPanel: true,
     MetaListCard: genericStub,
     QuickCreateManagedDialog: true,
     StatusBadge: true,
@@ -1446,6 +1465,7 @@ describe("AuxRecordDetail notification detail pages", () => {
     ActionButton: ActionButtonStub,
     DetailActionRow: genericStub,
     DetailTabsBar: DetailTabsBarStub,
+    HierarchyPanel: true,
     MetaListCard: genericStub,
     QuickCreateManagedDialog: true,
     StatusBadge: true,
@@ -1543,6 +1563,7 @@ describe("AuxRecordDetail finance and task detail pages", () => {
     ActionButton: ActionButtonStub,
     DetailActionRow: genericStub,
     DetailTabsBar: DetailTabsBarStub,
+    HierarchyPanel: true,
     MetaListCard: genericStub,
     QuickCreateManagedDialog: true,
     ReconciliationWorkbenchActionDialog: true,
@@ -1697,6 +1718,7 @@ describe("AuxRecordDetail communication aux detail pages", () => {
     ActionButton: ActionButtonStub,
     DetailActionRow: genericStub,
     DetailTabsBar: DetailTabsBarStub,
+    HierarchyPanel: true,
     MetaListCard: genericStub,
     QuickCreateManagedDialog: true,
     StatusBadge: true,
