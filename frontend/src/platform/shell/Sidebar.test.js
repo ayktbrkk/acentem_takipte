@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 
 import Sidebar from "./Sidebar.vue";
-import { useAuthStore } from "../stores/auth";
+import { useAuthStore } from "../state/authStore";
 
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),

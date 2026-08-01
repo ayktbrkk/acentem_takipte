@@ -337,3 +337,31 @@ A full audit of all 79 pages against this document found:
 ### Audit Metric
 84 test files, 268 tests, **0 failures** — lint, typecheck, and production build all pass.
 
+## 15. Subsequent Compliance Pass (Aug 2026)
+
+A full `/at` SPA review (all routes, shared component trees, shell) against this
+document found and fixed:
+
+- **Emoji icons removed** from shared components (`MaskedDataNotice`, `StepBar`,
+  `WorkbenchFileUploadModal`) → inline SVG / FeatherIcon. `MaskedDataNotice` uses
+  inline SVG rather than a `frappe-ui` import to keep the `GlobalCustomerSearch`
+  test module graph free of the frappe-ui resource import quirk.
+- **All raw color classes replaced with tokens**: `at-green`/`at-amber`/`at-red`,
+  `brand-*`, and `status-*` surfaces. `DashboardTypeBadge`'s undocumented
+  26-color categorical palette now maps each record type to a semantic status
+  token. Dashboard primary CTA is `brand-600`. Aging bars use the at-* ramp with
+  opacity steps. 0 raw colors remain in `src/components` and `src/platform`.
+- **Interaction polish**: `cursor-pointer` + visible focus states added to
+  `CommissionBalances` mini-button, `FilterBar` reset, `OfficeBranchSelect`
+  options, and shell banner buttons.
+- **Both component trees kept in sync** (`components/ui`+`app-shell` and
+  `platform/ui`+`shell`). Known drift: the two trees are maintained in parallel;
+  a consolidation is a separate workstream.
+- **Dead code removed**: legacy duplicate shell (`src/App.vue`,
+  `src/components/Sidebar.vue`, `src/components/Topbar.vue` and their tests)
+  deleted. The `Sidebar` localization test was ported to `platform/shell/`.
+  The real shell is `platform/shell/App.vue` (used by `main.js`).
+
+Validation: lint clean, typecheck clean, **400 unit tests pass** (94 files),
+production build ok, browser QA 16/16 with 0 JS console errors.
+
