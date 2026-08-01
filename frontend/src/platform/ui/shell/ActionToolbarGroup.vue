@@ -1,8 +1,4 @@
-<template>
-  <div class="flex flex-wrap items-center gap-2">
-    <slot />
-  </div>
-</template>
-
-<script setup></script>
-
+<script>
+import Component from "../../../components/app-shell/ActionToolbarGroup.vue";
+export default Component;
+</script>

@@ -1,14 +1,4 @@
-<template>
-  <td :class="['at-table-cell', cellClass]">
-    <slot />
-  </td>
-</template>
-
-<script setup>
-defineProps({
-  cellClass: {
-    type: [String, Array, Object],
-    default: "",
-  },
-});
+<script>
+import Component from "../../../components/app-shell/DataTableCell.vue";
+export default Component;
 </script>

@@ -357,6 +357,11 @@ document found and fixed:
 - **Both component trees kept in sync** (`components/ui`+`app-shell` and
   `platform/ui`+`shell`). Known drift: the two trees are maintained in parallel;
   a consolidation is a separate workstream.
+- **Component tree consolidation**: `platform/ui/**` (50 files) were mirrors of
+  `components/`; they are now thin re-export shims (`<script> export { default }`),
+  so every import resolves to the canonical `components/` implementation. The
+  canonical sources are `components/ui/`, `components/app-shell/`, and
+  `components/`. New shared components should be added there, not in `platform/ui/`.
 - **Dead code removed**: legacy duplicate shell (`src/App.vue`,
   `src/components/Sidebar.vue`, `src/components/Topbar.vue` and their tests)
   deleted. The `Sidebar` localization test was ported to `platform/shell/`.
