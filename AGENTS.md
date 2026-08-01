@@ -176,6 +176,10 @@ CI also runs backend tests by creating a fresh Frappe v15 bench and site; see [b
 - Frappe UI socket integration should remain disabled unless the environment intentionally exposes Socket.IO; otherwise E2E runs collect connection-refused noise.
 - For seed/import code that must preserve explicit document names, verify Frappe autoname behavior first. `format:` autoname patterns can override explicit `name` values unless the import path is deliberate.
 - When patching Python imports in tests, prefer the full inner package path rooted at `acentem_takipte.acentem_takipte...` if that is how the module is imported at runtime.
+- **Server not picking up code changes**: `bench serve` development server with watchdog auto-reloads `.py` files, but cached `__pycache__/*.pyc` can persist. Delete pycache dirs: `find apps/acentem_takipte -name __pycache__ -type d -exec rm -rf {} +`. Restart with: `pkill -f "frappe serve"; nohup bash -c 'bench --site at.localhost serve --port 8000' </dev/null > /tmp/bench.log 2>&1 & disown`
+- **`import frappe` fails in WSL `python3`**: The WSL system Python doesn't have Frappe. Always use `bench --site at.localhost console` or `bench --site at.localhost execute <module.path>` for backend commands.
+- **Playwright on Windows**: Use `BASE = "http://127.0.0.1:8000"` not `at.localhost` (DNS doesn't resolve from Windows host to WSL guest in all configurations). Use `wait_until="commit"` not `networkidle` for initial navigation, then add explicit `wait_for_timeout` for SPA render.
+- **Design compliance**: Use semantic color tokens (`at-green`, `at-amber`, `at-red`, `brand-600`, `slate-*`) — never raw Tailwind colors. Add `focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none` to all interactive elements. Use `role="button" tabindex="0"` on clickable divs.
 
 ## Repo Landmarks
 
@@ -200,8 +204,32 @@ CI also runs backend tests by creating a fresh Frappe v15 bench and site; see [b
 - `acentem_takipte/acentem_takipte/domains/commissions/services/balance.py`: accrual/paid/aging computation, IC breakdown, reconciliation summary
 - `acentem_takipte/acentem_takipte/domains/accounting/services/statement_import.py`: commission statement CSV preview, import, missing external generation
 - `acentem_takipte/acentem_takipte/doctype/at_commission_period/`: AT Commission Period DocType for period lock
-- `acentem_takipte/acentem_takipte/tests/test_commission_balances.py`: 23 backend tests (balance, aging, IC, branch, entity detail)
+- `acentem_takipte/acentem_takipte/tests/test_commission_balances.py`: 25 backend tests (balance, aging, IC, branch, entity detail, head-office distribution)
 - `acentem_takipte/acentem_takipte/tests/test_commission_statement_import.py`: 8 backend tests (preview, import, missing external)
+
+### Commission Distribution Model
+
+The system uses a **head-office-centric** model:
+- Each non-root entity gets `share_pct%` of the ORIGINAL commission amount
+- Root entity (`is_root=1`) absorbs all remaining commission regardless of its `share_pct`
+- Total must always equal `commission_amount`
+- Canonical implementation: `build_commission_distribution()` in `balance.py` — shared by both `at_policy.py` and `recalc_commission_dist.py`
+
+### Sales Entity Commission Validation
+
+- `commission_share_pct` must be in `ALLOWED_AUX_EDIT_FIELDS["AT Sales Entity"]` for quick edit to work
+- Root entity's `commission_share_pct` is locked in quick edit UI (`disabled: ({ model }) => String(model?.is_root) === "1"`)
+- `_validate_share_pct_total()`: sum of all non-root active entities in same branch must not exceed 100%
+- `_validate_no_parent_cycle()`: prevents circular parent_entity chains (max 50 levels)
+- Server cache: after editing `at.py` or service files, run `bench --site at.localhost clear-cache` AND delete `__pycache__` dirs from both WSL and Windows paths
+
+### Session State Architecture (⚠️ critical)
+
+Two `session.js` files exist — they must share the same reactive state:
+- `frontend/src/platform/state/session.js` — canonical, sets office_branches from API
+- `frontend/src/state/session.js` — **re-exports** from platform version (do NOT create independent state)
+- `frontend/src/platform/state/branchStore.js` imports from `./session` (not `../state/session`)
+- If branch dropdowns are empty, check: (1) `at.py` includes `office_branches` in boot, (2) server restarted after file change, (3) `hydrateSessionState()` call completed before `branchStore.hydrateFromSession()`
 
 ## Preference Order For Changes
 
