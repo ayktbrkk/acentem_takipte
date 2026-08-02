@@ -10,6 +10,7 @@ from frappe.utils import cint, flt, getdate, nowdate
 from acentem_takipte.acentem_takipte.domains.accounting.services.runtime import (
     COMMISSION_DUE_DAYS,
 )
+from acentem_takipte.acentem_takipte.utils.statuses import ATPolicyStatus
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ def compute_commission_balances(
     bucket_ic_policy_count: dict[tuple, int] = {}
 
     policy_filters = {
-        "status": ["in", ["Active", "Record"]],
+        "status": ["in", list(ATPolicyStatus.COMMISSION_ACCRUAL)],
         "commission_amount": [">", 0],
     }
     if from_date and to_date:
@@ -346,7 +347,7 @@ def compute_entity_detail(entity_name: str, limit: int = 50) -> dict:
     # Policies where this entity appears in commission_distribution
     policies = frappe.get_all(
         "AT Policy",
-        filters={"status": ["in", ["Active", "Record"]], "commission_amount": [">", 0]},
+        filters={"status": ["in", list(ATPolicyStatus.COMMISSION_ACCRUAL)], "commission_amount": [">", 0]},
         fields=["name", "policy_no", "customer", "issue_date", "commission_distribution"],
         limit_page_length=0,
     )
@@ -430,7 +431,7 @@ def compute_commission_policy_detail(
     doc_name = _resolve_entity_doc_name(display_name)
 
     policy_filters = {
-        "status": ["in", ["Active", "Record"]],
+        "status": ["in", list(ATPolicyStatus.COMMISSION_ACCRUAL)],
         "commission_amount": [">", 0],
     }
     if from_date and to_date:

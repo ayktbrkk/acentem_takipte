@@ -6,8 +6,10 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, cint, getdate, nowdate
 
+from acentem_takipte.acentem_takipte.utils.statuses import ATPolicyStatus
 
-ACTIVE_POLICY_STATUSES = ("Active", "Renewal")
+
+ACTIVE_POLICY_STATUSES = tuple(ATPolicyStatus.COMMISSION_ACCRUAL)
 OPEN_RENEWAL_STATUSES = ("Open", "In Progress")
 
 

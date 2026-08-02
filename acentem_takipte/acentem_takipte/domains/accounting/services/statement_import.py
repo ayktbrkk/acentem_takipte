@@ -8,6 +8,8 @@ from typing import Any
 import frappe
 from frappe.utils import flt
 
+from acentem_takipte.acentem_takipte.utils.statuses import ATPolicyStatus
+
 
 def build_statement_import_preview(
     *,
@@ -397,7 +399,7 @@ def generate_missing_external_for_commission_statement(
     }
 
     policy_filters: dict[str, Any] = {
-        "status": ["in", ["Active", "Record"]],
+        "status": ["in", list(ATPolicyStatus.COMMISSION_ACCRUAL)],
         "commission_amount": [">", 0],
     }
     if insurance_company:

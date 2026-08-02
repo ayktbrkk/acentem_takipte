@@ -6,6 +6,8 @@ from typing import Any
 import frappe
 from frappe.utils import cint, flt, getdate, today
 
+from acentem_takipte.acentem_takipte.utils.statuses import ATPolicyStatus
+
 
 SNAPSHOT_SOURCE_VERSION = "v1"
 
@@ -246,7 +248,7 @@ def _collect_customer_segment_metrics(customer_name: str) -> dict[str, Any]:
     )
     total_policy_count = len(policies)
     active_policy_count = sum(
-        1 for row in policies if (row.status or "") in {"Active", "Renewal"}
+        1 for row in policies if (row.status or "") in ATPolicyStatus.COMMISSION_ACCRUAL
     )
     cancelled_policy_count = sum(
         1 for row in policies if (row.status or "") == "Cancelled"

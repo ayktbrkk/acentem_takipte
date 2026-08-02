@@ -34,6 +34,10 @@ class ATPolicyStatus:
 
     VALID = frozenset({PENDING, RECORD, ACTIVE, CANCELLED, ARCHIVED})
 
+    # Policies whose commission accrual is counted for commission balances,
+    # reconciliation workbench previews, and statement reconciliation.
+    COMMISSION_ACCRUAL = (RECORD, ACTIVE)
+
 
 class ATPaymentStatus:
     DRAFT = "Draft"

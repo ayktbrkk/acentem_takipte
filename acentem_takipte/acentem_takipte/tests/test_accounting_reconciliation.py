@@ -12,6 +12,9 @@ from acentem_takipte.acentem_takipte.accounting import (
     run_reconciliation,
     sync_accounting_entry,
 )
+from acentem_takipte.acentem_takipte.domains.accounting.services.runtime import (
+    build_reconciliation_workbench,
+)
 
 
 class TestAccountingReconciliation(IntegrationTestCase):
@@ -135,6 +138,95 @@ class TestAccountingReconciliation(IntegrationTestCase):
 
         rec_doc = frappe.get_doc("AT Reconciliation Item", rec_name)
         self.assertEqual(rec_doc.status, "Resolved")
+
+    def test_commission_accrual_preview_counts_record_and_active_policies(self):
+        """The reconciliation workbench commission accrual/aging/by-entity must use
+        the same policy status set as the commissions balances page (Active + Record).
+        The old 'Renewal'/'Pending Renewal' statuses do not exist on AT Policy and
+        silently dropped Record policies from the workbench preview."""
+        from acentem_takipte.acentem_takipte.tests.test_utils import ensure_test_office_branch
+
+        suffix = frappe.generate_hash(length=8)
+        insurance_company = frappe.get_doc(
+            {
+                "doctype": "AT Insurance Company",
+                "company_name": f"Workbench Insurance {suffix}",
+                "company_code": f"WI{suffix[:4]}",
+            }
+        ).insert(ignore_permissions=True)
+
+        branch = frappe.get_doc(
+            {
+                "doctype": "AT Branch",
+                "branch_name": f"Workbench Branch {suffix}",
+                "branch_code": f"WB{suffix[:4]}",
+                "insurance_company": insurance_company.name,
+            }
+        ).insert(ignore_permissions=True)
+
+        office_branch = ensure_test_office_branch(suffix)
+
+        sales_entity = frappe.get_doc(
+            {
+                "doctype": "AT Sales Entity",
+                "entity_type": "Agency",
+                "full_name": f"Workbench Agency {suffix}",
+                "office_branch": office_branch,
+            }
+        ).insert(ignore_permissions=True)
+
+        customer = frappe.get_doc(
+            {
+                "doctype": "AT Customer",
+                "tax_id": _random_tax_id(),
+                "full_name": f"Workbench Customer {suffix}",
+                "phone": "05559876543",
+                "email": f"wb.{suffix}@example.com",
+                "assigned_agent": "Administrator",
+            }
+        ).insert(ignore_permissions=True)
+
+        policy_kwargs = {
+            "customer": customer.name,
+            "sales_entity": sales_entity.name,
+            "insurance_company": insurance_company.name,
+            "branch": branch.name,
+            "office_branch": office_branch,
+            "issue_date": nowdate(),
+            "start_date": nowdate(),
+            "end_date": add_days(nowdate(), 365),
+            "currency": "TRY",
+            "net_premium": 1000,
+            "tax_amount": 120,
+        }
+
+        active_policy = frappe.get_doc(
+            {"doctype": "AT Policy", "status": "Active", "commission_amount": 150, **policy_kwargs}
+        ).insert(ignore_permissions=True)
+        record_policy = frappe.get_doc(
+            {"doctype": "AT Policy", "status": "Record", "commission_amount": 200, **policy_kwargs}
+        ).insert(ignore_permissions=True)
+
+        for policy_name in (active_policy.name, record_policy.name):
+            self.assertEqual(
+                sync_accounting_entry("AT Policy", policy_name, force=True).get("status"),
+                "Synced",
+            )
+
+        result = build_reconciliation_workbench(office_branch=office_branch)
+        metrics = result["metrics"]
+
+        self.assertEqual(metrics["commission_accrual_count"], 2)
+        self.assertEqual(round(metrics["commission_accrual_amount_try"], 2), 350.0)
+
+        aging = result["commission_preview"]["aging"]
+        self.assertEqual(aging["total_count"], 2)
+        self.assertEqual(round(aging["total_amount"], 2), 350.0)
+
+        by_entity_total = round(
+            sum(row["total_amount"] for row in result["commission_preview"]["by_entity"]), 2
+        )
+        self.assertEqual(by_entity_total, 350.0)
 
 
 def _create_dependencies() -> dict[str, str]:

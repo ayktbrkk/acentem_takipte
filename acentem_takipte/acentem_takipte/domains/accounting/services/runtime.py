@@ -11,6 +11,7 @@ from acentem_takipte.acentem_takipte.platform.permissions.branches import (
 )
 from acentem_takipte.acentem_takipte.utils.statuses import (
     ATAccountingEntryStatus,
+    ATPolicyStatus,
     ATReconciliationItemStatus,
 )
 
@@ -249,7 +250,7 @@ def _get_overdue_collection_rows(office_branch: str | None, limit: int = 50, pag
 
 def _get_commission_accrual_rows(office_branch: str | None, limit: int = 50, page: int = 1) -> list[dict]:
     policy_filters: dict[str, Any] = {
-        "status": ["in", ["Active", "Renewal", "Pending Renewal"]],
+        "status": ["in", list(ATPolicyStatus.COMMISSION_ACCRUAL)],
         "commission_amount": [">", 0],
     }
     if office_branch:
@@ -284,7 +285,7 @@ def _get_commission_accrual_rows(office_branch: str | None, limit: int = 50, pag
 
 def _compute_commission_aging(office_branch: str | None) -> dict:
     policy_filters: dict[str, Any] = {
-        "status": ["in", ["Active", "Renewal", "Pending Renewal"]],
+        "status": ["in", list(ATPolicyStatus.COMMISSION_ACCRUAL)],
         "commission_amount": [">", 0],
     }
     if office_branch:
@@ -338,7 +339,7 @@ def _compute_commission_aging(office_branch: str | None) -> dict:
 
 def _compute_commission_by_entity(office_branch: str | None) -> list[dict]:
     policy_filters: dict[str, Any] = {
-        "status": ["in", ["Active", "Renewal", "Pending Renewal"]],
+        "status": ["in", list(ATPolicyStatus.COMMISSION_ACCRUAL)],
         "commission_amount": [">", 0],
     }
     if office_branch:
