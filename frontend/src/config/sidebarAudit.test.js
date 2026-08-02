@@ -17,13 +17,13 @@ function readSource(relativePath) {
 }
 
 function extractSidebarLinks() {
-  const source = readSource("composables/useSidebarNavigation.js");
+  const source = readSource("platform/composables/useSidebarNavigation.js");
   return Array.from(source.matchAll(/\{\s*key:\s*"([^"]+)"[\s\S]*?to:\s*"([^"]+)"/g))
     .map(([, key, to]) => ({ key, to }));
 }
 
 function extractRouterPaths() {
-  const source = readSource("router/index.js");
+  const source = readSource("platform/router/index.js");
   const directPaths = Array.from(source.matchAll(/path:\s*"([^"]+)"/g)).map(([, path]) => path);
   const auxPaths = AUX_WORKBENCH_ROUTE_DEFS.flatMap((def) => [def.listPath, def.detailPath]);
   return new Set([...directPaths, ...auxPaths]);
