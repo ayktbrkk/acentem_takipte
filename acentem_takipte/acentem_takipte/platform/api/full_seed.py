@@ -25,10 +25,11 @@ from frappe.utils import add_days, add_months, cint, flt, getdate, now, nowdate
 
 
 def _guard_dev():
+    from frappe import _
     if not frappe.conf.developer_mode:
         frappe.throw(
-            "Seed operations require developer_mode. Set developer_mode=1 in site_config.json.",
-            title="Developer Mode Required",
+            _("Seed operations require developer_mode. Set developer_mode=1 in site_config.json."),
+            title=_("Developer Mode Required"),
         )
 
 

@@ -515,7 +515,7 @@ def _policy_renewal_notification_exists_today(policy_name: str, business_date) -
 def enqueue_data_import_job(job_name: str) -> dict[str, Any]:
     safe_job_name = str(job_name or "").strip()
     if not safe_job_name:
-        frappe.throw("Import job name is required.")
+        frappe.throw(frappe._("Import job name is required."))
 
     requested_by = frappe.db.get_value("AT Data Import Job", safe_job_name, "requested_by") or frappe.session.user
     job = frappe.enqueue(

@@ -29,9 +29,13 @@ ALLOWED_TURKISH_FILES = {
     "frontend/src/config/**/*.js",
     "frontend/src/composables/**/*.js",
     # Backend modules that intentionally normalize or expose bilingual domain labels.
-    "acentem_takipte/acentem_takipte/api/documents.py",
+    "acentem_takipte/acentem_takipte/platform/api/documents.py",
+    "acentem_takipte/acentem_takipte/domains/reports/services/registry.py",
     "acentem_takipte/acentem_takipte/patches/v2026_04_22_document_sub_type_english_values.py",
     "acentem_takipte/acentem_takipte/services/report_registry.py",
+    # Dev-only seed scripts and backend tests may hold Turkish comments/fixtures.
+    "acentem_takipte/acentem_takipte/scripts/*",
+    "acentem_takipte/acentem_takipte/tests/*",
 }
 
 SCAN_EXTENSIONS = (".py", ".js", ".vue", ".json", ".ts", ".tsx", ".jinja", ".html")
