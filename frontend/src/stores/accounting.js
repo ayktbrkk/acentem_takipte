@@ -11,7 +11,7 @@ function createAccountingInitialState() {
       mismatchType: "",
       sourceQuery: "",
       sourceDoctype: "",
-      limit: 50,
+      limit: 200,
     },
   };
 }
@@ -54,7 +54,7 @@ export const useAccountingStore = defineStore("accounting", () => {
     if (state.filters.mismatchType) count += 1;
     if (state.filters.sourceQuery) count += 1;
     if (state.filters.sourceDoctype) count += 1;
-    if (Number(state.filters.limit) !== 50) count += 1;
+    if (Number(state.filters.limit) !== 200) count += 1;
     return count;
   });
   const sourceDoctypeOptions = computed(() => {
