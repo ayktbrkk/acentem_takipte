@@ -24,12 +24,15 @@ def build_reconciliation_workbench(
     mismatch_type: str | None = None,
     office_branch: str | None = None,
     limit: int = 100,
+    page: int = 1,
     commission_limit: int = 50,
     commission_page: int = 1,
     collection_limit: int = 50,
     collection_page: int = 1,
 ) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
+    safe_page = max(cint(page), 1)
+    limit_start = max(0, (safe_page - 1) * safe_limit)
     filters = {}
     if status:
         filters["status"] = status
@@ -58,6 +61,8 @@ def build_reconciliation_workbench(
             }
         filters["accounting_entry"] = ["in", list(set(permitted_entry_names))]
 
+    total_rows = frappe.db.count("AT Reconciliation Item", filters)
+
     rows = frappe.get_all(
         "AT Reconciliation Item",
         filters=filters,
@@ -79,6 +84,7 @@ def build_reconciliation_workbench(
         ],
         order_by="modified desc",
         limit_page_length=safe_limit,
+        limit_start=limit_start,
     )
 
     entry_map = {}
@@ -164,6 +170,11 @@ def build_reconciliation_workbench(
 
     return {
         "rows": rows,
+        "total_rows": total_rows,
+        "pagination": {
+            "limit": safe_limit,
+            "page": safe_page,
+        },
         "metrics": metrics,
         "collection_preview": {
             "overdue_rows": overdue_payment_rows,

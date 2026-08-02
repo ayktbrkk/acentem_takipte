@@ -324,6 +324,23 @@ class TestAccountingReconciliation(IntegrationTestCase):
         self.assertEqual(result["buckets"]["current"], 100.0)
         self.assertEqual(result["buckets"]["90_plus"], 0.0)
 
+    @patch("frappe.db.count", return_value=0)
+    @patch("frappe.get_all", return_value=[])
+    def test_workbench_main_list_applies_pagination(self, mock_get_all, mock_db_count):
+        """The reconciliation item main list must support backend pagination so
+        the workbench is not hard-capped at the default limit."""
+        build_reconciliation_workbench(limit=10, page=2)
+
+        main_calls = [
+            call
+            for call in mock_get_all.call_args_list
+            if call.args and call.args[0] == "AT Reconciliation Item"
+        ]
+        self.assertTrue(main_calls)
+        main_call = main_calls[0]
+        self.assertEqual(main_call.kwargs.get("limit_page_length"), 10)
+        self.assertEqual(main_call.kwargs.get("limit_start"), 10)
+
 
 def _create_policy(deps: dict[str, str], *, status: str, commission_amount: float):
     return frappe.get_doc(

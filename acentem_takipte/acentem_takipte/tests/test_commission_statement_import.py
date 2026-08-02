@@ -231,6 +231,18 @@ class TestCommissionStatementImport(FrappeTestCase):
         assert "total_external_commission_try" not in result["summary"]
         assert "total_amount_try" in result["summary"]
 
+    def test_commission_statement_payload_includes_sales_entity(self):
+        from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
+            _build_commission_statement_payload,
+        )
+        policy = _make_policy("AT-POL-2026-000001", "34567890", 1000)
+        policy["sales_entity"] = "AT-ENT-2026-00001"
+        row = {"external_ref": "DEC-001", "amount_try": 1000}
+
+        payload = _build_commission_statement_payload(row, policy)
+
+        assert payload["sales_entity"] == "AT-ENT-2026-00001"
+
 
 class TestCommissionStatementEndpoint(FrappeTestCase):
     def test_endpoint_accepts_params(self):
@@ -246,6 +258,43 @@ class TestCommissionStatementEndpoint(FrappeTestCase):
         assert "rows" in result
         assert "summary" in result
         assert "total_rows" in result["summary"]
+
+    def test_lock_commission_period_rejects_start_after_end(self):
+        """Locking a commission period with start > end must fail fast."""
+        from acentem_takipte.acentem_takipte.domains.commissions.api.endpoints import (
+            lock_commission_period,
+        )
+
+        previous_user = frappe.session.user
+        frappe.session.user = "Administrator"
+        try:
+            with self.assertRaises(Exception):
+                lock_commission_period(
+                    insurance_company="AT-IC-2026-00001",
+                    period_start="2026-02-01",
+                    period_end="2026-01-01",
+                )
+        finally:
+            frappe.session.user = previous_user
+
+    def test_lock_commission_period_rejects_blank_dates(self):
+        """Locking a commission period with blank dates must fail fast instead
+        of persisting a locked period with no range."""
+        from acentem_takipte.acentem_takipte.domains.commissions.api.endpoints import (
+            lock_commission_period,
+        )
+
+        previous_user = frappe.session.user
+        frappe.session.user = "Administrator"
+        try:
+            with self.assertRaises(Exception):
+                lock_commission_period(
+                    insurance_company="AT-IC-2026-00001",
+                    period_start="",
+                    period_end="",
+                )
+        finally:
+            frappe.session.user = previous_user
 
     def test_commission_statement_import_requires_accounting_admin_role(self):
         """Commission statement import is an accounting mutation: a user who is
