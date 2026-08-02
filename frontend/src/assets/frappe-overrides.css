@@ -7,10 +7,10 @@
   height: 36px !important;
   padding: 0 10px !important;
   font-size: 13px !important;
-  border: 0.5px solid #E5E7EB !important;
+  border: 0.5px solid #E2E8F0 !important;
   border-radius: 7px !important;
   background: #fff !important;
-  color: #111827 !important;
+  color: #0F172A !important;
   box-shadow: none !important;
   transition: border-color 0.15s !important;
 }
@@ -34,7 +34,7 @@
 .control-label {
   font-size: 10.5px !important;
   font-weight: 500 !important;
-  color: #9CA3AF !important;
+  color: #94A3B8 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   margin-bottom: 5px !important;
@@ -44,9 +44,9 @@
 .form-section .section-head {
   font-size: 12px !important;
   font-weight: 500 !important;
-  color: #374151 !important;
+  color: #334155 !important;
   padding: 10px 0 8px !important;
-  border-bottom: 0.5px solid #F3F4F6 !important;
+  border-bottom: 0.5px solid #F1F5F9 !important;
   margin-bottom: 12px !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
@@ -55,20 +55,20 @@
 .frappe-control input:disabled,
 .frappe-control textarea:disabled,
 .frappe-control select:disabled {
-  background: #F9FAFB !important;
-  color: #9CA3AF !important;
+  background: #F8FAFC !important;
+  color: #94A3B8 !important;
   cursor: not-allowed !important;
 }
 
 .frappe-control.has-error input,
 .frappe-control.has-error textarea,
 .frappe-control.has-error select {
-  border-color: #E24B4A !important;
+  border-color: #EF4444 !important;
 }
 
 .frappe-control .help-box.small.text-muted {
   font-size: 11px !important;
-  color: #9CA3AF !important;
+  color: #94A3B8 !important;
   margin-top: 3px !important;
 }
 
@@ -79,7 +79,7 @@
 .frappe-control .like-disabled-input,
 .control-value {
   font-size: 13px !important;
-  color: #111827 !important;
+  color: #0F172A !important;
   padding: 0 !important;
   min-height: unset !important;
 }
@@ -91,7 +91,14 @@
 .frappe-control .grid-heading-row .grid-static-col {
   font-size: 10.5px !important;
   font-weight: 500 !important;
-  color: #9CA3AF !important;
+  color: #94A3B8 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
+}
+
+/* Design-system font: enforce DM Sans over frappe-ui's Inter default. */
+body,
+#app,
+.at-shell-content {
+  font-family: "DM Sans", "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif !important;
 }

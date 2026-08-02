@@ -17,6 +17,7 @@
 
   body {
     @apply min-h-screen bg-slate-50 text-slate-900 antialiased;
+    font-family: "DM Sans", "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     background-image: 
       radial-gradient(circle at 0% 0%, #ebf3ff 0%, transparent 40%),
       radial-gradient(circle at 100% 100%, #f0fdfa 0%, transparent 40%),
@@ -70,7 +71,7 @@
   }
 
   .at-hero-tag {
-    @apply text-xs font-semibold uppercase tracking-[0.22em] text-emerald-100/90;
+    @apply text-xs font-semibold uppercase tracking-[0.22em] text-brand-100/90;
   }
 
   .at-hero-title {
@@ -82,7 +83,7 @@
   }
 
   .at-hero-meta {
-    @apply text-xs text-emerald-100/90;
+    @apply text-xs text-brand-100/90;
   }
 
   .at-page-toolbar {
@@ -192,39 +193,39 @@
   }
 
   .qc-error-banner {
-    @apply rounded-2xl border border-amber-200/60 px-4 py-3 bg-white/80 backdrop-blur-sm shadow-sm;
+    @apply rounded-2xl border border-at-amber/30 px-4 py-3 bg-white/80 backdrop-blur-sm shadow-sm;
     background: linear-gradient(to bottom right, rgba(255, 251, 235, 0.9), rgba(255, 247, 237, 0.8));
   }
 
   .qc-error-banner__text {
-    @apply text-sm font-medium leading-6 text-amber-800;
+    @apply text-sm font-medium leading-6 text-at-amber;
   }
 
   .qc-success-banner {
-    @apply rounded-2xl border border-emerald-200/60 px-4 py-3 bg-white/80 backdrop-blur-sm shadow-sm;
+    @apply rounded-2xl border border-at-green/30 px-4 py-3 bg-white/80 backdrop-blur-sm shadow-sm;
     background: linear-gradient(to bottom right, rgba(236, 253, 245, 0.9), rgba(240, 253, 250, 0.8));
   }
 
   .qc-success-banner__text {
-    @apply text-sm font-medium leading-6 text-emerald-700;
+    @apply text-sm font-medium leading-6 text-status-active-text;
   }
 
   .qc-inline-error {
-    @apply text-xs font-medium leading-5 text-amber-700;
+    @apply text-xs font-medium leading-5 text-at-amber;
   }
 
   .qc-warning-banner {
-    @apply rounded-xl border border-amber-200/80 px-3.5 py-2.5;
+    @apply rounded-xl border border-at-amber/30 px-3.5 py-2.5;
     background: linear-gradient(180deg, rgba(255, 251, 235, 0.98), rgba(255, 247, 237, 0.95));
     box-shadow: 0 12px 28px -22px rgba(217, 119, 6, 0.5);
   }
 
   .qc-warning-banner__text {
-    @apply text-sm font-medium leading-6 text-amber-800;
+    @apply text-sm font-medium leading-6 text-at-amber;
   }
 
   .qc-warning-card {
-    @apply rounded-2xl border border-amber-200/50 px-4 py-4 bg-white/90 shadow-sm transition-all hover:shadow-md;
+    @apply rounded-2xl border border-at-amber/30 px-4 py-4 bg-white/90 shadow-sm transition-all hover:shadow-md;
     background: linear-gradient(to bottom right, rgba(255, 251, 235, 0.95), rgba(255, 247, 237, 0.9));
   }
 
@@ -233,11 +234,11 @@
   }
 
   .qc-danger-button {
-    @apply rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 transition disabled:cursor-not-allowed disabled:opacity-60;
+    @apply rounded-lg border border-at-amber/30 bg-status-waiting-bg px-2.5 py-1.5 text-xs font-semibold text-at-amber transition disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .qc-danger-button:hover {
-    @apply border-amber-300 bg-amber-100 text-amber-900;
+    @apply border-at-amber bg-status-waiting-bg text-at-amber;
   }
 
   .qc-managed-dialog-shell {
@@ -256,7 +257,7 @@
   }
 
   .qc-managed-dialog__eyebrow {
-    @apply mb-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-200/90;
+    @apply mb-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-brand-200/90;
   }
 
   .qc-managed-dialog__title {
@@ -340,7 +341,7 @@
   }
 
   .at-tab-chip-active {
-    @apply border-gray-900 bg-gray-900 text-white shadow-sm;
+    @apply border-slate-900 bg-slate-900 text-white shadow-sm;
   }
 
   .at-tab-chip-idle {
@@ -390,19 +391,19 @@
   }
 
   .badge-blue {
-    @apply bg-blue-50 text-blue-700 ring-blue-700/10;
+    @apply bg-brand-50 text-brand-700 ring-brand-700/10;
   }
 
   .badge-emerald {
-    @apply bg-emerald-50 text-emerald-700 ring-emerald-700/10;
+    @apply bg-status-active-bg text-status-active-text ring-status-active-text/10;
   }
 
   .badge-amber {
-    @apply bg-amber-50 text-amber-700 ring-amber-700/10;
+    @apply bg-status-waiting-bg text-at-amber ring-status-waiting-text/10;
   }
 
   .badge-rose {
-    @apply bg-rose-50 text-rose-700 ring-rose-700/10;
+    @apply bg-status-cancel-bg text-status-cancel-text ring-status-cancel-text/10;
   }
 
   .at-input {

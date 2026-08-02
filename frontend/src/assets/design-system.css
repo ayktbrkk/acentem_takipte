@@ -1,17 +1,17 @@
   .page-shell {
-    @apply flex min-h-screen flex-col bg-gray-50;
+    @apply flex min-h-screen flex-col bg-slate-50;
   }
 
   .detail-topbar {
-    @apply flex items-start justify-between border-b border-gray-200 bg-white px-5 py-4;
+    @apply flex items-start justify-between border-b border-slate-200 bg-white px-5 py-4;
   }
 
   .detail-breadcrumb {
-    @apply mb-2 text-xs text-gray-500;
+    @apply mb-2 text-xs text-slate-500;
   }
 
   .detail-title {
-    @apply flex items-center gap-2.5 text-xl font-medium text-gray-900;
+    @apply flex items-center gap-2.5 text-xl font-medium text-slate-900;
   }
 
   .detail-subtitle {
@@ -20,7 +20,7 @@
 
 
   .hero-strip {
-    @apply grid divide-x divide-gray-200 border-b border-gray-200 bg-white;
+    @apply grid divide-x divide-slate-200 border-b border-slate-200 bg-white;
   }
 
   .hero-cell {
@@ -28,17 +28,17 @@
   }
 
   .hero-label {
-    @apply mb-1 text-2xs font-medium uppercase tracking-wider text-gray-400;
+    @apply mb-1 text-2xs font-medium uppercase tracking-wider text-slate-400;
   }
 
   .hero-value {
-    @apply text-sm font-medium text-gray-900;
+    @apply text-sm font-medium text-slate-900;
     line-height: 1.5;
     margin-bottom: 0.5rem;
   }
 
   .hero-value-lg {
-    @apply text-xl font-medium text-gray-900;
+    @apply text-xl font-medium text-slate-900;
     line-height: 1.5;
     margin-bottom: 0.75rem;
   }
@@ -52,15 +52,15 @@
   }
 
   .nav-tabs-bar {
-    @apply flex border-b border-gray-200 bg-white px-5;
+    @apply flex border-b border-slate-200 bg-white px-5;
   }
 
   .nav-tab {
-    @apply cursor-pointer whitespace-nowrap border-b-2 border-transparent px-3.5 py-2.5 text-sm text-gray-500 transition-all duration-150;
+    @apply cursor-pointer whitespace-nowrap border-b-2 border-transparent px-3.5 py-2.5 text-sm text-slate-500 transition-all duration-150;
   }
 
   .nav-tab:hover {
-    @apply text-gray-900;
+    @apply text-slate-900;
   }
 
   .nav-tab.is-active {
@@ -76,11 +76,11 @@
   }
 
   .detail-sidebar {
-    @apply flex shrink-0 flex-col gap-3.5 border-l border-gray-200 bg-white p-5 xl:w-80 sticky top-24 self-start;
+    @apply flex shrink-0 flex-col gap-3.5 border-l border-slate-200 bg-white p-5 xl:w-80 sticky top-24 self-start;
   }
 
   .card {
-    @apply overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm;
+    @apply overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm;
   }
 
   .policy-equal-card {
@@ -89,7 +89,7 @@
     min-height: 22rem;
     height: 100%;
     border-radius: 0.75rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #e2e8f0;
     background: white;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
@@ -99,8 +99,8 @@
   }
 
   .hero-value-pill-success {
-    background: #e6fffa;
-    color: #2c7a7b;
+    background: #ecfdf5;
+    color: #065f46;
   }
 
   .hero-value-pill-waiting {
@@ -112,11 +112,11 @@
   }
 
   .card-head {
-    @apply flex items-center justify-between border-b border-gray-100 px-4 py-2.5;
+    @apply flex items-center justify-between border-b border-slate-100 px-4 py-2.5;
   }
 
   .card-title {
-    @apply text-sm font-medium text-gray-800;
+    @apply text-sm font-medium text-slate-800;
   }
 
   .card-body {
@@ -124,7 +124,7 @@
   }
 
   .card-empty {
-    @apply py-5 text-center text-sm text-gray-400;
+    @apply py-5 text-center text-sm text-slate-400;
   }
 
   .field-label {
@@ -152,11 +152,11 @@
   }
 
   .field-value-success {
-    @apply text-sm font-medium text-green-700;
+    @apply text-sm font-medium text-status-active-text;
   }
 
   .copy-tag {
-    @apply inline-flex cursor-pointer items-center gap-1.5 rounded border border-gray-200 bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-500 transition-colors hover:border-gray-400;
+    @apply inline-flex cursor-pointer items-center gap-1.5 rounded border border-slate-200 bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-500 transition-colors hover:border-slate-400;
   }
 
   .qc-accent-label {
@@ -224,7 +224,7 @@
   }
 
   .badge-green {
-    @apply bg-green-50 text-green-700;
+    @apply bg-status-active-bg text-status-active-text;
   }
 
   .badge-amber {
@@ -236,11 +236,11 @@
   }
 
   .badge-gray {
-    @apply bg-gray-100 text-gray-500;
+    @apply bg-slate-100 text-slate-500;
   }
 
   .btn {
-    @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-transparent px-3 py-1.5 text-sm text-gray-700 transition-all duration-150 hover:bg-gray-50 active:scale-95;
+    @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-transparent px-3 py-1.5 text-sm text-slate-700 transition-all duration-150 hover:bg-slate-50 active:scale-95;
   }
 
   .btn-sm {
@@ -252,7 +252,7 @@
   }
 
   .btn-outline {
-    @apply border-gray-200 bg-transparent text-gray-700 hover:bg-gray-50;
+    @apply border-slate-200 bg-transparent text-slate-700 hover:bg-slate-50;
   }
 
   .btn-full {
@@ -260,19 +260,19 @@
   }
 
   .divider {
-    @apply my-3 h-px bg-gray-100;
+    @apply my-3 h-px bg-slate-100;
   }
 
   .mini-metric {
-    @apply rounded-xl bg-gray-50 p-3 shadow-sm;
+    @apply rounded-xl bg-slate-50 p-3 shadow-sm;
   }
 
   .mini-metric-label {
-    @apply mb-1 text-2xs text-gray-400;
+    @apply mb-1 text-2xs text-slate-400;
   }
 
   .mini-metric-value {
-    @apply text-base font-medium text-gray-900;
+    @apply text-base font-medium text-slate-900;
   }
 
   .report-chip {
@@ -317,7 +317,7 @@
   }
 
   .form-header {
-    @apply flex items-center justify-between border-b border-gray-200 p-6;
+    @apply flex items-center justify-between border-b border-slate-200 p-6;
   }
 
   .form-section {
@@ -325,7 +325,7 @@
   }
 
   .form-section-title {
-    @apply mb-4 text-base font-semibold text-gray-900;
+    @apply mb-4 text-base font-semibold text-slate-900;
   }
 
   .form-grid {
@@ -337,28 +337,28 @@
   }
 
   .form-label {
-    @apply block text-sm font-medium text-gray-700;
+    @apply block text-sm font-medium text-slate-700;
   }
 
   .form-label.required::after {
     content: "*";
-    @apply ml-1 text-amber-500;
+    @apply ml-1 text-at-amber;
   }
 
   .form-input {
-    @apply w-full rounded-md border border-gray-300 px-3 py-2 focus:border-brand-500 focus:ring-2 focus:ring-brand-500;
+    @apply w-full rounded-md border border-slate-300 px-3 py-2 focus:border-brand-500 focus:ring-2 focus:ring-brand-500;
   }
 
   .form-input.error {
-    @apply border-amber-300 focus:border-amber-500 focus:ring-amber-500;
+    @apply border-at-amber focus:border-at-amber focus:ring-at-amber;
   }
 
   .form-error {
-    @apply mt-1 text-sm text-amber-700;
+    @apply mt-1 text-sm text-at-amber;
   }
 
   .form-footer {
-    @apply flex justify-end gap-3 border-t bg-gray-50 px-6 py-4;
+    @apply flex justify-end gap-3 border-t bg-slate-50 px-6 py-4;
   }
 
   .stepbar {
@@ -366,7 +366,7 @@
   }
 
   .step-item {
-    @apply flex items-center gap-1.5 text-xs text-gray-400;
+    @apply flex items-center gap-1.5 text-xs text-slate-400;
   }
 
   .step-item.done {
@@ -390,11 +390,11 @@
   }
 
   .step-item.pending .step-circle {
-    @apply border-gray-300 bg-white text-gray-400;
+    @apply border-slate-300 bg-white text-slate-400;
   }
 
   .step-line {
-    @apply h-px min-w-[14px] flex-1 bg-gray-200;
+    @apply h-px min-w-[14px] flex-1 bg-slate-200;
   }
 
   .step-line.done {
@@ -402,11 +402,11 @@
   }
 
   .timeline-item {
-    @apply flex gap-3 border-b border-gray-100 py-2.5 last:border-0;
+    @apply flex gap-3 border-b border-slate-100 py-2.5 last:border-0;
   }
 
   .tl-dot {
-    @apply mt-1 h-2 w-2 shrink-0 rounded-full bg-gray-300;
+    @apply mt-1 h-2 w-2 shrink-0 rounded-full bg-slate-300;
   }
 
   .tl-dot-active {
@@ -418,15 +418,15 @@
   }
 
   .tl-dot-draft {
-    @apply bg-gray-400;
+    @apply bg-slate-400;
   }
 
   .tl-text {
-    @apply text-sm leading-snug text-gray-800;
+    @apply text-sm leading-snug text-slate-800;
   }
 
   .tl-time {
-    @apply mt-0.5 text-xs text-gray-400;
+    @apply mt-0.5 text-xs text-slate-400;
   }
 
   .avatar {
@@ -450,7 +450,7 @@
   }
 
   .section-title {
-    @apply mb-2.5 text-sm font-medium text-gray-800;
+    @apply mb-2.5 text-sm font-medium text-slate-800;
   }
 
   .urgency-critical {
@@ -458,15 +458,15 @@
   }
 
   .urgency-warning {
-    @apply text-amber-600 font-medium;
+    @apply text-at-amber font-medium;
   }
 
   .urgency-normal {
-    @apply text-gray-700;
+    @apply text-slate-700;
   }
 
   .urgency-safe {
-    @apply text-green-700;
+    @apply text-status-active-text;
   }
 
   .row-critical {
@@ -474,7 +474,11 @@
   }
 
   .row-warning {
-    @apply bg-amber-50 hover:bg-amber-100;
+    @apply bg-status-waiting-bg;
+  }
+
+  .row-warning:hover {
+    @apply bg-status-waiting-bg;
   }
 
   .dialog-overlay {
@@ -482,7 +486,7 @@
   }
 
   .dialog-shell {
-    @apply mt-4 w-full rounded-xl border border-gray-200 bg-white shadow-2xl;
+    @apply mt-4 w-full rounded-xl border border-slate-200 bg-white shadow-2xl;
   }
 
   .dialog-sm {
@@ -502,11 +506,11 @@
   }
 
   .dialog-header {
-    @apply flex items-center justify-between border-b border-gray-200 px-5 py-4;
+    @apply flex items-center justify-between border-b border-slate-200 px-5 py-4;
   }
 
   .dialog-title {
-    @apply text-base font-semibold text-gray-900;
+    @apply text-base font-semibold text-slate-900;
   }
 
   .dialog-body {
@@ -514,7 +518,7 @@
   }
 
   .dialog-footer {
-    @apply flex items-center justify-end gap-2 border-t border-gray-200 bg-gray-50 px-5 py-3;
+    @apply flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3;
   }
 
   /* Quick Create Shell Premium Styles */
@@ -539,11 +543,11 @@
   }
 
   .qc-error-banner {
-    @apply rounded-xl bg-red-50 border border-red-100 p-4 mt-4;
+    @apply rounded-xl bg-status-cancel-bg border border-at-red/30 p-4 mt-4;
   }
 
   .qc-error-banner__text {
-    @apply text-sm font-medium text-red-700;
+    @apply text-sm font-medium text-status-cancel-text;
   }
 
   /* Premium Section Card */
