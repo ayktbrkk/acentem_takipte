@@ -793,6 +793,32 @@ class TestCommissionPolicyDetail(FrappeTestCase):
         assert "policies" in result
         assert result["policies"] == []
 
+    @patch("frappe.db.get_value", return_value=None)
+    @patch("frappe.get_all")
+    def test_policy_detail_batches_customer_and_branch_lookups(self, mock_get_all, mock_db_get_value):
+        """Customer and branch display names must be resolved with batched
+        frappe.get_all queries, not a per-policy frappe.db.get_value (N+1)."""
+        policy = {
+            "name": "POL-1", "policy_no": "P1", "customer": "CUST-1",
+            "insurance_company": "IC-1", "branch": "BR-1", "gross_premium": 100,
+            "issue_date": date(2026, 1, 1),
+            "commission_distribution": json.dumps([{"entity": "ENT-1", "amount_try": 50}]),
+        }
+
+        def get_all_side_effect(doctype, **kwargs):
+            if doctype == "AT Policy":
+                return [policy]
+            return []
+
+        mock_get_all.side_effect = get_all_side_effect
+
+        result = compute_commission_policy_detail("ENT-1")
+
+        self.assertEqual(result["totals"]["policies"], 1)
+        doctypes = [call.args[0] for call in mock_get_all.call_args_list]
+        self.assertIn("AT Customer", doctypes)
+        self.assertIn("AT Branch", doctypes)
+
 
 class TestBranchFilter(FrappeTestCase):
     @patch("frappe.db.get_value")

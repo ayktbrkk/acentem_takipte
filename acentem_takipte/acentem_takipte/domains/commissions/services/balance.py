@@ -352,7 +352,7 @@ def compute_entity_detail(entity_name: str, limit: int = 50) -> dict:
         limit_page_length=0,
     )
 
-    accrued_policies: list[dict] = []
+    matched: list[tuple[dict, float]] = []
     for policy in policies:
         try:
             entries = json.loads(policy.get("commission_distribution") or "[]")
@@ -366,29 +366,46 @@ def compute_entity_detail(entity_name: str, limit: int = 50) -> dict:
             amount_try = flt(entry.get("amount_try") or 0)
             if amount_try <= 0:
                 continue
+            matched.append((policy, amount_try))
+            break
 
-            issue_date = policy.get("issue_date")
-            if issue_date:
-                due_date = issue_date + timedelta(days=COMMISSION_DUE_DAYS)
-                aging_days = (today - due_date).days
-            else:
-                aging_days = 0
+    # Batch customer display-name lookups (avoid N+1)
+    customer_map: dict[str, str] = {}
+    customer_names = {
+        str(policy.get("customer") or "").strip()
+        for policy, _ in matched
+        if str(policy.get("customer") or "").strip()
+    }
+    if customer_names:
+        for row in frappe.get_all(
+            "AT Customer",
+            filters={"name": ["in", list(customer_names)]},
+            fields=["name", "full_name"],
+            limit_page_length=0,
+        ):
+            customer_map[row["name"]] = row.get("full_name") or ""
 
-            customer_name = (
-                frappe.db.get_value("AT Customer", policy.get("customer"), "full_name")
-                or ""
-            )
+    accrued_policies: list[dict] = []
+    for policy, amount_try in matched:
+        issue_date = policy.get("issue_date")
+        if issue_date:
+            due_date = issue_date + timedelta(days=COMMISSION_DUE_DAYS)
+            aging_days = (today - due_date).days
+        else:
+            aging_days = 0
 
-            accrued_policies.append(
-                {
-                    "policy_name": policy["name"],
-                    "policy_no": policy.get("policy_no") or policy["name"],
-                    "customer_name": customer_name,
-                    "commission_amount_try": round(amount_try, 2),
-                    "issue_date": str(issue_date or ""),
-                    "aging_days": aging_days,
-                }
-            )
+        customer_name = customer_map.get(str(policy.get("customer") or "").strip(), "")
+
+        accrued_policies.append(
+            {
+                "policy_name": policy["name"],
+                "policy_no": policy.get("policy_no") or policy["name"],
+                "customer_name": customer_name,
+                "commission_amount_try": round(amount_try, 2),
+                "issue_date": str(issue_date or ""),
+                "aging_days": aging_days,
+            }
+        )
 
     # Payment history for this entity
     payment_rows = frappe.get_all(
@@ -453,6 +470,7 @@ def compute_commission_policy_detail(
 
     policy_list: list[dict] = []
     policy_names: list[str] = []
+    matched: list[tuple[dict, float]] = []
 
     for policy in policies:
         try:
@@ -482,6 +500,40 @@ def compute_commission_policy_detail(
                     continue
 
         policy_names.append(policy["name"])
+        matched.append((policy, amount_try))
+
+    # --- Batch customer / branch display-name lookups (avoid N+1) ------
+    customer_map: dict[str, str] = {}
+    branch_map: dict[str, str] = {}
+    customer_names = {
+        str(policy.get("customer") or "").strip()
+        for policy, _ in matched
+        if str(policy.get("customer") or "").strip()
+    }
+    branch_names = {
+        str(policy.get("branch") or "").strip()
+        for policy, _ in matched
+        if str(policy.get("branch") or "").strip()
+    }
+    if customer_names:
+        for row in frappe.get_all(
+            "AT Customer",
+            filters={"name": ["in", list(customer_names)]},
+            fields=["name", "full_name"],
+            limit_page_length=0,
+        ):
+            customer_map[row["name"]] = row.get("full_name") or ""
+    if branch_names:
+        for row in frappe.get_all(
+            "AT Branch",
+            filters={"name": ["in", list(branch_names)]},
+            fields=["name", "branch_name"],
+            limit_page_length=0,
+        ):
+            branch_map[row["name"]] = row.get("branch_name") or ""
+
+    for policy, amount_try in matched:
+        policy_ic = str(policy.get("insurance_company") or "").strip()
 
         issue_date = policy.get("issue_date")
         if issue_date:
@@ -490,18 +542,9 @@ def compute_commission_policy_detail(
         else:
             aging_days = 0
 
-        customer_name = ""
-        if policy.get("customer"):
-            customer_name = (
-                frappe.db.get_value("AT Customer", policy["customer"], "full_name") or ""
-            )
-
+        customer_name = customer_map.get(str(policy.get("customer") or "").strip(), "")
         ic_display_name = _ic_display_name(policy_ic) if policy_ic else ""
-        branch_display = ""
-        if policy.get("branch"):
-            branch_display = (
-                frappe.db.get_value("AT Branch", policy["branch"], "branch_name") or ""
-            )
+        branch_display = branch_map.get(str(policy.get("branch") or "").strip(), "")
 
         policy_list.append(
             {
