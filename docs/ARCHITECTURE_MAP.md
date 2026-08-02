@@ -397,8 +397,27 @@ Primary backend surfaces:
 
 - `accounting.py`
 - `api/accounting.py`
-- `services/accounting_runtime.py`
-- `doctype/at_payment*`, `at_accounting_entry`, `at_reconciliation_item`
+- `domains/accounting/services/runtime.py`, `statement_import.py`
+- `domains/commissions/services/balance.py`
+- `doctype/at_payment*`, `at_accounting_entry`, `at_reconciliation_item`, `at_commission_period`
+
+Reconciliation data flow (canonical):
+
+- The accounting sync (`sync_accounting_entry`, on doc events + hourly job) writes
+  **local journal data only** (`local_amount*`, `journal_lines`). It never
+  fabricates an external amount or reference.
+- The **external side** comes only from real commission/premium statement imports
+  (`import_commission_statement_rows` / `import_statement_preview_rows`), which
+  populate `external_amount*` and `external_ref`. A later re-sync preserves that
+  real statement data.
+- `run_reconciliation` (02:00 slot) evaluates an entry only when it has real
+  external data: `Status` for failed syncs, `Amount` when the difference exceeds
+  the 0.01 tolerance. `Missing External` items are created exclusively by
+  `generate_missing_external` during a statement import (policies the insurer's
+  statement omitted) and are closed when a later statement includes the policy.
+- Commission balances (`compute_commission_balances`) read accrued
+  `commission_distribution` from `Active`/`Record` policies and subtract
+  `Commission Payout` payments (`ATPolicyStatus.COMMISSION_ACCRUAL`).
 
 ### Communication and outbound operations
 
