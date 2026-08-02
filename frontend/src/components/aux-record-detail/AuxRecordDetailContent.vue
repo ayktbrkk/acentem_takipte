@@ -111,5 +111,7 @@ const tabProxy = computed({
         <pre class="max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">{{ block.value }}</pre>
       </AuxRecordDetailSectionGroup>
     </div>
+
+    <slot name="below-content" />
   </div>
 </template>

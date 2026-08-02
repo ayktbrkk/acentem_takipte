@@ -154,7 +154,15 @@
         :group-items="groupItems"
         :field-label="fieldLabel"
         :t="t"
-      />
+      >
+        <template #below-content>
+          <HierarchyPanel
+            v-if="screenKey === 'sales-entities'"
+            ref="hierarchyPanelRef"
+            :office-branch="doc?.office_branch"
+          />
+        </template>
+      </AuxRecordDetailContent>
 
       <AuxRecordDetailSidebar
         :special-badges="specialBadges"
@@ -164,13 +172,6 @@
         :no-decision-context-text="t('noDecisionContext')"
       />
     </div>
-
-    <HierarchyPanel
-      v-if="screenKey === 'sales-entities'"
-      ref="hierarchyPanelRef"
-      :office-branch="doc?.office_branch"
-      class="px-5 pb-5"
-    />
 
     <AuxRecordDetailQuickEditDialog
       v-model="showQuickEditDialog"
