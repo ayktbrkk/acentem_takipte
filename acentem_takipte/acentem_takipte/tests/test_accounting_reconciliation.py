@@ -242,6 +242,17 @@ class TestAccountingReconciliation(IntegrationTestCase):
         for call in mock_get_all.call_args_list:
             self.assertEqual(call.kwargs.get("limit_page_length"), 0)
 
+    @patch("frappe.get_all")
+    def test_commission_aging_missing_issue_date_buckets_current(self, mock_get_all):
+        """A policy without issue_date must be aged as 'current' (not 90_plus),
+        matching the commissions balances page, so the two screens agree."""
+        mock_get_all.return_value = [{"issue_date": None, "commission_amount": 100}]
+
+        result = _compute_commission_aging(None)
+
+        self.assertEqual(result["buckets"]["current"], 100.0)
+        self.assertEqual(result["buckets"]["90_plus"], 0.0)
+
 
 def _create_dependencies() -> dict[str, str]:
     suffix = frappe.generate_hash(length=8)

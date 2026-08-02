@@ -312,8 +312,9 @@ def _compute_commission_aging(office_branch: str | None) -> dict:
             due_date = add_days(issue_date, COMMISSION_DUE_DAYS)
             days_aging = (today - due_date).days
         else:
-            due_date = add_days(today, -365)
-            days_aging = 365
+            # No issue_date: treat as freshly accrued (current bucket) to stay
+            # consistent with balance.py's commission aging on the balances page.
+            days_aging = 0
 
         if days_aging <= 0:
             buckets["current"] += comm
