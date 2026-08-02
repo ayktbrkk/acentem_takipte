@@ -279,10 +279,10 @@ export function useOfferBoardState({
       (offerListFilters.status ? 1 : 0)
   );
   const lanes = computed(() => [
-    { key: "Draft", label: t("draftLane"), hint: t("draftLaneHint"), borderClass: "border-t-amber-400" },
-    { key: "Sent", label: t("sentLane"), hint: t("sentLaneHint"), borderClass: "border-t-sky-400" },
-    { key: "Accepted", label: t("acceptedLane"), hint: t("acceptedLaneHint"), borderClass: "border-t-emerald-400" },
-    { key: "Converted", label: t("convertedLane"), hint: t("convertedLaneHint"), borderClass: "border-t-indigo-400" },
+    { key: "Draft", label: t("draftLane"), hint: t("draftLaneHint"), borderClass: "border-t-at-amber" },
+    { key: "Sent", label: t("sentLane"), hint: t("sentLaneHint"), borderClass: "border-t-brand-400" },
+    { key: "Accepted", label: t("acceptedLane"), hint: t("acceptedLaneHint"), borderClass: "border-t-at-green" },
+    { key: "Converted", label: t("convertedLane"), hint: t("convertedLaneHint"), borderClass: "border-t-brand-400" },
   ]);
   const convertDialogEyebrow = computed(() => translateText("Quick Conversion", activeLocale.value));
   const canCreateQuickOffer = computed(() => {

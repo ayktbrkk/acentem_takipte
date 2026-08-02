@@ -1,12 +1,12 @@
 <template>
-  <div class="overflow-x-auto rounded-lg border border-gray-200">
+  <div class="overflow-x-auto rounded-lg border border-slate-200">
     <div v-if="loading" class="flex items-center justify-center py-16">
       <div class="h-5 w-5 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
     </div>
 
     <table v-else class="w-full border-collapse">
       <thead>
-        <tr class="border-b border-gray-200 bg-gray-50">
+        <tr class="border-b border-slate-200 bg-slate-50">
           <th
             v-for="col in effectiveColumns"
             :key="col.key"
@@ -30,13 +30,13 @@
             </button>
             <span v-else>{{ formatHeaderLabel(col.label) }}</span>
           </th>
-          <th v-if="showPreview" class="w-10 bg-gray-50 px-4 py-2.5"></th>
-          <th v-if="clickable" class="w-10 bg-gray-50 px-4 py-2.5"></th>
+          <th v-if="showPreview" class="w-10 bg-slate-50 px-4 py-2.5"></th>
+          <th v-if="clickable" class="w-10 bg-slate-50 px-4 py-2.5"></th>
         </tr>
       </thead>
       <tbody>
         <tr v-if="!sortedRows.length">
-          <td :colspan="tableColspan" class="px-4 py-12 text-center text-sm text-gray-400">
+          <td :colspan="tableColspan" class="px-4 py-12 text-center text-sm text-slate-400">
             {{ resolvedEmptyMessage }}
           </td>
         </tr>
@@ -60,8 +60,8 @@
             v-else
             :key="row.name ?? row.id"
           :class="[
-            'cursor-pointer border-b border-gray-100 transition-colors duration-100 last:border-0',
-            row._urgency || 'hover:bg-gray-50',
+            'cursor-pointer border-b border-slate-100 transition-colors duration-100 last:border-0',
+            row._urgency || 'hover:bg-slate-50',
           ]"
           @click="$emit('row-click', row)"
         >
@@ -93,7 +93,7 @@
               {{ row[col.key] }}
             </span>
 
-            <span v-else-if="col.type === 'mono'" class="font-mono text-xs text-gray-700">
+            <span v-else-if="col.type === 'mono'" class="font-mono text-xs text-slate-700">
               {{ row[col.key] ?? '-' }}
             </span>
 
@@ -187,7 +187,7 @@
             </ActionButton>
           </td>
           <td v-if="clickable" class="px-4 py-3 text-right">
-            <FeatherIcon name="chevron-right" class="inline-block h-4 w-4 text-gray-300 group-hover:text-gray-400" />
+            <FeatherIcon name="chevron-right" class="inline-block h-4 w-4 text-slate-300 group-hover:text-slate-400" />
           </td>
         </tr>
         </template>
@@ -266,7 +266,7 @@ const resolvedEmptyMessage = computed(() => {
 });
 
 function urgencyClass(days) {
-  if (days == null) return "text-sm text-gray-400";
+  if (days == null) return "text-sm text-slate-400";
   if (days <= 7) return "urgency-critical";
   if (days <= 30) return "urgency-warning";
   if (days <= 90) return "urgency-normal";

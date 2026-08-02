@@ -53,7 +53,7 @@
           <div 
             v-for="(event, idx) in day.events" 
             :key="idx"
-            class="p-2 rounded-lg border border-slate-50 bg-slate-50/50 hover:bg-white hover:border-indigo-100 transition-all group"
+            class="p-2 rounded-lg border border-slate-50 bg-slate-50/50 hover:bg-white hover:border-brand-100 transition-all group"
           >
             <div class="flex items-start justify-between gap-2">
               <span class="text-[13px] font-semibold text-slate-900 line-clamp-1">{{ event.title }}</span>

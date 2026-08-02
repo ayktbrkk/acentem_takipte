@@ -4,7 +4,7 @@
       class="surface-card rounded-xl px-2.5 py-2 transition"
       :class="isLocked
         ? 'border-slate-200 bg-slate-100/85'
-        : 'border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-sky-50/65 shadow-slate-200/70'"
+        : 'border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-brand-50/65 shadow-slate-200/70'"
     >
       <div class="mb-1 flex items-center justify-between gap-2">
         <span class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{{ t("scope") }}</span>
@@ -22,7 +22,7 @@
         class="group flex w-full items-center justify-between gap-2 rounded-lg border border-transparent px-1.5 py-1 text-left transition"
         :class="isLocked
           ? 'cursor-not-allowed text-slate-500'
-          : 'text-slate-900 hover:border-sky-200 hover:bg-white/85 focus:outline-none focus-visible:border-sky-300 focus-visible:ring-2 focus-visible:ring-sky-200/60'"
+          : 'text-slate-900 hover:border-brand-200 hover:bg-white/85 focus:outline-none focus-visible:border-brand-400 focus-visible:ring-2 focus-visible:ring-brand-200/60'"
         :aria-label="t('scope')"
         :aria-expanded="isOpen ? 'true' : 'false'"
         :aria-controls="listboxId"
@@ -62,7 +62,7 @@
             ref="searchInputRef"
             v-model.trim="searchQuery"
             type="text"
-            class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 pr-6 text-xs text-slate-700 placeholder:text-slate-400 focus:border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-200/60"
+            class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 pr-6 text-xs text-slate-700 placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-200/60"
             :placeholder="t('searchPlaceholder')"
             data-testid="branch-search-input"
             @keydown="onSearchInputKeydown"

@@ -14,7 +14,7 @@
       <div
         v-for="i in count"
         :key="i"
-        class="sk-card rounded-xl border border-gray-100 p-4"
+        class="sk-card rounded-xl border border-slate-100 p-4"
       >
         <div class="sk-block mb-3 h-3 w-1/2 rounded" />
         <div class="sk-block h-7 w-3/4 rounded" />
@@ -27,7 +27,7 @@
       <div
         v-for="i in rows"
         :key="i"
-        class="sk-row flex items-center gap-3 border-b border-gray-50 py-3 last:border-0"
+        class="sk-row flex items-center gap-3 border-b border-slate-50 py-3 last:border-0"
       >
         <div class="sk-block h-8 w-8 shrink-0 rounded-full" />
         <div class="flex-1 space-y-1.5">

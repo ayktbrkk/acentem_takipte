@@ -183,25 +183,25 @@ export function useReportsTableData({
   const columnsSummaryLabel = computed(() => `${visibleColumns.value.length}/${columns.value.length}`);
 
   const metricToneClasses = {
-    rows: "text-gray-900",
+    rows: "text-slate-900",
     gross_premium: "text-at-green",
     net_premium: "text-slate-900",
     commission: "text-brand-600",
     paid_amount: "text-at-amber",
-    active_policies: "text-green-600",
+    active_policies: "text-at-green",
     conversion_rate: "text-brand-600",
-    open_renewals: "text-amber-600",
-    loyal_customers: "text-gray-900",
-    claim_customers: "text-amber-600",
-    matched_customers: "text-green-600",
+    open_renewals: "text-at-amber",
+    loyal_customers: "text-slate-900",
+    claim_customers: "text-at-amber",
+    matched_customers: "text-at-green",
     created_drafts: "text-brand-600",
-    successful_deliveries: "text-green-600",
-    open_reconciliation: "text-amber-600",
+    successful_deliveries: "text-at-green",
+    open_reconciliation: "text-at-amber",
     difference_amount: "text-brand-600",
-    resolved_items: "text-green-600",
-    open_claims: "text-amber-600",
-    rejected_claims: "text-amber-600",
-    successful_notifications: "text-green-600",
+    resolved_items: "text-at-green",
+    open_claims: "text-at-amber",
+    rejected_claims: "text-at-amber",
+    successful_notifications: "text-at-green",
   };
 
   const buildMetricItem = (key, label, value, extra = {}) => ({

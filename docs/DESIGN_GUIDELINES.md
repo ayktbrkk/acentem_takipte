@@ -350,7 +350,16 @@ document found and fixed:
   `brand-*`, and `status-*` surfaces. `DashboardTypeBadge`'s undocumented
   26-color categorical palette now maps each record type to a semantic status
   token. Dashboard primary CTA is `brand-600`. Aging bars use the at-* ramp with
-  opacity steps. 0 raw colors remain in `src/components` and `src/platform`.
+  opacity steps.
+- **Full-app raw-color sweep**: a second scan across every production `.vue` and
+  `.js` file (components, dashboard tabs, reports, offer board, sidebar,
+  composables) found and removed the remaining non-`slate` raw Tailwind colors:
+  `gray-*` → `slate-*`; error/success borders (`rose`/`emerald`) → `at-red` /
+  `at-green`; focus rings and accents (`sky`/`indigo`/`fuchsia`) → `brand-*`;
+  sidebar nav badges (13 decorative hues) → `text-brand-700`; status chart dots
+  and offer-lane borders → the semantic at-*/brand tokens. Result: **0 raw
+  chromatic/neutral colors** in production `.vue`/`.js` (only `slate-*`,
+  `brand-*`, `at-*`, `status-*`, black/white/transparent remain).
 - **Interaction polish**: `cursor-pointer` + visible focus states added to
   `CommissionBalances` mini-button, `FilterBar` reset, `OfficeBranchSelect`
   options, and shell banner buttons.

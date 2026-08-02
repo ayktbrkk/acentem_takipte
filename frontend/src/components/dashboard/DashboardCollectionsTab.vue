@@ -62,7 +62,7 @@
             :key="payment.name"
             :title="payment.payment_no || payment.name"
             layout="dense"
-            emphasis-class="border-l-4 border-l-red-500"
+            emphasis-class="border-l-4 border-l-at-red"
             clickable
             @click="openPaymentItem(payment)"
           >
@@ -146,7 +146,7 @@
             :description="row.description"
             :meta="riskReference(row)"
             layout="dense"
-            :emphasis-class="Number(row?.score || 0) >= 6 ? 'border-l-4 border-l-red-500' : ''"
+            :emphasis-class="Number(row?.score || 0) >= 6 ? 'border-l-4 border-l-at-red' : ''"
             clickable
             @click="openCollectionRiskItem(row)"
           >

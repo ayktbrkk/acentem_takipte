@@ -40,7 +40,7 @@ const resolvedTitle = computed(() => {
 const compactBaseClass =
   "flex min-h-[136px] flex-col items-center justify-center px-4 py-5 text-center";
 const regularBaseClass =
-  "flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/50 px-6 py-12 text-center";
+  "flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-6 py-12 text-center";
 
 const rootClass = computed(() =>
   props.compact ? `${compactBaseClass} ${props.compactContainerClass}` : regularBaseClass
@@ -48,18 +48,18 @@ const rootClass = computed(() =>
 
 const iconClass = computed(() =>
   props.compact
-    ? "mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-300"
-    : "mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-gray-300"
+    ? "mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-300"
+    : "mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-300"
 );
 
 const iconGlyphClass = computed(() => (props.compact ? "h-6 w-6" : "h-8 w-8"));
 
 const titleClass = computed(() =>
-  props.compact ? "text-sm font-medium text-gray-500" : "text-sm font-semibold text-gray-900"
+  props.compact ? "text-sm font-medium text-slate-500" : "text-sm font-semibold text-slate-900"
 );
 
 const descriptionClass = computed(() =>
-  props.compact ? "mt-1 text-sm text-gray-500" : "mt-1 text-xs text-gray-500"
+  props.compact ? "mt-1 text-sm text-slate-500" : "mt-1 text-xs text-slate-500"
 );
 
 const actionsClass = computed(() => (props.compact ? "mt-3" : "mt-4"));

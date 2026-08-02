@@ -23,7 +23,7 @@
             :description="renewalTaskPolicy(task)"
             :meta="renewalTaskMeta(task)"
             layout="dense"
-            emphasis-class="border-l-4 border-l-amber-300"
+            emphasis-class="border-l-4 border-l-at-amber"
             clickable
             @click="openRenewalTaskItem(task)"
           >

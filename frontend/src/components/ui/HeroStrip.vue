@@ -4,11 +4,11 @@
       <div class="hero-label">{{ cell.label }}</div>
       <div :class="valueClass(cell.variant)">
         {{ cell.value }}
-        <span v-if="cell.suffix" class="ml-1 text-xs font-normal text-gray-400">
+        <span v-if="cell.suffix" class="ml-1 text-xs font-normal text-slate-400">
           {{ cell.suffix }}
         </span>
       </div>
-      <div v-if="cell.sub" class="mt-0.5 text-xs text-gray-400">{{ cell.sub }}</div>
+      <div v-if="cell.sub" class="mt-0.5 text-xs text-slate-400">{{ cell.sub }}</div>
     </div>
   </div>
 </template>

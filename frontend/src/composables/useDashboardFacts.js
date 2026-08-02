@@ -22,13 +22,13 @@ function buildOutcomeRows(t, retention) {
       key: "renewed",
       label: t("outcomeRenewed"),
       value: Number(retention?.renewed || 0),
-      colorClass: "bg-emerald-500",
+      colorClass: "bg-at-green",
     },
     {
       key: "lost",
       label: t("outcomeLost"),
       value: Number(retention?.lost || 0),
-      colorClass: "bg-amber-500",
+      colorClass: "bg-at-amber",
     },
     {
       key: "cancelled",
@@ -260,21 +260,21 @@ export function useDashboardFacts({
         label: t("statusActive"),
         value: map.Active?.total || 0,
         gwp: map.Active?.gwp || 0,
-        colorClass: "bg-emerald-500",
+        colorClass: "bg-at-green",
       },
       {
         key: "Record",
         label: t("status_kayit"),
         value: map.Record?.total || 0,
         gwp: map.Record?.gwp || 0,
-        colorClass: "bg-sky-500",
+        colorClass: "bg-brand-500",
       },
       {
         key: "Cancelled",
         label: t("status_cancelled"),
         value: map.Cancelled?.total || 0,
         gwp: map.Cancelled?.gwp || 0,
-        colorClass: "bg-amber-400",
+        colorClass: "bg-at-amber",
       },
     ].map((entry) => ({
       ...entry,
@@ -298,9 +298,9 @@ export function useDashboardFacts({
       }
       const total = Object.values(counts).reduce((sum, value) => sum + value, 0) || 1;
       return [
-        { key: "Open", label: t("open"), value: counts.Open, colorClass: "bg-amber-500" },
-        { key: "In Progress", label: t("statusInProgress"), value: counts["In Progress"], colorClass: "bg-sky-500" },
-        { key: "Done", label: t("statusCompleted"), value: counts.Done, colorClass: "bg-emerald-500" },
+        { key: "Open", label: t("open"), value: counts.Open, colorClass: "bg-at-amber" },
+        { key: "In Progress", label: t("statusInProgress"), value: counts["In Progress"], colorClass: "bg-brand-500" },
+        { key: "Done", label: t("statusCompleted"), value: counts.Done, colorClass: "bg-at-green" },
         { key: "Cancelled", label: t("statusCancelled"), value: counts.Cancelled, colorClass: "bg-slate-400" },
       ]
         .filter((row) => row.value > 0 || isRenewalsTab.value)
@@ -322,9 +322,9 @@ export function useDashboardFacts({
     }
     const total = Object.values(counts).reduce((sum, value) => sum + value, 0) || 1;
     return [
-      { key: "Open", label: t("open"), value: counts.Open, colorClass: "bg-amber-500" },
-      { key: "In Progress", label: t("statusInProgress"), value: counts["In Progress"], colorClass: "bg-sky-500" },
-      { key: "Done", label: t("statusCompleted"), value: counts.Done, colorClass: "bg-emerald-500" },
+      { key: "Open", label: t("open"), value: counts.Open, colorClass: "bg-at-amber" },
+      { key: "In Progress", label: t("statusInProgress"), value: counts["In Progress"], colorClass: "bg-brand-500" },
+      { key: "Done", label: t("statusCompleted"), value: counts.Done, colorClass: "bg-at-green" },
       { key: "Cancelled", label: t("statusCancelled"), value: counts.Cancelled, colorClass: "bg-slate-400" },
     ]
       .filter((row) => row.value > 0 || isRenewalsTab.value)
@@ -342,8 +342,8 @@ export function useDashboardFacts({
     }
     const order = ["Draft", "Paid", "Cancelled"];
     const colorMap = {
-      Draft: "bg-amber-500",
-      Paid: "bg-emerald-500",
+      Draft: "bg-at-amber",
+      Paid: "bg-at-green",
       Cancelled: "bg-slate-400",
     };
     const totals = order.reduce((acc, status) => {
@@ -366,8 +366,8 @@ export function useDashboardFacts({
     const totalRows = Object.values(map).reduce((sum, item) => sum + Number(item?.total || 0), 0) || 1;
     const order = ["Inbound", "Outbound"];
     const colorMap = {
-      Inbound: "bg-sky-500",
-      Outbound: "bg-fuchsia-500",
+      Inbound: "bg-brand-500",
+      Outbound: "bg-brand-500",
     };
     return order
       .map((direction) => ({

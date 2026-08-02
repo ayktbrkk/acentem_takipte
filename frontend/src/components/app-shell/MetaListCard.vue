@@ -5,7 +5,7 @@
         ? 'group relative border-b border-slate-100 bg-white px-4 py-3 last:border-b-0'
         : 'rounded-xl border border-slate-200 bg-slate-50 p-3',
       isDense && emphasisClass,
-      clickable && 'cursor-pointer transition hover:bg-slate-50/70 focus:outline-none focus:ring-2 focus:ring-sky-500/30',
+      clickable && 'cursor-pointer transition hover:bg-slate-50/70 focus:outline-none focus:ring-2 focus:ring-brand-500/30',
     ]"
     :role="clickable ? 'button' : undefined"
     :tabindex="clickable ? 0 : undefined"

@@ -60,9 +60,9 @@ export function useDashboardSales({
     const total = Object.values(map).reduce((sum, value) => sum + value, 0) || 1;
 
     return [
-      { key: "Draft", label: t("draft"), value: map.Draft || 0, colorClass: "bg-amber-500" },
-      { key: "Open", label: t("open"), value: map.Open || 0, colorClass: "bg-sky-500" },
-      { key: "Replied", label: t("replied"), value: map.Replied || 0, colorClass: "bg-emerald-500" },
+      { key: "Draft", label: t("draft"), value: map.Draft || 0, colorClass: "bg-at-amber" },
+      { key: "Open", label: t("open"), value: map.Open || 0, colorClass: "bg-brand-500" },
+      { key: "Replied", label: t("replied"), value: map.Replied || 0, colorClass: "bg-at-green" },
       { key: "Closed", label: t("closed"), value: map.Closed || 0, colorClass: "bg-slate-500" },
     ].map((entry) => ({
       ...entry,
@@ -78,11 +78,11 @@ export function useDashboardSales({
     }
     const total = Object.values(totalsByStatus).reduce((sum, value) => sum + Number(value || 0), 0) || 1;
     const colorMap = {
-      Draft: "bg-amber-500",
-      Sent: "bg-sky-500",
-      Accepted: "bg-emerald-500",
-      Rejected: "bg-amber-500",
-      Converted: "bg-indigo-500",
+      Draft: "bg-at-amber",
+      Sent: "bg-brand-500",
+      Accepted: "bg-at-green",
+      Rejected: "bg-at-amber",
+      Converted: "bg-brand-500",
     };
     const labelMap = {
       Draft: t("draft"),

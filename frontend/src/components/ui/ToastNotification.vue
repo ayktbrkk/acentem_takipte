@@ -10,7 +10,7 @@
     <div
       v-if="show"
       class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 border-l-4"
-      :class="type === 'success' ? 'border-emerald-500' : 'border-rose-500'"
+      :class="type === 'success' ? 'border-at-green' : 'border-at-red'"
     >
       <div class="p-4">
         <div class="flex items-start">

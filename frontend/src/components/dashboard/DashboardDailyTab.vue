@@ -29,7 +29,7 @@
               :description="followUpCustomer(item)"
               :meta="followUpReference(item)"
               layout="dense"
-              :emphasis-class="followUpIsOverdue(item) ? 'border-l-4 border-l-red-500' : ''"
+              :emphasis-class="followUpIsOverdue(item) ? 'border-l-4 border-l-at-red' : ''"
               clickable
               @click="openFollowUpItem(item)"
             >
@@ -75,7 +75,7 @@
             :description="renewalAlertCustomer(task)"
             :meta="renewalAlertReference(task)"
             layout="dense"
-            :emphasis-class="renewalAlertIsHot(task) ? 'border-l-4 border-l-red-500' : ''"
+            :emphasis-class="renewalAlertIsHot(task) ? 'border-l-4 border-l-at-red' : ''"
             clickable
             @click="openRenewalTaskItem(task)"
           >
@@ -123,7 +123,7 @@
                 :description="task.task_title || task.name || '-'"
                 :meta="taskReference(task)"
                 layout="dense"
-                :emphasis-class="taskIsOverdue(task) ? 'border-l-4 border-l-red-500' : ''"
+                :emphasis-class="taskIsOverdue(task) ? 'border-l-4 border-l-at-red' : ''"
                 clickable
                 @click="openTaskItem(task)"
               >
@@ -210,7 +210,7 @@
             :key="claim.name"
             :title="claim.claim_no || claim.name"
             layout="dense"
-            :emphasis-class="claimIsHot(claim) ? 'border-l-4 border-l-red-500' : ''"
+            :emphasis-class="claimIsHot(claim) ? 'border-l-4 border-l-at-red' : ''"
             clickable
             @click="openClaimItem(claim)"
           >

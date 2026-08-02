@@ -6,7 +6,7 @@
         : 'rounded-xl border border-slate-200 bg-slate-50/80 p-4',
       isDense && emphasisClass,
       stretch && 'flex h-full flex-col',
-      clickable && 'cursor-pointer transition hover:bg-slate-50/70 focus:outline-none focus:ring-2 focus:ring-sky-500/30',
+      clickable && 'cursor-pointer transition hover:bg-slate-50/70 focus:outline-none focus:ring-2 focus:ring-brand-500/30',
     ]"
     :role="clickable ? 'button' : undefined"
     :tabindex="clickable ? 0 : undefined"

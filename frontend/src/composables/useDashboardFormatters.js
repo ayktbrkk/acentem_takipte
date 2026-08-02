@@ -87,7 +87,7 @@ export function useDashboardFormatters({ dashboardComparisonTrendHint, localeCod
     if (!previous && current) {
       return {
         text: "+100%",
-        className: reverseTrend ? "text-amber-700" : "text-emerald-600",
+        className: reverseTrend ? "text-at-amber" : "text-at-green",
       };
     }
 
@@ -97,7 +97,7 @@ export function useDashboardFormatters({ dashboardComparisonTrendHint, localeCod
     const sign = rounded > 0 ? "+" : "";
     return {
       text: `${sign}${new Intl.NumberFormat(unref(localeCode), { maximumFractionDigits: 1 }).format(rounded)}%`,
-      className: positive ? "text-emerald-600" : "text-amber-700",
+      className: positive ? "text-at-green" : "text-at-amber",
     };
   }
 

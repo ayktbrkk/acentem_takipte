@@ -132,7 +132,7 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
       { label: t("status_rejected"), value: "Rejected" },
     ], required: true },
     { key: "offer_date", label: t("offer_date"), value: offer.value.offer_date, displayValue: formatDate(offer.value.offer_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
-    { key: "valid_until", label: t("valid_until"), value: offer.value.valid_until, displayValue: formatDate(offer.value.valid_until), type: "date", required: true, unspecifiedLabel: t("unspecified"), valueClass: "text-amber-600 font-bold" },
+    { key: "valid_until", label: t("valid_until"), value: offer.value.valid_until, displayValue: formatDate(offer.value.valid_until), type: "date", required: true, unspecifiedLabel: t("unspecified"), valueClass: "text-at-amber font-bold" },
   ]);
 
   const premiumFields = computed(() => [

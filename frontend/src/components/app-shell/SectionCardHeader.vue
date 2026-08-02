@@ -4,7 +4,7 @@
       <div v-if="icon" class="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-400 border border-slate-100">
         <FeatherIcon :name="icon" class="h-4 w-4" />
       </div>
-      <h3 class="text-lg font-semibold text-gray-900 leading-tight">{{ title }}</h3>
+      <h3 class="text-lg font-semibold text-slate-900 leading-tight">{{ title }}</h3>
     </div>
     <slot v-if="$slots.trailing" name="trailing" />
     <span v-else-if="showCount" class="badge badge-brand ml-2">{{ count }}</span>
