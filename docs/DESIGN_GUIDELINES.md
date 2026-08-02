@@ -362,6 +362,27 @@ document found and fixed:
   so every import resolves to the canonical `components/` implementation. The
   canonical sources are `components/ui/`, `components/app-shell/`, and
   `components/`. New shared components should be added there, not in `platform/ui/`.
+- **State/utils/composables consolidation (same pass)**: the remaining parallel
+  trees were collapsed into a single canonical source:
+  - `stores/{auth,branch,ui}.js`, `state/ui.js` → re-export shims for
+    `platform/state/{authStore,branchStore,uiStore,uiState}.js`.
+  - `utils/{i18n,routeMeta,officeBranchTree}.js` → re-export shims for
+    `platform/i18n`, `platform/router/routeMeta`, `platform/state/officeBranchTree`.
+  - `composables/use*` (12 files) → re-export shims for the equivalent
+    `platform/composables/*` (these platform files are the live, correct ones used
+    by the shell and components; legacy paths now resolve through shims).
+  - `router/index.js` → re-export shim for `platform/router` (the runtime router
+    used by `main.js`).
+  - **Quick-create exception**: `platform/composables/quickCreate/` and
+    `platform/config/quickCreate/` were abandoned, broken mirrors (unresolvable
+    relative imports; nothing imported them). They were **deleted**. The canonical
+    quick-create code lives in `composables/useQuickCreate*` and
+    `config/quickCreate/` (root-lock binding on `commission_share_pct` kept there).
+    The quick-create policy status allowlist was corrected to the backend canonical
+    values `Pending, Record, Active, Cancelled, Archived`.
+  - Dead duplicate `platform/ui/shell/*.test.js` files (byte-identical to the
+    `components/app-shell` versions and excluded from vitest) were deleted, and the
+    stale vitest exclude entries removed.
 - **Dead code removed**: legacy duplicate shell (`src/App.vue`,
   `src/components/Sidebar.vue`, `src/components/Topbar.vue` and their tests)
   deleted. The `Sidebar` localization test was ported to `platform/shell/`.

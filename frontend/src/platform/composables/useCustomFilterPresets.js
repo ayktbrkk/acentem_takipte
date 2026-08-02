@@ -9,7 +9,7 @@ import {
   readFilterPresetList,
   writeFilterPresetKey,
   writeFilterPresetList,
-} from "../utils/filterPresetState";
+} from "@/utils/filterPresetState";
 
 function hasMeaningfulPresetState(selectedKey, presets) {
   return String(selectedKey || "default") !== "default" || (Array.isArray(presets) && presets.length > 0);

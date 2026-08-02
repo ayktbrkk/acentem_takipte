@@ -233,6 +233,26 @@ Two `session.js` files exist — they must share the same reactive state:
 - `frontend/src/platform/state/branchStore.js` imports from `./session` (not `../state/session`)
 - If branch dropdowns are empty, check: (1) `at.py` includes `office_branches` in boot, (2) server restarted after file change, (3) `hydrateSessionState()` call completed before `branchStore.hydrateFromSession()`
 
+### Frontend Consolidation (single source of truth)
+
+The frontend has a single canonical source per module; legacy import paths are thin
+re-export shims so both old and new import sites hit the same implementation:
+
+- State: canonical `platform/state/{session,authStore,branchStore,uiStore,uiState,officeBranchTree}`;
+  `stores/{auth,branch,ui}.js` and `state/{session,ui}.js` are shims.
+- i18n: canonical `platform/i18n/index.js`; `utils/i18n.js` is a shim.
+- Router: canonical `platform/router/index.js` (used by `main.js`); `router/index.js` is a shim.
+- Components: canonical `components/{ui,app-shell}/` and `components/`;
+  `platform/ui/**` are shims. New shared components go in `components/`, never `platform/ui/`.
+- Composable helpers: canonical `platform/composables/*`; `composables/use*` (the shared
+  helpers) are shims.
+- Quick-create exception: `composables/useQuickCreate*` and `config/quickCreate/` are the
+  canonical quick-create code (`platform/composables/quickCreate/` and
+  `platform/config/quickCreate/` were abandoned broken mirrors and are deleted).
+  The quick-create policy status allowlist uses backend values
+  `Pending, Record, Active, Cancelled, Archived`; `commission_share_pct` is disabled
+  (locked) when `is_root` is `1`.
+
 ## Preference Order For Changes
 
 - Make the smallest change that fits the existing module structure.

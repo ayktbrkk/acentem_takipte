@@ -1,5 +1,18 @@
 # AT Yenileme Planı — Kesin Sürüm
 
+> ⚠️ **SUPERSEDED (Aug 2026).** This plan describes the original domain-slice
+> migration (legacy → `platform/`). That migration was only partially completed
+> and then **reversed** by the two-tree consolidation:
+> `components/` is canonical and `platform/ui/**` are shims; `platform/state`,
+> `platform/i18n`, `platform/router`, `platform/composables` are canonical and
+> the legacy locations (`stores/`, `state/`, `utils/`, `composables/`, `router/`)
+> are shims. The abandoned `platform/composables/quickCreate/` and
+> `platform/config/quickCreate/` mirrors were deleted (quick-create code stays in
+> `composables/useQuickCreate*` + `config/quickCreate/`). See
+> [AGENTS.md](../AGENTS.md) "Frontend Consolidation" and
+> [DESIGN_GUIDELINES.md](DESIGN_GUIDELINES.md) §15 for the current source of truth.
+> Do not execute the phases below without re-validating the canonical locations first.
+
 > Domain-Slice mimarisine geçiş için adım adım uygulama planı.
 > Dörtlü denetim: kıdemli yazılım mühendisi + sigorta domain uzmanı + full-stack developer + EN/TR tercüman.
 > Son güncelleme: 2026-07-20.
