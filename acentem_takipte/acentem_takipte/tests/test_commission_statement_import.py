@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import frappe
 from frappe.tests.utils import FrappeTestCase
 
 from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
@@ -250,6 +251,38 @@ class TestCommissionStatementEndpoint(FrappeTestCase):
 class TestCommissionStatementImport(FrappeTestCase):
     """Tests for import_commission_statement_rows."""
 
+    @patch("frappe.new_doc")
+    @patch("frappe.get_doc")
+    @patch("frappe.db.get_value")
+    def test_statement_entry_reuses_missing_external_placeholder(
+        self, mock_db_get_value, mock_get_doc, mock_new_doc,
+    ):
+        """A later statement row for a policy must reuse the 'Missing External'
+        placeholder entry (external_ref='') instead of creating a second entry,
+        so the stale Missing External item can close."""
+        from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
+            _get_or_create_commission_statement_entry,
+        )
+
+        def get_value_side_effect(doctype, filters, field=None, **kwargs):
+            if doctype == "AT Accounting Entry" and isinstance(filters, dict):
+                if filters.get("external_ref") == "STM-001":
+                    return None  # no exact statement entry yet
+                if filters.get("external_ref") == "":
+                    return "AT-ACC-PLACEHOLDER"  # existing Missing External placeholder
+            return None
+
+        mock_db_get_value.side_effect = get_value_side_effect
+        placeholder_doc = object()
+        mock_get_doc.return_value = placeholder_doc
+        fresh_doc = object()
+        mock_new_doc.return_value = fresh_doc
+
+        result = _get_or_create_commission_statement_entry("POL-001", "STM-001")
+
+        assert result is placeholder_doc
+        mock_get_doc.assert_called_once_with("AT Accounting Entry", "AT-ACC-PLACEHOLDER")
+
     @patch("frappe.db.commit")
     @patch("frappe.db.sql")
     @patch("frappe.db.get_value")
@@ -484,6 +517,169 @@ class TestCommissionStatementImport(FrappeTestCase):
         csv = _csv("policy_no,amount_try,external_ref", "34567890,750.00,DEC-001")
         import_commission_statement_rows(csv_text=csv, insurance_company="AT-IC-2026-00001")
         assert captured_local[0] == 750.0
+
+
+class TestCommissionStatementResolutionFlow(FrappeTestCase):
+    """End-to-end: a Missing External item resolves when the policy later
+    appears in a commission statement (no duplicate entry, no stale item)."""
+
+    def tearDown(self) -> None:
+        import frappe
+
+        frappe.db.rollback()
+
+    def _create_policy(self, policy_no: str, commission_amount: float):
+        from acentem_takipte.acentem_takipte.tests.test_utils import ensure_test_office_branch
+
+        suffix = frappe.generate_hash(length=8)
+        insurance_company = frappe.get_doc(
+            {
+                "doctype": "AT Insurance Company",
+                "company_name": f"Flow Insurance {suffix}",
+                "company_code": f"FI{suffix[:4]}",
+            }
+        ).insert(ignore_permissions=True)
+
+        branch = frappe.get_doc(
+            {
+                "doctype": "AT Branch",
+                "branch_name": f"Flow Branch {suffix}",
+                "branch_code": f"FB{suffix[:4]}",
+                "insurance_company": insurance_company.name,
+            }
+        ).insert(ignore_permissions=True)
+
+        office_branch = ensure_test_office_branch(suffix)
+
+        sales_entity = frappe.get_doc(
+            {
+                "doctype": "AT Sales Entity",
+                "entity_type": "Agency",
+                "full_name": f"Flow Agency {suffix}",
+                "office_branch": office_branch,
+            }
+        ).insert(ignore_permissions=True)
+
+        customer = frappe.get_doc(
+            {
+                "doctype": "AT Customer",
+                "tax_id": _random_tax_id(),
+                "full_name": f"Flow Customer {suffix}",
+                "phone": "05559876543",
+                "email": f"flow.{suffix}@example.com",
+                "assigned_agent": "Administrator",
+            }
+        ).insert(ignore_permissions=True)
+
+        policy = frappe.get_doc(
+            {
+                "doctype": "AT Policy",
+                "policy_no": policy_no,
+                "customer": customer.name,
+                "sales_entity": sales_entity.name,
+                "insurance_company": insurance_company.name,
+                "branch": branch.name,
+                "office_branch": office_branch,
+                "status": "Active",
+                "issue_date": frappe.utils.nowdate(),
+                "start_date": frappe.utils.nowdate(),
+                "end_date": frappe.utils.add_days(frappe.utils.nowdate(), 365),
+                "currency": "TRY",
+                "net_premium": 1000,
+                "commission_amount": commission_amount,
+                "tax_amount": 120,
+            }
+        ).insert(ignore_permissions=True)
+
+        return {
+            "insurance_company": insurance_company.name,
+            "office_branch": office_branch,
+            "policy": policy.name,
+            "policy_no": policy.policy_no,
+        }
+
+    def test_later_statement_reuses_placeholder_and_closes_missing_external(self):
+        from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
+            generate_missing_external_for_commission_statement,
+            import_commission_statement_rows,
+        )
+
+        deps = self._create_policy("FLOW-2026-0001", 1000.0)
+
+        # 1. Policy is not in the statement -> Missing External placeholder.
+        result = generate_missing_external_for_commission_statement(
+            policy_refs_from_statement=[],
+            insurance_company=deps["insurance_company"],
+            office_branch=deps["office_branch"],
+        )
+        self.assertEqual(result["generated"], 1)
+
+        entry_name = frappe.db.get_value(
+            "AT Accounting Entry",
+            {"source_doctype": "AT Policy", "source_name": deps["policy"]},
+            "name",
+        )
+        self.assertTrue(entry_name)
+        placeholder = frappe.get_doc("AT Accounting Entry", entry_name)
+        self.assertEqual(placeholder.external_ref, "")
+        self.assertTrue(
+            frappe.db.exists(
+                "AT Reconciliation Item",
+                {
+                    "accounting_entry": entry_name,
+                    "status": "Open",
+                    "mismatch_type": "Missing External",
+                },
+            )
+        )
+
+        # 2. A later statement now includes the policy.
+        csv = _csv(
+            "policy_no,amount_try,external_ref",
+            f"{deps['policy_no']},1000.00,STM-001",
+        )
+        import_result = import_commission_statement_rows(
+            csv_text=csv,
+            insurance_company=deps["insurance_company"],
+            office_branch=deps["office_branch"],
+            generate_missing=False,
+        )
+        self.assertEqual(import_result["imported"], 1)
+        self.assertEqual(import_result["open_items"], 0)
+
+        # 3. The SAME entry is reused (no duplicate) with the real external ref.
+        entries = frappe.get_all(
+            "AT Accounting Entry",
+            filters={"source_doctype": "AT Policy", "source_name": deps["policy"]},
+            fields=["name", "external_ref"],
+        )
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["external_ref"], "STM-001")
+
+        # 4. The stale Missing External item is closed.
+        self.assertEqual(
+            frappe.db.count(
+                "AT Reconciliation Item",
+                {
+                    "accounting_entry": entry_name,
+                    "status": "Open",
+                    "mismatch_type": "Missing External",
+                },
+            ),
+            0,
+        )
+
+
+def _random_tax_id() -> str:
+    import frappe
+
+    raw = "".join(char for char in frappe.generate_hash(length=12) if char.isdigit())[:9].ljust(9, "1")
+    if raw.startswith("0"):
+        raw = f"1{raw[1:]}"
+    digits = [int(char) for char in raw]
+    tenth = ((sum(digits[0:9:2]) * 7) - sum(digits[1:8:2])) % 10
+    eleventh = (sum(digits) + tenth) % 10
+    return f"{raw}{tenth}{eleventh}"
 
 
 class TestMissingExternalGeneration(FrappeTestCase):

@@ -216,18 +216,37 @@ def _get_or_create_commission_statement_entry(
     Uses source_doctype + source_name + external_ref as the idempotency key
     so that the same policy imported with different statement periods does not
     overwrite earlier imports.
+
+    When no entry exists for the given external_ref, a previous 'Missing
+    External' placeholder entry (external_ref="") for the same policy is reused.
+    That way a later statement that finally includes the policy populates the
+    same entry, the stale Missing External open item closes, and no duplicate
+    accounting entry is left behind.
     """
+    normalized_ref = str(external_ref or "").strip()
     existing = frappe.db.get_value(
         "AT Accounting Entry",
         {
             "source_doctype": "AT Policy",
             "source_name": policy_name,
-            "external_ref": str(external_ref or "").strip(),
+            "external_ref": normalized_ref,
         },
         "name",
     )
     if existing:
         return frappe.get_doc("AT Accounting Entry", existing)
+    if normalized_ref:
+        placeholder = frappe.db.get_value(
+            "AT Accounting Entry",
+            {
+                "source_doctype": "AT Policy",
+                "source_name": policy_name,
+                "external_ref": "",
+            },
+            "name",
+        )
+        if placeholder:
+            return frappe.get_doc("AT Accounting Entry", placeholder)
     return frappe.new_doc("AT Accounting Entry")
 
 
