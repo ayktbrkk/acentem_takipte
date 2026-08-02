@@ -295,7 +295,7 @@ def _compute_commission_aging(office_branch: str | None) -> dict:
         "AT Policy",
         filters=policy_filters,
         fields=["issue_date", "commission_amount"],
-        limit_page_length=2000,
+        limit_page_length=0,
     )
 
     today = frappe.utils.getdate(nowdate())
@@ -349,7 +349,7 @@ def _compute_commission_by_entity(office_branch: str | None) -> list[dict]:
         "AT Policy",
         filters=policy_filters,
         fields=["commission_distribution", "commission_amount", "sales_entity"],
-        limit_page_length=2000,
+        limit_page_length=0,
     )
 
     entity_totals: dict[str, dict] = {}

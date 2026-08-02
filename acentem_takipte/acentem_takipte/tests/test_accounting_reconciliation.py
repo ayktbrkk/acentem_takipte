@@ -13,6 +13,8 @@ from acentem_takipte.acentem_takipte.accounting import (
     sync_accounting_entry,
 )
 from acentem_takipte.acentem_takipte.domains.accounting.services.runtime import (
+    _compute_commission_aging,
+    _compute_commission_by_entity,
     build_reconciliation_workbench,
 )
 
@@ -227,6 +229,18 @@ class TestAccountingReconciliation(IntegrationTestCase):
             sum(row["total_amount"] for row in result["commission_preview"]["by_entity"]), 2
         )
         self.assertEqual(by_entity_total, 350.0)
+
+    @patch("frappe.get_all", return_value=[])
+    def test_commission_aging_and_by_entity_use_unbounded_policy_queries(self, mock_get_all):
+        """Workbench commission aging/by-entity must not silently truncate at a
+        fixed row cap (2000): a large policy set would otherwise under-report
+        the metrics while looking correct."""
+        _compute_commission_aging(None)
+        _compute_commission_by_entity(None)
+
+        self.assertEqual(mock_get_all.call_count, 2)
+        for call in mock_get_all.call_args_list:
+            self.assertEqual(call.kwargs.get("limit_page_length"), 0)
 
 
 def _create_dependencies() -> dict[str, str]:
