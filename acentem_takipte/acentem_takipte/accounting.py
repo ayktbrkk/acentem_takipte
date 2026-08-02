@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from hashlib import sha256
 
 import frappe
@@ -142,7 +143,6 @@ def sync_accounting_entry(
         return {"status": "Skipped", "reason": "already_synced", "entry": entry.name}
 
     try:
-        external_payload = _simulate_external_payload(payload)
         entry.entry_type = payload["entry_type"]
         entry.policy = payload.get("policy")
         entry.customer = payload.get("customer")
@@ -152,9 +152,14 @@ def sync_accounting_entry(
         entry.currency = payload.get("currency") or "TRY"
         entry.local_amount = payload.get("local_amount") or 0
         entry.local_amount_try = payload.get("local_amount_try") or 0
-        entry.external_amount = external_payload.get("external_amount") or 0
-        entry.external_amount_try = external_payload.get("external_amount_try") or 0
-        entry.external_ref = external_payload.get("external_ref")
+        # External amounts/refs come only from real commission/premium statement
+        # imports. Never fabricate a simulated external payload here. Clear
+        # legacy simulated refs ("EXT-...") but preserve real statement data
+        # already populated on the entry by an import.
+        if not entry.name or _is_simulated_external_ref(entry.get("external_ref")):
+            entry.external_amount = 0
+            entry.external_amount_try = 0
+            entry.external_ref = None
         entry.payload_json = frappe.as_json(payload)
         entry.integration_hash = payload_hash
         entry.status = ATAccountingEntryStatus.SYNCED
@@ -222,8 +227,13 @@ def run_reconciliation(limit: int = 400) -> dict[str, int]:
             open_count += 1
             continue
 
-        resolved_count += _close_open_items(entry_row.name, keep_mismatch_type=None)
-        _set_entry_reconciliation_flag(entry_row.name, False)
+        resolved_count += _close_open_items(
+            entry_row.name, keep_mismatch_type="Missing External"
+        )
+        # Missing External items are managed by statement imports; preserve them.
+        _set_entry_reconciliation_flag(
+            entry_row.name, _has_open_reconciliation(entry_row.name)
+        )
         matched_count += 1
 
     if scanned and not frappe.flags.in_test:
@@ -516,25 +526,14 @@ def _mark_entry_failed(entry, traceback_text: str) -> None:
         )
 
 
-def _simulate_external_payload(payload: dict) -> dict[str, str | float]:
-    config = frappe.get_site_config() or {}
-    drift_ratio = flt(config.get("at_accounting_drift_ratio") or 0)
-    drift_fixed_try = flt(config.get("at_accounting_drift_fixed_try") or 0)
+def _is_simulated_external_ref(external_ref: str | None) -> bool:
+    """Return True for a legacy simulated external ref (EXT-<TYPE>-<12hex>).
 
-    local_amount = flt(payload.get("local_amount"))
-    local_amount_try = flt(payload.get("local_amount_try"))
-    external_amount = local_amount * (1 + drift_ratio)
-    external_amount_try = (local_amount_try * (1 + drift_ratio)) + drift_fixed_try
-
-    source_key = f"{payload.get('source_doctype')}::{payload.get('source_name')}"
-    message_hash = sha256(source_key.encode("utf-8")).hexdigest()[:12]
-    external_ref = f"EXT-{payload.get('entry_type', 'GEN')[:3].upper()}-{message_hash}"
-
-    return {
-        "external_ref": external_ref,
-        "external_amount": round(external_amount, 2),
-        "external_amount_try": round(external_amount_try, 2),
-    }
+    The old sync path fabricated external references with _simulate_external_payload.
+    Real statement references from insurer imports never match this pattern.
+    """
+    ref = str(external_ref or "").strip()
+    return bool(re.match(r"^EXT-[A-Z]{3}-[0-9a-f]{12}$", ref))
 
 
 def _evaluate_mismatch(entry_row) -> tuple[str | None, dict]:
@@ -546,10 +545,10 @@ def _evaluate_mismatch(entry_row) -> tuple[str | None, dict]:
         return "Status", {"reason": "sync_failed", "difference_try": difference_try}
 
     if not entry_row.external_ref:
-        return "Missing External", {
-            "reason": "external_ref_missing",
-            "difference_try": difference_try,
-        }
+        # No real external statement data yet. "Missing External" is decided by
+        # statement imports (generate_missing_external), not inferred here, so a
+        # freshly synced entry is not a mismatch.
+        return None, {"reason": "no_external_data", "difference_try": difference_try}
 
     if abs(difference_try) > RECONCILIATION_TOLERANCE:
         return "Amount", {"reason": "amount_mismatch", "difference_try": difference_try}

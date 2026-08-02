@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import frappe
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
-from frappe.utils import add_days, nowdate
+from frappe.utils import add_days, flt, nowdate
 
 import acentem_takipte.acentem_takipte.domains.accounting.api.endpoints as accounting_api
 from acentem_takipte.acentem_takipte.accounting import (
@@ -91,6 +91,76 @@ class TestAccountingReconciliation(IntegrationTestCase):
             },
         )
 
+    def test_sync_does_not_fabricate_external_data(self):
+        """The accounting sync writes local journal data only; external amounts
+        and refs must come from real statement imports, never a simulation."""
+        deps = _create_dependencies()
+        policy = _create_policy(deps, status="Active", commission_amount=150)
+
+        self.assertEqual(
+            sync_accounting_entry("AT Policy", policy.name, force=True).get("status"),
+            "Synced",
+        )
+
+        entry = frappe.get_doc(
+            "AT Accounting Entry",
+            frappe.db.get_value(
+                "AT Accounting Entry",
+                {"source_doctype": "AT Policy", "source_name": policy.name},
+                "name",
+            ),
+        )
+        self.assertFalse(entry.external_ref)
+        self.assertEqual(flt(entry.external_amount_try), 0)
+        self.assertGreater(flt(entry.local_amount_try), 0)
+
+    def test_sync_preserves_real_statement_external_data(self):
+        """A later re-sync must not clobber external amounts/refs that a real
+        commission statement import has populated on the entry."""
+        deps = _create_dependencies()
+        policy = _create_policy(deps, status="Active", commission_amount=150)
+        sync_accounting_entry("AT Policy", policy.name, force=True)
+
+        entry = frappe.get_doc(
+            "AT Accounting Entry",
+            frappe.db.get_value(
+                "AT Accounting Entry",
+                {"source_doctype": "AT Policy", "source_name": policy.name},
+                "name",
+            ),
+        )
+        entry.external_ref = "STM-001"
+        entry.external_amount_try = 999
+        entry.save(ignore_permissions=True)
+
+        sync_accounting_entry("AT Policy", policy.name, force=True)
+
+        entry.reload()
+        self.assertEqual(entry.external_ref, "STM-001")
+        self.assertEqual(flt(entry.external_amount_try), 999)
+
+    def test_run_reconciliation_does_not_flag_entries_without_external_data(self):
+        """Entries that have no real statement external data yet must not be
+        flagged Missing External by the background reconciliation job."""
+        deps = _create_dependencies()
+        policy = _create_policy(deps, status="Active", commission_amount=150)
+        sync_accounting_entry("AT Policy", policy.name, force=True)
+        entry_name = frappe.db.get_value(
+            "AT Accounting Entry",
+            {"source_doctype": "AT Policy", "source_name": policy.name},
+            "name",
+        )
+
+        run_reconciliation(limit=100)
+
+        self.assertEqual(
+            frappe.db.count(
+                "AT Reconciliation Item",
+                {"accounting_entry": entry_name, "status": "Open"},
+            ),
+            0,
+        )
+
     def test_policy_sync_and_reconciliation_resolution(self):
         deps = _create_dependencies()
         policy = frappe.get_doc(
@@ -122,6 +192,7 @@ class TestAccountingReconciliation(IntegrationTestCase):
         self.assertTrue(entry_name)
 
         entry = frappe.get_doc("AT Accounting Entry", entry_name)
+        entry.external_ref = "STM-001"
         entry.external_amount_try = (entry.local_amount_try or 0) + 250
         entry.save(ignore_permissions=True)
 
@@ -252,6 +323,26 @@ class TestAccountingReconciliation(IntegrationTestCase):
 
         self.assertEqual(result["buckets"]["current"], 100.0)
         self.assertEqual(result["buckets"]["90_plus"], 0.0)
+
+
+def _create_policy(deps: dict[str, str], *, status: str, commission_amount: float):
+    return frappe.get_doc(
+        {
+            "doctype": "AT Policy",
+            "customer": deps["customer"],
+            "sales_entity": deps["sales_entity"],
+            "insurance_company": deps["insurance_company"],
+            "branch": deps["branch"],
+            "status": status,
+            "issue_date": nowdate(),
+            "start_date": nowdate(),
+            "end_date": add_days(nowdate(), 365),
+            "currency": "TRY",
+            "net_premium": 1000,
+            "commission_amount": commission_amount,
+            "tax_amount": 120,
+        }
+    ).insert(ignore_permissions=True)
 
 
 def _create_dependencies() -> dict[str, str]:
