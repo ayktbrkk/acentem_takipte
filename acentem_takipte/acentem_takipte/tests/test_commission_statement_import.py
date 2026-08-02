@@ -247,6 +247,26 @@ class TestCommissionStatementEndpoint(FrappeTestCase):
         assert "summary" in result
         assert "total_rows" in result["summary"]
 
+    def test_commission_statement_import_requires_accounting_admin_role(self):
+        """Commission statement import is an accounting mutation: a user who is
+        not an accounting admin must be rejected even when they hold doctype-level
+        read/write permissions and the underlying data lookup succeeds."""
+        import acentem_takipte.acentem_takipte.domains.commissions.api.endpoints as commissions_api
+
+        previous_user = frappe.session.user
+        frappe.session.user = "restricted.user@example.com"
+        try:
+            with patch.object(commissions_api, "assert_doctype_permission"):
+                with patch.object(commissions_api.frappe, "get_roles", return_value=["AT Agent"]):
+                    with patch("frappe.get_all", return_value=[]):
+                        with self.assertRaises(Exception):
+                            commissions_api.import_commission_statement(
+                                csv_text="",
+                                insurance_company="AT-IC-2026-00001",
+                            )
+        finally:
+            frappe.session.user = previous_user
+
 
 class TestCommissionStatementImport(FrappeTestCase):
     """Tests for import_commission_statement_rows."""

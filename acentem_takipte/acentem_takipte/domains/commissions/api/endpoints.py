@@ -7,6 +7,10 @@ from acentem_takipte.acentem_takipte.platform.api.security import (
     assert_authenticated,
     assert_doctype_permission,
 )
+from acentem_takipte.acentem_takipte.platform.api.mutation_access import (
+    assert_role_based_write_access,
+)
+from acentem_takipte.acentem_takipte.utils.permissions import build_doctype_permission_map
 from acentem_takipte.acentem_takipte.domains.commissions.services.balance import (
     compute_commission_balances,
     compute_commission_policy_detail,
@@ -18,6 +22,30 @@ from acentem_takipte.acentem_takipte.domains.accounting.services.statement_impor
     generate_missing_external_for_commission_statement,
     import_commission_statement_rows,
 )
+
+COMMISSION_ADMIN_ROLES = ("System Manager", "AT Manager", "AT Accountant")
+COMMISSION_MUTATION_DOCTYPES = build_doctype_permission_map(
+    upload_preview=("AT Accounting Entry", "AT Policy"),
+    import_statement=("AT Accounting Entry", "AT Reconciliation Item"),
+    generate_missing=("AT Accounting Entry", "AT Reconciliation Item"),
+    lock_period=("AT Commission Period",),
+)
+
+
+def _assert_commission_mutation_access(
+    action: str,
+    *,
+    details: dict | None = None,
+    permission_targets: tuple[str, ...],
+) -> None:
+    assert_role_based_write_access(
+        action=action,
+        roles=COMMISSION_ADMIN_ROLES,
+        permission_targets=permission_targets,
+        details=details,
+        role_message="You do not have permission to run commission operations.",
+        post_message="Only POST requests are allowed for commission mutations.",
+    )
 
 
 @frappe.whitelist()
@@ -81,16 +109,15 @@ def upload_commission_statement_preview(
     delimiter: str = ",",
     limit: int = 200,
 ) -> dict:
-    assert_authenticated()
-    assert_doctype_permission(
-        "AT Policy",
-        "read",
-        "You do not have permission to preview commission statements.",
-    )
-    assert_doctype_permission(
-        "AT Accounting Entry",
-        "read",
-        "You do not have permission to preview commission statements.",
+    _assert_commission_mutation_access(
+        "api.commissions.upload_commission_statement_preview",
+        details={
+            "office_branch": office_branch,
+            "insurance_company": insurance_company,
+            "delimiter": delimiter,
+            "limit": limit,
+        },
+        permission_targets=COMMISSION_MUTATION_DOCTYPES["upload_preview"],
     )
     return build_statement_import_preview(
         csv_text=csv_text,
@@ -111,21 +138,16 @@ def import_commission_statement(
     limit: int = 200,
     generate_missing: bool = True,
 ) -> dict:
-    assert_authenticated()
-    assert_doctype_permission(
-        "AT Policy",
-        "read",
-        "You do not have permission to import commission statements.",
-    )
-    assert_doctype_permission(
-        "AT Accounting Entry",
-        "write",
-        "You do not have permission to import commission statements.",
-    )
-    assert_doctype_permission(
-        "AT Reconciliation Item",
-        "write",
-        "You do not have permission to import commission statements.",
+    _assert_commission_mutation_access(
+        "api.commissions.import_commission_statement",
+        details={
+            "office_branch": office_branch,
+            "insurance_company": insurance_company,
+            "delimiter": delimiter,
+            "limit": limit,
+            "generate_missing": generate_missing,
+        },
+        permission_targets=COMMISSION_MUTATION_DOCTYPES["import_statement"],
     )
     return import_commission_statement_rows(
         csv_text=csv_text,
@@ -143,21 +165,10 @@ def generate_commission_missing_external(
     insurance_company: str | None = None,
     office_branch: str | None = None,
 ) -> dict:
-    assert_authenticated()
-    assert_doctype_permission(
-        "AT Policy",
-        "read",
-        "You do not have permission to generate missing external items.",
-    )
-    assert_doctype_permission(
-        "AT Accounting Entry",
-        "write",
-        "You do not have permission to generate missing external items.",
-    )
-    assert_doctype_permission(
-        "AT Reconciliation Item",
-        "write",
-        "You do not have permission to generate missing external items.",
+    _assert_commission_mutation_access(
+        "api.commissions.generate_commission_missing_external",
+        details={"insurance_company": insurance_company, "office_branch": office_branch},
+        permission_targets=COMMISSION_MUTATION_DOCTYPES["generate_missing"],
     )
     refs = frappe.parse_json(policy_refs) if isinstance(policy_refs, str) else policy_refs
     return generate_missing_external_for_commission_statement(
@@ -234,11 +245,10 @@ def lock_commission_period(
     period_start: str,
     period_end: str,
 ) -> dict:
-    assert_authenticated()
-    assert_doctype_permission(
-        "AT Commission Period",
-        "write",
-        "You do not have permission to lock commission periods.",
+    _assert_commission_mutation_access(
+        "api.commissions.lock_commission_period",
+        details={"insurance_company": insurance_company, "period_start": period_start, "period_end": period_end},
+        permission_targets=COMMISSION_MUTATION_DOCTYPES["lock_period"],
     )
     from acentem_takipte.acentem_takipte.doctype.at_commission_period.at_commission_period import (
         is_commission_period_locked,
