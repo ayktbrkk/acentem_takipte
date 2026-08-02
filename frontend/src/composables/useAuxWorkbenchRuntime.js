@@ -210,8 +210,7 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
   }
 
   function buildListParams() {
-    const officeBranch = branchStore.requestBranch || "";
-    const out = {
+    return {
       doctype: config.doctype,
       fields: config.listFields,
       filters: buildFilters(),
@@ -220,23 +219,17 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
       limit_start: (pagination.page - 1) * pagination.pageLength,
       limit_page_length: pagination.pageLength,
     };
-    if (officeBranch && OFFICE_BRANCH_FILTER_DOCTYPES.has(config.doctype)) {
-      out.office_branch = officeBranch;
-    }
-    return out;
   }
 
   function buildCountParams() {
-    const officeBranch = branchStore.requestBranch || "";
-    const out = {
+    // get_count only accepts doctype/filters/debug/cache. The office branch is
+    // already applied as a field filter by buildFilters(), so never pass it as a
+    // top-level param (DatabaseQuery.execute would reject it with a 500).
+    return {
       doctype: config.doctype,
       filters: buildFilters(),
       or_filters: buildOrFilters() || undefined,
     };
-    if (officeBranch && OFFICE_BRANCH_FILTER_DOCTYPES.has(config.doctype)) {
-      out.office_branch = officeBranch;
-    }
-    return out;
   }
 
   async function refreshList() {
