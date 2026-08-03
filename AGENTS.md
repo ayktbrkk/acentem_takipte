@@ -240,7 +240,9 @@ re-export shims so both old and new import sites hit the same implementation:
 
 - State: canonical `platform/state/{session,authStore,branchStore,uiStore,uiState,officeBranchTree}`;
   `stores/{auth,branch,ui}.js` and `state/{session,ui}.js` are shims.
-- i18n: canonical `platform/i18n/index.js`; `utils/i18n.js` is a shim.
+- i18n: canonical aggregator `platform/i18n/index.js`; domain translation maps live in
+  `domains/<domain>/i18n/translations.js` (canonical per domain) and the matching
+  `config/*_translations.js` (domain maps) are re-export shims. `utils/i18n.js` is a shim.
 - Router: canonical `platform/router/index.js` (used by `main.js`); `router/index.js` is a shim.
 - Components: canonical `components/{ui,app-shell}/` and `components/`;
   `platform/ui/**` are shims. New shared components go in `components/`, never `platform/ui/`.
