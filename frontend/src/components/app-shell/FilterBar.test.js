@@ -38,4 +38,31 @@ describe("FilterBar", () => {
     await wrapper.find("button[type='button']").trigger("click");
     expect(wrapper.text()).toContain("Filtreleri Gizle");
   });
+
+  it("never applies the bare hidden class to the filter grid", async () => {
+    // Regression: frappe-ui defines .hidden { display:none !important },
+    // which would keep the desktop filter grid permanently hidden when it
+    // also carries lg:grid. The grid must use responsive max-lg variants.
+    const wrapper = mount(FilterBar, {
+      props: {
+        activeCount: 0,
+      },
+      slots: {
+        default: "<div class='default-slot'>base</div>",
+        advanced: "<div class='advanced-slot'>advanced</div>",
+      },
+    });
+
+    const grid = wrapper.find(".at-filter-grid");
+    const classes = grid.classes();
+    expect(classes).not.toContain("hidden");
+    expect(classes).toContain("lg:grid");
+    expect(classes).toContain("max-lg:hidden");
+
+    const button = wrapper.find("button[type='button']");
+    await button.trigger("click");
+    const classesOpen = grid.classes();
+    expect(classesOpen).not.toContain("hidden");
+    expect(classesOpen).toContain("max-lg:grid");
+  });
 });

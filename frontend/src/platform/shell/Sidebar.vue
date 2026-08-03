@@ -30,12 +30,13 @@
           </div>
 
           <button
-            class="hidden h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600 hover:bg-slate-100 lg:grid"
+            class="max-lg:hidden grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none lg:grid"
             type="button"
-            :title="isCollapsed ? t('expandSidebar') : t('collapseSidebar')"
+            :aria-label="isCollapsed ? expandMenuLabel : collapseMenuLabel"
+            :title="isCollapsed ? expandMenuLabel : collapseMenuLabel"
             @click="toggleSidebarCollapsedDesktop"
           >
-            {{ isCollapsed ? ">>" : "<<" }}
+            <component :is="isCollapsed ? IconLucidePanelLeftOpen : IconLucidePanelLeftClose" class="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -113,8 +114,8 @@
         </div>
       </nav>
 
-      <footer class="mt-auto border-t border-slate-100 px-4 py-3">
-        <div class="mb-3 flex items-center gap-2.5">
+      <footer class="mt-auto border-t border-slate-100 px-3 py-3">
+        <div class="flex items-center gap-2.5" :class="isCollapsed ? 'justify-center' : ''">
           <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-medium text-white">
             {{ userInitials }}
           </div>
@@ -123,16 +124,17 @@
             <p class="truncate text-[10px] text-slate-400">{{ branchLabel }}</p>
           </div>
         </div>
-        <ActionButton
-          variant="secondary"
-          size="xs"
-          class="hidden w-full items-center justify-center gap-2 !px-3 !py-2 lg:flex"
-          :title="isCollapsed ? t('expandSidebar') : t('collapseSidebar')"
-          @click="toggleSidebarCollapsedDesktop"
-        >
-          <span class="text-[11px]">{{ isCollapsed ? t("expandShort") : t("collapseShort") }}</span>
-          <span v-if="!isCollapsed">{{ t("collapseSidebar") }}</span>
-        </ActionButton>
+        <div class="mt-3 flex items-center border-t border-slate-100 pt-3" :class="isCollapsed ? 'justify-center' : ''">
+          <button
+            class="max-lg:hidden grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+            type="button"
+            :aria-label="isCollapsed ? expandMenuLabel : collapseMenuLabel"
+            :title="isCollapsed ? expandMenuLabel : collapseMenuLabel"
+            @click="toggleSidebarCollapsedDesktop"
+          >
+            <component :is="isCollapsed ? IconLucidePanelLeftOpen : IconLucidePanelLeftClose" class="h-4 w-4" />
+          </button>
+        </div>
       </footer>
     </aside>
   </div>
@@ -140,6 +142,8 @@
 
 <script setup>
 import ActionButton from "../ui/shell/ActionButton.vue";
+import IconLucidePanelLeftClose from '~icons/lucide/panel-left-close';
+import IconLucidePanelLeftOpen from '~icons/lucide/panel-left-open';
 import { useSidebarNavigation } from "../composables/useSidebarNavigation";
 
 const props = defineProps({
@@ -155,6 +159,8 @@ const {
   t,
   upper,
   isCollapsed,
+  collapseMenuLabel,
+  expandMenuLabel,
   userDisplayName,
   userInitials,
   branchLabel,

@@ -58,7 +58,9 @@ describe("Sidebar localization", () => {
     expect(wrapper.text()).toContain("SATIŞ & PORTFÖY");
     expect(wrapper.text()).toContain("Fırsatlar");
     expect(wrapper.text()).toContain("Doküman Merkezi");
-    expect(wrapper.text()).toContain("Kenar Menüsünü Daralt");
+    const collapseToggles = wrapper.findAll('button[aria-label="Menüyü daralt"]');
+    expect(collapseToggles.length).toBeGreaterThan(0);
+    expect(collapseToggles[0].attributes("title")).toBe("Menüyü daralt");
   });
 
   it("shows alert channel settings for system managers", () => {
@@ -118,6 +120,77 @@ describe("Sidebar localization", () => {
     expect(wrapper.text()).toContain("SALES & PORTFOLIO");
     expect(wrapper.text()).toContain("Leads");
     expect(wrapper.text()).toContain("Document Center");
-    expect(wrapper.text()).toContain("Collapse Sidebar");
+    expect(wrapper.findAll('button[aria-label="Collapse menu"]').length).toBeGreaterThan(0);
+  });
+
+  it("shares the same collapse state between top and footer toggles", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      locale: "tr",
+      user: "Aykut",
+      userId: "aykut",
+      roles: ["AT Manager"],
+    });
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        mobileOpen: false,
+      },
+      global: {
+        directives: {
+          prefetch: {},
+        },
+        stubs: {
+          RouterLink: RouterLinkStub,
+          OfficeBranchSelect: OfficeBranchSelectStub,
+        },
+      },
+    });
+
+    const collapseLabel = "Menüyü daralt";
+    const expandLabel = "Menüyü genişlet";
+
+    expect(wrapper.findAll(`button[aria-label="${collapseLabel}"]`).length).toBe(2);
+    expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
+
+    await wrapper.findAll(`button[aria-label="${collapseLabel}"]`)[1].trigger("click");
+    expect(wrapper.findAll(`button[aria-label="${expandLabel}"]`).length).toBe(2);
+    expect(wrapper.findAll(`button[aria-label="${collapseLabel}"]`).length).toBe(0);
+    expect(wrapper.findAll("nav a p").length).toBe(0);
+
+    await wrapper.findAll(`button[aria-label="${expandLabel}"]`)[0].trigger("click");
+    expect(wrapper.findAll(`button[aria-label="${collapseLabel}"]`).length).toBe(2);
+    expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
+  });
+
+  it("renders nav icons when roles are present", () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      locale: "tr",
+      user: "Aykut",
+      userId: "aykut",
+      roles: ["AT Manager"],
+    });
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        mobileOpen: false,
+      },
+      global: {
+        directives: {
+          prefetch: {},
+        },
+        stubs: {
+          RouterLink: RouterLinkStub,
+          OfficeBranchSelect: OfficeBranchSelectStub,
+        },
+      },
+    });
+
+    const anchors = wrapper.findAll("nav a");
+    const svgs = wrapper.findAll("nav svg");
+    const shortLabels = wrapper.findAll("nav a span");
+    expect(anchors.length).toBeGreaterThan(0);
+    expect(svgs.length + shortLabels.length).toBeGreaterThan(0);
   });
 });

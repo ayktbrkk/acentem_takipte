@@ -1,6 +1,6 @@
 <template>
   <div class="at-filter-bar">
-    <div :class="['at-filter-grid', mobileFiltersOpen ? 'grid' : 'hidden', 'lg:grid']">
+    <div :class="['at-filter-grid', mobileFiltersOpen ? 'max-lg:grid' : 'max-lg:hidden', 'lg:grid']">
       <slot />
     </div>
 

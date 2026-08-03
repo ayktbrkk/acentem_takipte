@@ -1,4 +1,4 @@
-import { computed, shallowRef } from "vue";
+import { computed } from "vue";
 import IconLucideLayoutDashboard from '~icons/lucide/layout-dashboard';
 import IconLucideTarget from '~icons/lucide/target';
 import IconLucideFileText from '~icons/lucide/file-text';
@@ -60,6 +60,8 @@ export function useSidebarNavigation() {
   }
 
   const isCollapsed = computed(() => uiStore.sidebarCollapsed);
+  const collapseMenuLabel = computed(() => t("collapseMenu"));
+  const expandMenuLabel = computed(() => t("expandMenu"));
   const userDisplayName = computed(() => String(authStore.user || authStore.userId || "-").trim() || "-");
   const userInitials = computed(() => {
     const parts = userDisplayName.value.split(/\s+/).filter(Boolean);
@@ -98,7 +100,7 @@ export function useSidebarNavigation() {
       ? [{
         title: t("sectionOverview"),
         items: filterByRoles([
-          { key: "dashboard", label: t("dashboard"), to: "/dashboard", short: "DB", icon: shallowRef(IconLucideLayoutDashboard), badgeClass: "text-brand-700", roles: ROLE_MANAGER },
+          { key: "dashboard", label: t("dashboard"), to: "/dashboard", short: "DB", icon: IconLucideLayoutDashboard, badgeClass: "text-brand-700", roles: ROLE_MANAGER },
         ]),
       }]
       : []),
@@ -106,14 +108,14 @@ export function useSidebarNavigation() {
       ? [{
         title: t("sectionSalesPortfolio"),
         items: filterByRoles([
-          { key: "leads", label: t("leads"), to: "/leads", short: "LD", icon: shallowRef(IconLucideTarget), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "offers", label: t("offers"), to: "/offers", short: "OF", icon: shallowRef(IconLucideFileText), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "policies", label: t("policies"), to: "/policies", short: "PL", icon: shallowRef(IconLucideShield), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "customers", label: t("customers"), to: "/customers", short: "CU", icon: shallowRef(IconLucideUsers), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "customer-relations", label: t("customerRelations"), to: "/customer-relations", short: "CR", icon: shallowRef(IconLucideShare2), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "insured-assets", label: t("insuredAssets"), to: "/insured-assets", short: "IA", icon: shallowRef(IconLucidePackage), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "customer-segment-snapshots", label: t("customerSegmentSnapshots"), to: "/customer-segment-snapshots", short: "SS", icon: shallowRef(IconLucidePieChart), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "customer-search", label: t("customerSearch"), to: "/customer-search", short: "CS", icon: shallowRef(IconLucideSearch), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "leads", label: t("leads"), to: "/leads", short: "LD", icon: IconLucideTarget, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "offers", label: t("offers"), to: "/offers", short: "OF", icon: IconLucideFileText, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "policies", label: t("policies"), to: "/policies", short: "PL", icon: IconLucideShield, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "customers", label: t("customers"), to: "/customers", short: "CU", icon: IconLucideUsers, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "customer-relations", label: t("customerRelations"), to: "/customer-relations", short: "CR", icon: IconLucideShare2, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "insured-assets", label: t("insuredAssets"), to: "/insured-assets", short: "IA", icon: IconLucidePackage, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "customer-segment-snapshots", label: t("customerSegmentSnapshots"), to: "/customer-segment-snapshots", short: "SS", icon: IconLucidePieChart, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "customer-search", label: t("customerSearch"), to: "/customer-search", short: "CS", icon: IconLucideSearch, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
         ]),
       }]
       : []),
@@ -121,16 +123,16 @@ export function useSidebarNavigation() {
       ? [{
         title: t("sectionOperations"),
         items: filterByRoles([
-          { key: "claims", label: t("claims"), to: "/claims", short: "CL", icon: shallowRef(IconLucideAlertTriangle), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "payments", label: t("payments"), to: "/payments", short: "PM", icon: shallowRef(IconLucideCreditCard), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "renewals", label: t("renewals"), to: "/renewals", short: "RN", icon: shallowRef(IconLucideCalendarClock), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "commissions", label: t("commissions"), to: "/commissions", short: "CM", icon: shallowRef(IconLucidePercent), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "reconciliation", label: t("reconciliation"), to: "/reconciliation", short: "RC", icon: shallowRef(IconLucideCheckSquare), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
-          { key: "at-documents", label: t("documentCenter"), to: "/at-documents", short: "DC", icon: shallowRef(IconLucideFolderOpen), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "files", label: t("files"), to: "/files", short: "FL", icon: shallowRef(IconLucidePaperclip), badgeClass: "text-slate-700", roles: ROLE_ACCOUNTANT },
-          { key: "reports", label: t("reports"), to: "/reports", short: "RP", icon: shallowRef(IconLucideBarChart2), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "data-import", label: t("dataImport"), to: "/data-import", short: "IM", icon: shallowRef(IconLucideDownload), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
-          { key: "data-export", label: t("dataExport"), to: "/data-export", short: "EX", icon: shallowRef(IconLucideUpload), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "claims", label: t("claims"), to: "/claims", short: "CL", icon: IconLucideAlertTriangle, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "payments", label: t("payments"), to: "/payments", short: "PM", icon: IconLucideCreditCard, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "renewals", label: t("renewals"), to: "/renewals", short: "RN", icon: IconLucideCalendarClock, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "commissions", label: t("commissions"), to: "/commissions", short: "CM", icon: IconLucidePercent, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "reconciliation", label: t("reconciliation"), to: "/reconciliation", short: "RC", icon: IconLucideCheckSquare, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "at-documents", label: t("documentCenter"), to: "/at-documents", short: "DC", icon: IconLucideFolderOpen, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "files", label: t("files"), to: "/files", short: "FL", icon: IconLucidePaperclip, badgeClass: "text-slate-700", roles: ROLE_ACCOUNTANT },
+          { key: "reports", label: t("reports"), to: "/reports", short: "RP", icon: IconLucideBarChart2, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "data-import", label: t("dataImport"), to: "/data-import", short: "IM", icon: IconLucideDownload, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "data-export", label: t("dataExport"), to: "/data-export", short: "EX", icon: IconLucideUpload, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
         ]),
       }]
       : []),
@@ -138,16 +140,16 @@ export function useSidebarNavigation() {
       ? [{
         title: t("sectionCommunication"),
         items: filterByRoles([
-          { key: "communication", label: t("communication"), to: "/communication", short: "CM", icon: shallowRef(IconLucideMessageSquare), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "call-notes", label: t("callNotes"), to: "/call-notes", short: "CN", icon: shallowRef(IconLucidePhone), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "segments", label: t("segments"), to: "/segments", short: "SG", icon: shallowRef(IconLucideLayers), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "campaigns", label: t("campaigns"), to: "/campaigns", short: "CP", icon: shallowRef(IconLucideMegaphone), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "tasks", label: t("tasks"), to: "/tasks", short: "TS", icon: shallowRef(IconLucideCheckCircle), badgeClass: "text-slate-700", roles: ROLE_ACCOUNTANT },
-          { key: "reminders", label: t("reminders"), to: "/reminders", short: "RM", icon: shallowRef(IconLucideBell), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "activities", label: t("activities"), to: "/activities", short: "AC", icon: shallowRef(IconLucideActivity), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "ownership-assignments", label: t("ownershipAssignments"), to: "/ownership-assignments", short: "OA", icon: shallowRef(IconLucideUserCheck), badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
-          { key: "notification-drafts", label: t("notificationDrafts"), to: "/notification-drafts", short: "ND", icon: shallowRef(IconLucideEdit3), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
-          { key: "notification-outbox", label: t("notificationOutbox"), to: "/notification-outbox", short: "NO", icon: shallowRef(IconLucideSend), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "communication", label: t("communication"), to: "/communication", short: "CM", icon: IconLucideMessageSquare, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "call-notes", label: t("callNotes"), to: "/call-notes", short: "CN", icon: IconLucidePhone, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "segments", label: t("segments"), to: "/segments", short: "SG", icon: IconLucideLayers, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "campaigns", label: t("campaigns"), to: "/campaigns", short: "CP", icon: IconLucideMegaphone, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "tasks", label: t("tasks"), to: "/tasks", short: "TS", icon: IconLucideCheckCircle, badgeClass: "text-slate-700", roles: ROLE_ACCOUNTANT },
+          { key: "reminders", label: t("reminders"), to: "/reminders", short: "RM", icon: IconLucideBell, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "activities", label: t("activities"), to: "/activities", short: "AC", icon: IconLucideActivity, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "ownership-assignments", label: t("ownershipAssignments"), to: "/ownership-assignments", short: "OA", icon: IconLucideUserCheck, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "notification-drafts", label: t("notificationDrafts"), to: "/notification-drafts", short: "ND", icon: IconLucideEdit3, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "notification-outbox", label: t("notificationOutbox"), to: "/notification-outbox", short: "NO", icon: IconLucideSend, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
         ]),
       }]
       : []),
@@ -155,11 +157,11 @@ export function useSidebarNavigation() {
       ? [{
         title: t("sectionMaster"),
         items: filterByRoles([
-          { key: "companies", label: t("companies"), to: "/insurance-companies", short: "IC", icon: shallowRef(IconLucideBuilding), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
-          { key: "branches", label: t("branches"), to: "/branches", short: "BR", icon: shallowRef(IconLucideMapPin), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
-          { key: "office-branches", label: t("officeBranches"), to: "/office-branches", short: "OB", icon: shallowRef(IconLucideMapPin), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
-          { key: "sales-entities", label: t("salesEntities"), to: "/sales-entities", short: "SE", icon: shallowRef(IconLucideBriefcase), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
-          { key: "templates", label: t("templates"), to: "/notification-templates", short: "NT", icon: shallowRef(IconLucideFileSignature), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "companies", label: t("companies"), to: "/insurance-companies", short: "IC", icon: IconLucideBuilding, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "branches", label: t("branches"), to: "/branches", short: "BR", icon: IconLucideMapPin, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "office-branches", label: t("officeBranches"), to: "/office-branches", short: "OB", icon: IconLucideMapPin, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "sales-entities", label: t("salesEntities"), to: "/sales-entities", short: "SE", icon: IconLucideBriefcase, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "templates", label: t("templates"), to: "/notification-templates", short: "NT", icon: IconLucideFileSignature, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
         ]),
       }]
       : []),
@@ -167,9 +169,9 @@ export function useSidebarNavigation() {
       ? [{
         title: t("sectionFinance"),
         items: filterByRoles([
-          { key: "accounting-entries", label: t("accountingEntries"), to: "/accounting-entries", short: "AC", icon: shallowRef(IconLucideReceipt), badgeClass: "text-slate-700", roles: ROLE_SYSTEM },
-          { key: "reconciliation-items", label: t("reconciliationItems"), to: "/reconciliation-items", short: "RI", icon: shallowRef(IconLucideListChecks), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
-          { key: "access-logs", label: t("accessLogs"), to: "/access-logs", short: "LG", icon: shallowRef(IconLucideScrollText), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "accounting-entries", label: t("accountingEntries"), to: "/accounting-entries", short: "AC", icon: IconLucideReceipt, badgeClass: "text-slate-700", roles: ROLE_SYSTEM },
+          { key: "reconciliation-items", label: t("reconciliationItems"), to: "/reconciliation-items", short: "RI", icon: IconLucideListChecks, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "access-logs", label: t("accessLogs"), to: "/access-logs", short: "LG", icon: IconLucideScrollText, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
         ]),
       }]
       : []),
@@ -177,8 +179,8 @@ export function useSidebarNavigation() {
       ? [{
         title: t("sectionAdminSettings"),
         items: filterByRoles([
-          { key: "general-settings", label: t("generalSettings"), to: "/admin/general-settings", short: "GS", icon: shallowRef(IconLucideBriefcase), badgeClass: "text-slate-700", roles: ROLE_SYSTEM },
-          { key: "alert-channels", label: t("alertChannelsSettings"), to: "/admin/alert-channels", short: "AL", icon: shallowRef(IconLucideMessageSquare), badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
+          { key: "general-settings", label: t("generalSettings"), to: "/admin/general-settings", short: "GS", icon: IconLucideBriefcase, badgeClass: "text-slate-700", roles: ROLE_SYSTEM },
+          { key: "alert-channels", label: t("alertChannelsSettings"), to: "/admin/alert-channels", short: "AL", icon: IconLucideMessageSquare, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
         ]),
       }]
       : []),
@@ -192,6 +194,8 @@ export function useSidebarNavigation() {
     t,
     upper,
     isCollapsed,
+    collapseMenuLabel,
+    expandMenuLabel,
     userDisplayName,
     userInitials,
     branchLabel,

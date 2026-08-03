@@ -13,7 +13,7 @@
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <slot name="actions" />
-          <div v-if="showRecordCount && recordCount !== null" class="ml-2 hidden h-4 w-px bg-slate-200 lg:block"></div>
+          <div v-if="showRecordCount && recordCount !== null" class="ml-2 max-lg:hidden h-4 w-px bg-slate-200 lg:block"></div>
           <span
             v-if="showRecordCount && recordCount !== null && recordCount !== undefined"
             class="text-xs font-semibold uppercase tracking-wider text-slate-400"

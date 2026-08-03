@@ -17,7 +17,7 @@
     <div class="flex flex-wrap items-center gap-2">
       <slot name="primary-filters" />
       
-      <div class="h-6 w-px bg-slate-200 mx-1 hidden lg:block" />
+      <div class="h-6 w-px bg-slate-200 mx-1 max-lg:hidden lg:block" />
       
       <button
         class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
