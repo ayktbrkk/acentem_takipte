@@ -49,16 +49,9 @@ def build_reconciliation_workbench(
             pluck="name",
             limit_page_length=0,
         )
-        if not permitted_entry_names:
-            return {
-                "rows": [],
-                "metrics": {
-                    "open": 0,
-                    "resolved": 0,
-                    "ignored": 0,
-                    "failed_entries": 0,
-                },
-            }
+        # No early return: commission/collection previews must still render even
+        # when the branch has no accounting entries yet (rows stay empty via the
+        # empty `accounting_entry in []` filter below).
         filters["accounting_entry"] = ["in", list(set(permitted_entry_names))]
 
     total_rows = frappe.db.count("AT Reconciliation Item", filters)

@@ -301,6 +301,49 @@ class TestAccountingReconciliation(IntegrationTestCase):
         )
         self.assertEqual(by_entity_total, 350.0)
 
+    def test_commission_preview_computed_without_accounting_entries(self):
+        """The workbench must still compute the commission accrual/aging/by-entity
+        preview for a branch that has commission policies but no accounting entries
+        yet (previously it early-returned and dropped the whole commission preview)."""
+        from acentem_takipte.acentem_takipte.tests.test_utils import ensure_test_office_branch
+
+        suffix = frappe.generate_hash(length=8)
+        insurance_company = frappe.get_doc(
+            {"doctype": "AT Insurance Company", "company_name": f"WB2 Ins {suffix}", "company_code": f"W2{suffix[:4]}"}
+        ).insert(ignore_permissions=True)
+        branch = frappe.get_doc(
+            {"doctype": "AT Branch", "branch_name": f"WB2 Branch {suffix}", "branch_code": f"W2B{suffix[:4]}", "insurance_company": insurance_company.name}
+        ).insert(ignore_permissions=True)
+        office_branch = ensure_test_office_branch(suffix)
+        sales_entity = frappe.get_doc(
+            {"doctype": "AT Sales Entity", "entity_type": "Agency", "full_name": f"WB2 Agency {suffix}", "office_branch": office_branch}
+        ).insert(ignore_permissions=True)
+        customer = frappe.get_doc(
+            {"doctype": "AT Customer", "tax_id": _random_tax_id(), "full_name": f"WB2 Cust {suffix}", "phone": "05559876543", "email": f"wb2.{suffix}@example.com", "assigned_agent": "Administrator"}
+        ).insert(ignore_permissions=True)
+
+        kwargs = {
+            "customer": customer.name, "sales_entity": sales_entity.name,
+            "insurance_company": insurance_company.name, "branch": branch.name,
+            "office_branch": office_branch, "issue_date": nowdate(),
+            "start_date": nowdate(), "end_date": add_days(nowdate(), 365),
+            "currency": "TRY", "net_premium": 1000, "tax_amount": 120,
+        }
+        frappe.get_doc({"doctype": "AT Policy", "status": "Active", "commission_amount": 150, **kwargs}).insert(ignore_permissions=True)
+        frappe.get_doc({"doctype": "AT Policy", "status": "Record", "commission_amount": 200, **kwargs}).insert(ignore_permissions=True)
+
+        # No accounting entries for this branch (policies never synced).
+        self.assertEqual(
+            frappe.db.count("AT Accounting Entry", {"office_branch": office_branch}), 0,
+        )
+
+        result = build_reconciliation_workbench(office_branch=office_branch)
+
+        self.assertEqual(result["rows"], [])
+        aging = result["commission_preview"]["aging"]
+        self.assertEqual(aging["total_count"], 2)
+        self.assertEqual(round(aging["total_amount"], 2), 350.0)
+
     @patch("frappe.get_all", return_value=[])
     def test_commission_aging_and_by_entity_use_unbounded_policy_queries(self, mock_get_all):
         """Workbench commission aging/by-entity must not silently truncate at a
