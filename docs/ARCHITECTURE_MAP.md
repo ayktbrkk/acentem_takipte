@@ -499,8 +499,14 @@ Primary backend surfaces:
 
 ### Localization
 
-- Frappe translations live under `acentem_takipte/translations/`.
-- Frontend locale is normalized in `state/session.js` and reflected into `document.documentElement.lang`.
+- Frappe translations live under `acentem_takipte/translations/` (en.csv/tr.csv source of truth;
+  `tools/localization_guard.py` enforces TR/EN parity, no bare `frappe.throw`, no missing en.csv keys).
+- Frontend locale is normalized in `platform/state/session.js` and reflected into `document.documentElement.lang`.
+- Frontend domain translations are **domain-owned**: canonical maps live in
+  `frontend/src/domains/<domain>/i18n/translations.js`; `platform/i18n/index.js` aggregates them.
+  The legacy `frontend/src/config/*_translations.js` files (domain maps) are re-export shims for
+  backward compatibility. Platform-scoped maps (common, sidebar, router, document, access_request,
+  customer_search, import, aux, quick-create) live in `platform/i18n/*` or `config/`.
 
 ### Build and deployment boundary
 
