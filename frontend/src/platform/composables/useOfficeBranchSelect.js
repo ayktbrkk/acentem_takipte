@@ -3,41 +3,13 @@ import { useRoute, useRouter } from "vue-router";
 
 import { useAuthStore } from "../state/authStore";
 import { useBranchStore } from "../state/branchStore";
+import { BRANCH_SCOPE_TRANSLATIONS } from "../i18n/branchScope";
 
 export function useOfficeBranchSelect() {
   const router = useRouter();
   const route = useRoute();
   const authStore = useAuthStore();
   const branchStore = useBranchStore();
-
-  const copy = {
-    tr: {
-      scope: "Şube Kapsamı",
-      allBranches: "Tüm Şubeler",
-      allBranchesActive: "Tüm şubeler seçili",
-      singleBranchLocked: "Sabit kapsam",
-      defaultBranchPrefix: "Varsayılan şube",
-      defaultBranchMissing: "Varsayılan şube tanımlı değil",
-      headOfficePrefix: "Merkez şube",
-      selected: "Seçili",
-      searchPlaceholder: "Şube ara...",
-      noResults: "Eşleşen şube bulunamadı",
-      clear: "Aramayı temizle",
-    },
-    en: {
-      scope: "Branch Scope",
-      allBranches: "All Branches",
-      allBranchesActive: "All branches selected",
-      singleBranchLocked: "Locked scope",
-      defaultBranchPrefix: "Default branch",
-      defaultBranchMissing: "Default branch not set",
-      headOfficePrefix: "Head office",
-      selected: "Selected",
-      searchPlaceholder: "Search branch...",
-      noResults: "No matching branch",
-      clear: "Clear search",
-    },
-  };
 
   const selectedValue = computed(() => branchStore.selected || "");
   const isLocked = computed(() => !branchStore.canAccessAll && branchStore.options.length <= 1);
@@ -51,48 +23,92 @@ export function useOfficeBranchSelect() {
   const typeaheadQuery = ref("");
   const typeaheadTimer = ref(null);
   const searchQuery = ref("");
+  const collapsedParents = ref(new Set());
+  const openDirection = ref("down");
+  const panelStyle = ref({});
 
   function t(key) {
     const locale = unref(authStore.locale) || "en";
-    return copy[locale]?.[key] || copy.en[key] || key;
+    const normalized = String(locale).toLowerCase().startsWith("tr") ? "tr" : "en";
+    return BRANCH_SCOPE_TRANSLATIONS[normalized]?.[key] || BRANCH_SCOPE_TRANSLATIONS.en[key] || key;
   }
 
-  function buildOptionMeta(option) {
-    if (!option || option.value === null) {
-      return "";
-    }
-
-    const row = option.row || {};
-    const detailParts = [
-      Number(row.is_head_office || 0) === 1 ? t("headOfficePrefix") : "",
-      String(option.code || "").trim(),
-      String(option.city || "").trim(),
-    ].filter(Boolean);
-    return detailParts.join(" • ");
-  }
-
-  const selectableOptions = computed(() => {
+  const allOptions = computed(() => {
     const options = branchStore.options.map((option) => ({
       value: option.value,
-      label: option.label,
-      meta: buildOptionMeta(option),
+      name: String(option.row?.office_branch_name || option.label || "").trim(),
+      code: String(option.code || "").trim(),
+      city: String(option.city || "").trim(),
+      isHeadOffice: Boolean(Number(option.row?.is_head_office || 0) === 1),
+      isDefault: Boolean(Number(option.row?.is_default || 0) === 1),
+      depth: Number(option.depth || 0),
+      parent: String(option.row?.parent_office_branch || "").trim() || null,
+      hasChildren: false,
     }));
+
+    const byName = new Map(options.map((option) => [option.value, option]));
+    for (const option of options) {
+      if (option.parent && byName.has(option.parent)) {
+        byName.get(option.parent).hasChildren = true;
+      }
+    }
+
     if (branchStore.canAccessAll) {
-      options.unshift({ value: null, label: t("allBranches"), meta: "" });
+      options.unshift({
+        value: null,
+        name: t("allBranches"),
+        code: "",
+        city: "",
+        isHeadOffice: false,
+        isDefault: false,
+        depth: -1,
+        parent: null,
+        hasChildren: false,
+      });
     }
     return options;
   });
 
+  const visibleByExpansion = computed(() => {
+    const collapsed = collapsedParents.value;
+    const byName = new Map(allOptions.value.map((option) => [option.value, option]));
+    return allOptions.value.filter((option) => {
+      if (!option.parent) {
+        return true;
+      }
+      let current = option;
+      while (current && current.parent) {
+        if (collapsed.has(current.parent)) {
+          return false;
+        }
+        current = byName.get(current.parent);
+      }
+      return true;
+    });
+  });
+
+  function normalizeOptionLabel(label) {
+    return String(label || "")
+      .toLocaleLowerCase(unref(authStore.locale) || "en")
+      .replace(/[\u0131]/g, "i")
+      .replace(/i\u0307/g, "i")
+      .replace(/[\u0307\u0327]/g, "")
+      .replace(/^[\s\-–—•]+/u, "")
+      .trim();
+  }
+
+  function optionMatchesQuery(option, query) {
+    return [option.name, option.code, option.city]
+      .map((value) => normalizeOptionLabel(value))
+      .some((value) => value.includes(query));
+  }
+
   const filteredOptions = computed(() => {
     const query = normalizeOptionLabel(searchQuery.value);
     if (!query) {
-      return selectableOptions.value;
+      return visibleByExpansion.value;
     }
-    return selectableOptions.value.filter((option) => {
-      const label = normalizeOptionLabel(option.label);
-      const meta = normalizeOptionLabel(option.meta);
-      return label.includes(query) || meta.includes(query);
-    });
+    return allOptions.value.filter((option) => optionMatchesQuery(option, query));
   });
 
   const defaultBranchLabel = computed(() =>
@@ -102,32 +118,35 @@ export function useOfficeBranchSelect() {
     const row = branchStore.items.find((item) => Number(item?.is_head_office || 0) === 1);
     return row?.office_branch_name || row?.name || "";
   });
+
   const selectedLabel = computed(() => {
     if (branchStore.canAccessAll && !selectedValue.value) {
       return t("allBranches");
     }
-    return branchStore.activeBranch?.office_branch_name || branchStore.activeBranch?.name || defaultBranchLabel.value || t("allBranches");
+    const activeBranch = branchStore.activeBranch;
+    return (
+      activeBranch?.office_branch_name
+      || activeBranch?.name
+      || defaultBranchLabel.value
+      || t("allBranches")
+    );
   });
-  const selectedMeta = computed(() => {
+
+  const selectedContextLabel = computed(() => {
     if (branchStore.canAccessAll && !selectedValue.value) {
       return t("allBranchesActive");
     }
-
     const activeBranch = branchStore.activeBranch;
     if (!activeBranch) {
       return "";
     }
-
-    const detailParts = [
+    const parts = [
       String(activeBranch.office_branch_code || "").trim(),
       String(activeBranch.city || "").trim(),
     ].filter(Boolean);
-
-    if (Number(activeBranch.is_head_office || 0) === 1) {
-      detailParts.unshift(t("headOfficePrefix"));
-    }
-    return detailParts.join(" • ");
+    return parts.join(" • ");
   });
+
   const helperLabel = computed(() => {
     const defaultLabel = defaultBranchLabel.value
       ? `${t("defaultBranchPrefix")}: ${defaultBranchLabel.value}`
@@ -135,7 +154,7 @@ export function useOfficeBranchSelect() {
     const headLabel = headOfficeLabel.value
       ? `${t("headOfficePrefix")}: ${headOfficeLabel.value}`
       : "";
-    const activeLabel = branchStore.activeBranch?.office_branch_name || branchStore.activeBranch?.name || "";
+    const activeLabel = selectedLabel.value;
 
     if (branchStore.canAccessAll && !branchStore.requestBranch) {
       return [t("allBranchesActive"), headLabel, defaultLabel].filter(Boolean).join(" • ");
@@ -154,6 +173,7 @@ export function useOfficeBranchSelect() {
     }
     return labels.filter(Boolean).join(" • ");
   });
+
   const activeDescendantId = computed(() => {
     if (!isOpen.value || highlightedIndex.value < 0) {
       return undefined;
@@ -189,13 +209,6 @@ export function useOfficeBranchSelect() {
         optionRefs.value[normalizedIndex]?.focus?.();
       });
     }
-  }
-
-  function normalizeOptionLabel(label) {
-    return String(label || "")
-      .replace(/^[\s\-–—•]+/u, "")
-      .trim()
-      .toLocaleLowerCase(unref(authStore.locale) || "en");
   }
 
   function getHighlightedParts(text, query) {
@@ -279,14 +292,61 @@ export function useOfficeBranchSelect() {
       ...Array.from({ length: startIndex }, (_, offset) => offset),
     ];
 
-    const matchedIndex = orderedIndices.find((index) => normalizeOptionLabel(options[index]?.label).startsWith(nextQuery));
+    const matchedIndex = orderedIndices.find((index) =>
+      normalizeOptionLabel(options[index]?.name || options[index]?.value).startsWith(nextQuery),
+    );
     if (matchedIndex !== undefined) {
       setHighlightedIndex(matchedIndex, { focus: true });
     }
   }
 
+  function computeOpenDirection() {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const rect = triggerRef.value?.getBoundingClientRect?.();
+    if (!rect) {
+      return;
+    }
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    openDirection.value = spaceBelow < 320 && spaceAbove > spaceBelow ? "up" : "down";
+  }
+
+  function computePanelPlacement() {
+    if (typeof window === "undefined" || !pickerRef.value) {
+      return;
+    }
+    const wrapperRect = pickerRef.value.getBoundingClientRect();
+    const style = {};
+
+    const panelWidth = Math.min(380, window.innerWidth - 32);
+    const overflowLeft = 12 - (wrapperRect.right - panelWidth);
+    if (overflowLeft > 0) {
+      style.right = `${-overflowLeft}px`;
+    }
+
+    if (openDirection.value === "up") {
+      style.maxHeight = `${Math.max(200, Math.min(wrapperRect.top - 16, window.innerHeight * 0.7))}px`;
+    } else {
+      const spaceBelow = window.innerHeight - wrapperRect.bottom;
+      style.maxHeight = `${Math.max(200, Math.min(spaceBelow - 8, window.innerHeight * 0.7))}px`;
+    }
+
+    panelStyle.value = style;
+  }
+
+  function onWindowResize() {
+    if (isOpen.value) {
+      computeOpenDirection();
+      computePanelPlacement();
+    }
+  }
+
   function openPicker(preferredIndex = null, options = {}) {
     if (isLocked.value) return;
+    computeOpenDirection();
+    computePanelPlacement();
     isOpen.value = true;
     searchQuery.value = "";
     clearTypeahead();
@@ -334,6 +394,23 @@ export function useOfficeBranchSelect() {
       return;
     }
     openPicker();
+  }
+
+  function toggleCollapse(option) {
+    if (!option || !option.hasChildren) {
+      return;
+    }
+    const next = new Set(collapsedParents.value);
+    if (next.has(option.value)) {
+      next.delete(option.value);
+    } else {
+      next.add(option.value);
+    }
+    collapsedParents.value = next;
+  }
+
+  function isBranchCollapsed(option) {
+    return Boolean(option && collapsedParents.value.has(option.value));
   }
 
   function clearSearch() {
@@ -486,6 +563,17 @@ export function useOfficeBranchSelect() {
     setHighlightedIndex(findSelectedOptionIndex(), { focus: false });
   });
 
+  watch(isOpen, (open) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (open) {
+      window.addEventListener("resize", onWindowResize);
+    } else {
+      window.removeEventListener("resize", onWindowResize);
+    }
+  });
+
   onMounted(() => {
     document.addEventListener("click", onDocumentClick);
     document.addEventListener("keydown", onEscape);
@@ -494,6 +582,9 @@ export function useOfficeBranchSelect() {
   onBeforeUnmount(() => {
     document.removeEventListener("click", onDocumentClick);
     document.removeEventListener("keydown", onEscape);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("resize", onWindowResize);
+    }
     clearTypeahead();
   });
 
@@ -502,6 +593,8 @@ export function useOfficeBranchSelect() {
     selectedValue,
     isLocked,
     isOpen,
+    openDirection,
+    panelStyle,
     highlightedIndex,
     pickerRef,
     triggerRef,
@@ -509,10 +602,9 @@ export function useOfficeBranchSelect() {
     optionRefs,
     listboxId,
     searchQuery,
-    selectableOptions,
     filteredOptions,
     selectedLabel,
-    selectedMeta,
+    selectedContextLabel,
     helperLabel,
     activeDescendantId,
     optionDomId,
@@ -523,6 +615,8 @@ export function useOfficeBranchSelect() {
     onListboxKeydown,
     onSearchInputKeydown,
     toggleOpen,
+    toggleCollapse,
+    isBranchCollapsed,
     onSelect,
     isTypeableCharacter,
   };

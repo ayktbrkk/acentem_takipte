@@ -15,6 +15,7 @@ import { RENEWAL_TRANSLATIONS } from "@/domains/renewals/i18n/translations";
 import { CUSTOMER_SEARCH_TRANSLATIONS } from "@/config/customer_search_translations";
 import { DASHBOARD_TRANSLATIONS } from "@/domains/dashboard/i18n/translations";
 import { SIDEBAR_TRANSLATIONS } from "@/platform/i18n/sidebar";
+import { BRANCH_SCOPE_TRANSLATIONS } from "@/platform/i18n/branchScope";
 import { AUX_WORKBENCH_TRANSLATIONS } from "@/config/aux_workbench_translations";
 import { AUX_DETAIL_TRANSLATIONS } from "@/config/aux_detail_translations";
 import { ROUTER_TRANSLATIONS } from "@/platform/i18n/router";
@@ -40,6 +41,7 @@ const ALL_TRANSLATIONS = {
   customer_search: CUSTOMER_SEARCH_TRANSLATIONS,
   dashboard: DASHBOARD_TRANSLATIONS,
   sidebar: SIDEBAR_TRANSLATIONS,
+  branch_scope: BRANCH_SCOPE_TRANSLATIONS,
   aux_workbench: AUX_WORKBENCH_TRANSLATIONS,
   aux_detail: AUX_DETAIL_TRANSLATIONS,
   router: ROUTER_TRANSLATIONS,

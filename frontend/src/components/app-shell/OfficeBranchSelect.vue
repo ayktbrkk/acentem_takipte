@@ -1,68 +1,95 @@
 <template>
-  <div ref="pickerRef" class="relative min-w-[240px] max-w-[340px]">
+  <div ref="pickerRef" class="relative w-full min-w-0 md:w-[300px]">
     <div
-      class="surface-card rounded-xl px-2.5 py-2 transition"
+      class="rounded-xl border border-slate-200/80 bg-white px-3 py-2 transition"
       :class="isLocked
-        ? 'border-slate-200 bg-slate-100/85'
-        : 'border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-brand-50/65 shadow-slate-200/70'"
+        ? 'bg-slate-50/80'
+        : 'shadow-sm shadow-slate-900/[0.04] hover:border-slate-300'"
     >
-      <div class="mb-1 flex items-center justify-between gap-2">
-        <span class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{{ t("scope") }}</span>
-        <span
-          v-if="isLocked"
-          class="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-500"
-        >
-          {{ t("singleBranchLocked") }}
-        </span>
-      </div>
-
       <button
         ref="triggerRef"
         type="button"
-        class="group flex w-full items-center justify-between gap-2 rounded-lg border border-transparent px-1.5 py-1 text-left transition"
+        class="flex w-full items-center gap-2.5 text-left transition"
         :class="isLocked
-          ? 'cursor-not-allowed text-slate-500'
-          : 'text-slate-900 hover:border-brand-200 hover:bg-white/85 focus:outline-none focus-visible:border-brand-400 focus-visible:ring-2 focus-visible:ring-brand-200/60'"
+          ? 'cursor-not-allowed opacity-80'
+          : 'focus:outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-brand-400'"
         :aria-label="t('scope')"
+        :aria-haspopup="isLocked ? undefined : 'listbox'"
         :aria-expanded="isOpen ? 'true' : 'false'"
-        :aria-controls="listboxId"
+        :aria-controls="isOpen ? listboxId : undefined"
         :aria-activedescendant="activeDescendantId"
         :disabled="isLocked"
         data-testid="branch-scope-trigger"
         @click="toggleOpen"
         @keydown="onTriggerKeydown"
       >
-        <span class="flex min-w-0 items-center gap-2">
-          <span class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-brand-500 shadow-sm shadow-brand-300/60"></span>
-          <span class="min-w-0">
-            <span class="block truncate text-[13px] font-semibold">{{ selectedLabel }}</span>
-            <span v-if="selectedMeta" class="block truncate text-[11px] text-slate-500">{{ selectedMeta }}</span>
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700">
+          <component :is="IconBuilding2" class="h-4 w-4" aria-hidden="true" />
+        </span>
+
+        <span class="min-w-0 flex-1">
+          <span class="flex items-center gap-1.5">
+            <span class="truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              {{ t("scope") }}
+            </span>
+            <span
+              v-if="isLocked"
+              class="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold text-slate-500"
+            >
+              {{ t("singleBranchLocked") }}
+            </span>
+          </span>
+          <span class="block truncate text-[13px] font-semibold text-slate-900" :title="selectedLabel">
+            {{ selectedLabel }}
           </span>
         </span>
-        <span class="text-xs text-slate-500 transition group-hover:text-slate-700">{{ isOpen ? '▲' : '▼' }}</span>
-      </button>
 
-      <p class="mt-1 truncate text-[10px] text-slate-500">{{ helperLabel }}</p>
+        <span class="shrink-0 text-slate-400" :aria-hidden="true">
+          <component :is="isOpen ? IconChevronUp : IconChevronDown" class="h-4 w-4" />
+        </span>
+      </button>
     </div>
 
     <div
       v-if="isOpen && !isLocked"
       :id="listboxId"
-      class="absolute right-0 top-[calc(100%+0.45rem)] z-40 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10"
+      :style="panelStyle"
+      class="absolute right-0 z-40 flex w-[380px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10"
+      :class="openDirection === 'up' ? 'bottom-full mb-2' : 'top-[calc(100%+0.5rem)]'"
       role="listbox"
       tabindex="-1"
       :aria-label="t('scope')"
       @keydown="onListboxKeydown"
     >
-      <div class="border-b border-slate-100 bg-slate-50/70 px-2.5 py-2">
-        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{{ t("scope") }}</p>
-        <p class="mt-0.5 text-xs text-slate-500">{{ helperLabel }}</p>
-        <div class="mt-2 relative">
+      <div class="border-b border-slate-100 bg-slate-50/70 px-3 py-2.5">
+        <p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          {{ t("activeScope") }}
+        </p>
+        <p class="mt-0.5 truncate text-[13px] font-semibold text-slate-900" :title="selectedLabel">
+          {{ selectedLabel }}
+        </p>
+        <p
+          v-if="selectedContextLabel"
+          class="mt-0.5 truncate text-[11px] text-slate-500"
+          :title="selectedContextLabel"
+        >
+          {{ selectedContextLabel }}
+        </p>
+        <p class="mt-1.5 border-t border-slate-100 pt-1.5 text-[11px] leading-4 text-slate-500">
+          {{ helperLabel }}
+        </p>
+      </div>
+
+      <div class="border-b border-slate-100 px-3 py-2">
+        <div class="relative">
+          <span class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true">
+            <component :is="IconSearch" class="h-3.5 w-3.5" />
+          </span>
           <input
             ref="searchInputRef"
             v-model.trim="searchQuery"
             type="text"
-            class="w-full rounded-md border border-slate-200 bg-white px-2 py-1 pr-6 text-xs text-slate-700 placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-200/60"
+            class="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-8 pr-7 text-xs text-slate-700 placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-200/60"
             :placeholder="t('searchPlaceholder')"
             data-testid="branch-search-input"
             @keydown="onSearchInputKeydown"
@@ -70,66 +97,104 @@
           <button
             v-if="searchQuery"
             type="button"
-            class="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+            class="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             :aria-label="t('clear')"
             data-testid="branch-search-clear"
             @click="clearSearch"
           >
-            <span class="text-sm">×</span>
+            <component :is="IconX" class="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </div>
       </div>
-      <p
-        v-if="filteredOptions.length === 0"
-        class="px-2.5 py-3 text-center text-xs text-slate-500"
-        data-testid="branch-option-empty"
-      >
-        {{ t("noResults") }}
-      </p>
-      <button
-        v-for="(option, index) in filteredOptions"
-        :key="option.value === null ? '__all__' : option.value"
-        :id="optionDomId(index)"
-        type="button"
-        role="option"
-        :ref="(el) => setOptionRef(el, index)"
-        class="flex w-full cursor-pointer items-start justify-between gap-2 px-2.5 py-2 text-left text-[13px] transition"
-        :class="highlightedIndex === index
-          ? 'bg-brand-50 text-brand-800'
-          : String(option.value ?? '') === selectedValue
-          ? 'bg-brand-50/60 text-brand-800'
-          : 'text-slate-700 hover:bg-slate-50'"
-        :aria-selected="String(option.value ?? '') === selectedValue ? 'true' : 'false'"
-        :data-testid="`branch-option-${option.value === null ? 'all' : option.value}`"
-        @mouseenter="setHighlightedIndex(index, { focus: false })"
-        @click="onSelect(option.value)"
-      >
-        <span class="min-w-0">
-          <span
-            class="branch-option-label block truncate"
-            :class="option.value === null ? 'font-semibold' : 'font-medium'"
-          >
-            <template v-for="(part, pIdx) in getHighlightedParts(option.label, searchQuery)" :key="pIdx">
-              <mark v-if="part.isMatch">{{ part.text }}</mark>
-              <span v-else>{{ part.text }}</span>
-            </template>
-          </span>
-          <span v-if="option.meta" class="mt-0.5 block truncate text-[11px] text-slate-500">
-            {{ option.meta }}
-          </span>
-        </span>
-        <span
-          v-if="String(option.value ?? '') === selectedValue"
-          class="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold text-brand-700"
+
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1">
+        <p
+          v-if="filteredOptions.length === 0"
+          class="px-3 py-4 text-center text-xs text-slate-500"
+          data-testid="branch-option-empty"
         >
-          {{ t("selected") }}
-        </span>
-      </button>
+          {{ t("noResults") }}
+        </p>
+
+        <div
+          v-for="(option, index) in filteredOptions"
+          :key="option.value === null ? '__all__' : option.value"
+          :id="optionDomId(index)"
+          role="option"
+          tabindex="0"
+          :ref="(el) => setOptionRef(el, index)"
+          class="group flex w-full cursor-pointer items-center gap-1.5 rounded-lg py-1.5 pr-2 text-left text-[13px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          :class="highlightedIndex === index
+            ? 'bg-brand-50 text-brand-800'
+            : String(option.value ?? '') === selectedValue
+              ? 'bg-brand-50/60 text-brand-800'
+              : 'text-slate-700 hover:bg-slate-50'"
+          :style="{ paddingLeft: `${8 + Math.max(option.depth, 0) * 16}px` }"
+          :aria-selected="String(option.value ?? '') === selectedValue ? 'true' : 'false'"
+          :data-testid="`branch-option-${option.value === null ? 'all' : option.value}`"
+          @mouseenter="setHighlightedIndex(index, { focus: false })"
+          @click="onSelect(option.value)"
+          @keydown.enter.prevent="onSelect(option.value)"
+          @keydown.space.prevent="onSelect(option.value)"
+        >
+          <button
+            v-if="option.hasChildren"
+            type="button"
+            class="grid h-5 w-5 shrink-0 place-items-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            :aria-label="isBranchCollapsed(option) ? t('expandChildren') : t('collapseChildren')"
+            @click.stop="toggleCollapse(option)"
+          >
+            <component :is="isBranchCollapsed(option) ? IconChevronRight : IconChevronDown" class="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+          <span v-else class="h-5 w-5 shrink-0" aria-hidden="true" />
+
+          <span class="min-w-0 flex-1">
+            <span class="flex items-center gap-1.5">
+              <span
+                class="branch-option-label"
+                :class="option.value === null ? 'font-semibold' : 'font-medium'"
+              >
+                <template v-for="(part, pIdx) in getHighlightedParts(option.name, searchQuery)" :key="pIdx">
+                  <mark v-if="part.isMatch">{{ part.text }}</mark>
+                  <span v-else>{{ part.text }}</span>
+                </template>
+              </span>
+              <span
+                v-if="option.isHeadOffice"
+                class="shrink-0 rounded-full border border-brand-100 bg-brand-50 px-1.5 py-0.5 text-[9px] font-semibold text-brand-700"
+              >
+                {{ t("headOfficeShort") }}
+              </span>
+            </span>
+            <span
+              v-if="option.code || option.city"
+              class="mt-0.5 block truncate text-[11px] text-slate-500"
+            >
+              {{ [option.code, option.city].filter(Boolean).join(" • ") }}
+            </span>
+          </span>
+
+          <span
+            v-if="String(option.value ?? '') === selectedValue"
+            class="shrink-0 text-brand-600"
+            aria-hidden="true"
+          >
+            <component :is="IconCheck" class="h-4 w-4" />
+          </span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import IconBuilding2 from '~icons/lucide/building-2';
+import IconSearch from '~icons/lucide/search';
+import IconX from '~icons/lucide/x';
+import IconCheck from '~icons/lucide/check';
+import IconChevronDown from '~icons/lucide/chevron-down';
+import IconChevronUp from '~icons/lucide/chevron-up';
+import IconChevronRight from '~icons/lucide/chevron-right';
 import { useOfficeBranchSelect } from "../../composables/useOfficeBranchSelect";
 
 const {
@@ -137,6 +202,8 @@ const {
   selectedValue,
   isLocked,
   isOpen,
+  openDirection,
+  panelStyle,
   highlightedIndex,
   pickerRef,
   triggerRef,
@@ -146,7 +213,7 @@ const {
   searchQuery,
   filteredOptions,
   selectedLabel,
-  selectedMeta,
+  selectedContextLabel,
   helperLabel,
   activeDescendantId,
   optionDomId,
@@ -157,6 +224,8 @@ const {
   onListboxKeydown,
   onSearchInputKeydown,
   toggleOpen,
+  toggleCollapse,
+  isBranchCollapsed,
   onSelect,
 } = useOfficeBranchSelect();
 </script>
@@ -170,4 +239,3 @@ const {
   padding: 0 2px;
 }
 </style>
-

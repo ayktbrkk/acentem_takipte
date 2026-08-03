@@ -53,8 +53,8 @@ describe("OfficeBranchSelect", () => {
       .findAll('[data-testid^="branch-option-"]')
       .map((node) => node.find(".branch-option-label").text().trim());
 
-    expect(options).toEqual(["AT Sigorta [Merkez]", "- Ankara"]);
-    expect(wrapper.text()).toContain("Merkez şube");
+    expect(options).toEqual(["AT Sigorta", "Ankara"]);
+    expect(wrapper.text()).toContain("Merkez");
   });
 
   it("supports keyboard navigation and selection", async () => {
@@ -94,7 +94,7 @@ describe("OfficeBranchSelect", () => {
       .findAll('[data-testid^="branch-option-"] .branch-option-label')
       .map((node) => node.text().trim());
 
-    expect(labels).toEqual(["- Ankara"]);
+    expect(labels).toEqual(["Ankara"]);
   });
 
   it("clears search with clear button", async () => {
@@ -128,5 +128,46 @@ describe("OfficeBranchSelect", () => {
 
     expect(markElements.length).toBeGreaterThan(0);
     expect(markElements[0].text()).toBe("kar");
+  });
+
+  it("collapses and expands sub-branches from the tree toggle", async () => {
+    const wrapper = mount(OfficeBranchSelect);
+    await wrapper.get('[data-testid="branch-scope-trigger"]').trigger("click");
+
+    expect(wrapper.findAll('[data-testid^="branch-option-"]').length).toBe(2);
+
+    await wrapper
+      .get('[data-testid="branch-option-HQ"]')
+      .find('button[aria-label="Alt şubeleri gizle"]')
+      .trigger("click");
+
+    expect(wrapper.findAll('[data-testid^="branch-option-"]').length).toBe(1);
+    expect(wrapper.find('[data-testid="branch-option-SUB"]').exists()).toBe(false);
+
+    await wrapper
+      .get('[data-testid="branch-option-HQ"]')
+      .find('button[aria-label="Alt şubeleri göster"]')
+      .trigger("click");
+
+    expect(wrapper.findAll('[data-testid^="branch-option-"]').length).toBe(2);
+  });
+
+  it("reveals matching sub-branches while their parent is collapsed", async () => {
+    const wrapper = mount(OfficeBranchSelect);
+    await wrapper.get('[data-testid="branch-scope-trigger"]').trigger("click");
+
+    await wrapper
+      .get('[data-testid="branch-option-HQ"]')
+      .find('button[aria-label="Alt şubeleri gizle"]')
+      .trigger("click");
+
+    const search = wrapper.get('[data-testid="branch-search-input"]');
+    await search.setValue("Ank");
+
+    expect(wrapper.find('[data-testid="branch-option-SUB"]').exists()).toBe(true);
+
+    await search.setValue("");
+
+    expect(wrapper.find('[data-testid="branch-option-SUB"]').exists()).toBe(false);
   });
 });

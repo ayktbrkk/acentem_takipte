@@ -1,0 +1,38 @@
+// Canonical bilingual copy for the branch scope selector in the app shell
+// topbar. Consumed by useOfficeBranchSelect; registered in platform/i18n.
+export const BRANCH_SCOPE_TRANSLATIONS = {
+  tr: {
+    scope: "Şube Kapsamı",
+    allBranches: "Tüm Şubeler",
+    allBranchesActive: "Tüm şubeler seçili",
+    singleBranchLocked: "Sabit kapsam",
+    defaultBranchPrefix: "Varsayılan şube",
+    defaultBranchMissing: "Varsayılan şube tanımlı değil",
+    headOfficePrefix: "Merkez şube",
+    headOfficeShort: "Merkez",
+    activeScope: "Aktif kapsam",
+    selected: "Seçili",
+    searchPlaceholder: "Şube ara...",
+    noResults: "Eşleşen şube bulunamadı",
+    clear: "Aramayı temizle",
+    expandChildren: "Alt şubeleri göster",
+    collapseChildren: "Alt şubeleri gizle",
+  },
+  en: {
+    scope: "Branch Scope",
+    allBranches: "All Branches",
+    allBranchesActive: "All branches selected",
+    singleBranchLocked: "Locked scope",
+    defaultBranchPrefix: "Default branch",
+    defaultBranchMissing: "Default branch not set",
+    headOfficePrefix: "Head office",
+    headOfficeShort: "Head Office",
+    activeScope: "Active scope",
+    selected: "Selected",
+    searchPlaceholder: "Search branches...",
+    noResults: "No matching branch",
+    clear: "Clear search",
+    expandChildren: "Show sub-branches",
+    collapseChildren: "Hide sub-branches",
+  },
+};
