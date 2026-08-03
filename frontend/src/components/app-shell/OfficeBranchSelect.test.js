@@ -94,7 +94,7 @@ describe("OfficeBranchSelect", () => {
       .findAll('[data-testid^="branch-option-"] .branch-option-label')
       .map((node) => node.text().trim());
 
-    expect(labels).toEqual(["Ankara"]);
+    expect(labels).toEqual(["AT Sigorta", "Ankara"]);
   });
 
   it("clears search with clear button", async () => {
@@ -169,5 +169,34 @@ describe("OfficeBranchSelect", () => {
     await search.setValue("");
 
     expect(wrapper.find('[data-testid="branch-option-SUB"]').exists()).toBe(false);
+  });
+
+  it("gives the all-branches quick-select a taller touch target", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "manager@example.com",
+      full_name: "AT Manager",
+      roles: ["AT Manager"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      office_branches: [
+        { name: "HQ", office_branch_name: "AT Sigorta", is_head_office: 1, is_default: 1 },
+      ],
+      default_office_branch: "HQ",
+      can_access_all_office_branches: true,
+    });
+    const branchStore = useBranchStore();
+    branchStore.hydrateFromSession();
+
+    const wrapper = mount(OfficeBranchSelect);
+    await wrapper.get('[data-testid="branch-scope-trigger"]').trigger("click");
+
+    const allClasses = wrapper.get('[data-testid="branch-option-all"]').classes();
+    const branchClasses = wrapper.get('[data-testid="branch-option-HQ"]').classes();
+
+    expect(allClasses).toContain("py-2.5");
+    expect(branchClasses).not.toContain("py-2.5");
+    expect(branchClasses).toContain("py-1");
   });
 });

@@ -108,7 +108,20 @@ export function useOfficeBranchSelect() {
     if (!query) {
       return visibleByExpansion.value;
     }
-    return allOptions.value.filter((option) => optionMatchesQuery(option, query));
+
+    const byName = new Map(allOptions.value.map((option) => [option.value, option]));
+    const visibleSet = new Set();
+    for (const option of allOptions.value) {
+      if (!optionMatchesQuery(option, query)) {
+        continue;
+      }
+      let current = option;
+      while (current) {
+        visibleSet.add(current.value);
+        current = current.parent ? byName.get(current.parent) : null;
+      }
+    }
+    return allOptions.value.filter((option) => visibleSet.has(option.value));
   });
 
   const defaultBranchLabel = computed(() =>
@@ -327,10 +340,10 @@ export function useOfficeBranchSelect() {
     }
 
     if (openDirection.value === "up") {
-      style.maxHeight = `${Math.max(200, Math.min(wrapperRect.top - 16, window.innerHeight * 0.7))}px`;
+      style.maxHeight = `${Math.max(200, Math.min(wrapperRect.top - 16, window.innerHeight * 0.65))}px`;
     } else {
       const spaceBelow = window.innerHeight - wrapperRect.bottom;
-      style.maxHeight = `${Math.max(200, Math.min(spaceBelow - 8, window.innerHeight * 0.7))}px`;
+      style.maxHeight = `${Math.max(200, Math.min(spaceBelow - 8, window.innerHeight * 0.65))}px`;
     }
 
     panelStyle.value = style;

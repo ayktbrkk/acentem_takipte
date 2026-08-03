@@ -1,7 +1,7 @@
 <template>
   <div ref="pickerRef" class="relative w-full min-w-0 md:w-[300px]">
     <div
-      class="rounded-xl border border-slate-200/80 bg-white px-3 py-2 transition"
+      class="rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 transition"
       :class="isLocked
         ? 'bg-slate-50/80'
         : 'shadow-sm shadow-slate-900/[0.04] hover:border-slate-300'"
@@ -39,8 +39,15 @@
               {{ t("singleBranchLocked") }}
             </span>
           </span>
-          <span class="block truncate text-[13px] font-semibold text-slate-900" :title="selectedLabel">
-            {{ selectedLabel }}
+          <span class="flex items-center gap-1.5">
+            <span
+              class="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500"
+              aria-hidden="true"
+              :class="isLocked ? 'opacity-40' : ''"
+            ></span>
+            <span class="block truncate text-[13px] font-semibold text-slate-900" :title="selectedLabel">
+              {{ selectedLabel }}
+            </span>
           </span>
         </span>
 
@@ -123,12 +130,15 @@
           role="option"
           tabindex="0"
           :ref="(el) => setOptionRef(el, index)"
-          class="group flex w-full cursor-pointer items-center gap-1.5 rounded-lg py-1.5 pr-2 text-left text-[13px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-          :class="highlightedIndex === index
-            ? 'bg-brand-50 text-brand-800'
-            : String(option.value ?? '') === selectedValue
-              ? 'bg-brand-50/60 text-brand-800'
-              : 'text-slate-700 hover:bg-slate-50'"
+          class="group flex w-full cursor-pointer items-center gap-1.5 rounded-lg pr-2 text-left text-[13px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          :class="[
+            option.value === null ? 'py-2.5' : 'py-1',
+            highlightedIndex === index
+              ? 'bg-brand-50 text-brand-800'
+              : String(option.value ?? '') === selectedValue
+                ? 'bg-brand-50/60 text-brand-800'
+                : 'text-slate-700 hover:bg-slate-50',
+          ]"
           :style="{ paddingLeft: `${8 + Math.max(option.depth, 0) * 16}px` }"
           :aria-selected="String(option.value ?? '') === selectedValue ? 'true' : 'false'"
           :data-testid="`branch-option-${option.value === null ? 'all' : option.value}`"
