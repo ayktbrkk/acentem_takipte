@@ -150,7 +150,7 @@ class TestDashboardContractSmoke(unittest.TestCase):
                         with patch.object(
                             dashboard_api,
                             "_build_payment_collection_where",
-                            side_effect=[("1=1", {}), ("1=1", {})],
+                            return_value=("1=1", {}),
                         ):
                             with patch.object(dashboard_api, "_get_payment_preview_rows", return_value=[{"name": "PAY-0001"}]):
                                 with patch.object(dashboard_api, "_get_reconciliation_open_rows_preview", return_value=[{"name": "REC-0001"}]):

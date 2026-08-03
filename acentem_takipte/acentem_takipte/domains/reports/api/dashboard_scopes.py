@@ -75,26 +75,31 @@ def _build_payment_where(
     branch: str | None,
     office_branch: str | None,
     allowed_customers: list[str] | None,
+    table_alias: str | None = None,
 ) -> tuple[str, dict]:
     conditions = ["1=1"]
     values = {}
+    payment_date_field = _qualified_field("payment_date", table_alias)
+    office_branch_field = _qualified_field("office_branch", table_alias)
+    customer_field = _qualified_field("customer", table_alias)
+    policy_field = _qualified_field("policy", table_alias)
 
     if from_date:
-        conditions.append("payment_date >= %(from_date)s")
+        conditions.append(f"{payment_date_field} >= %(from_date)s")
         values["from_date"] = getdate(from_date)
     if to_date:
-        conditions.append("payment_date <= %(to_date)s")
+        conditions.append(f"{payment_date_field} <= %(to_date)s")
         values["to_date"] = getdate(to_date)
     if branch:
         conditions.append(
-            "policy in (select name from `tabAT Policy` where branch = %(branch)s)"
+            f"{policy_field} in (select name from `tabAT Policy` where branch = %(branch)s)"
         )
         values["branch"] = branch
     if office_branch:
-        conditions.append("office_branch = %(office_branch)s")
+        conditions.append(f"{office_branch_field} = %(office_branch)s")
         values["office_branch"] = office_branch
     if allowed_customers is not None:
-        conditions.append("customer in %(customers)s")
+        conditions.append(f"{customer_field} in %(customers)s")
         values["customers"] = tuple(allowed_customers)
 
     return " and ".join(conditions), values
@@ -107,30 +112,39 @@ def _build_payment_collection_where(
     branch: str | None,
     office_branch: str | None,
     allowed_customers: list[str] | None,
+    table_alias: str | None = None,
 ) -> tuple[str, dict]:
+    status_field = _qualified_field("status", table_alias)
+    direction_field = _qualified_field("payment_direction", table_alias)
+    purpose_field = _qualified_field("payment_purpose", table_alias)
+    due_date_field = _qualified_field("due_date", table_alias)
+    office_branch_field = _qualified_field("office_branch", table_alias)
+    customer_field = _qualified_field("customer", table_alias)
+    policy_field = _qualified_field("policy", table_alias)
+
     conditions = [
-        "status = 'Draft'",
-        "payment_direction = 'Inbound'",
-        "payment_purpose = 'Premium Collection'",
-        "due_date is not null",
+        f"{status_field} = 'Draft'",
+        f"{direction_field} = 'Inbound'",
+        f"{purpose_field} = 'Premium Collection'",
+        f"{due_date_field} is not null",
     ]
     values: dict[str, object] = {"anchor_date": getdate(anchor_date or nowdate())}
 
     if due_state == "due_today":
-        conditions.append("due_date = %(anchor_date)s")
+        conditions.append(f"{due_date_field} = %(anchor_date)s")
     else:
-        conditions.append("due_date < %(anchor_date)s")
+        conditions.append(f"{due_date_field} < %(anchor_date)s")
 
     if branch:
         conditions.append(
-            "policy in (select name from `tabAT Policy` where branch = %(branch)s)"
+            f"{policy_field} in (select name from `tabAT Policy` where branch = %(branch)s)"
         )
         values["branch"] = branch
     if office_branch:
-        conditions.append("office_branch = %(office_branch)s")
+        conditions.append(f"{office_branch_field} = %(office_branch)s")
         values["office_branch"] = office_branch
     if allowed_customers is not None:
-        conditions.append("customer in %(customers)s")
+        conditions.append(f"{customer_field} in %(customers)s")
         values["customers"] = tuple(allowed_customers or ["__none__"])
 
     return " and ".join(["1=1", *conditions]), values

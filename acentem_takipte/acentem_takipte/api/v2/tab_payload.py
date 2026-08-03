@@ -33,10 +33,10 @@ def build_dashboard_tab_sections(
     metrics: dict = {}
     series: dict = {}
     previews: dict = {}
-    scope_cache: dict[tuple[str, str], tuple[str, dict]] = {}
+    scope_cache: dict[tuple[str, ...], tuple[str, dict]] = {}
 
-    def get_offer_scope() -> tuple[str, dict]:
-        cache_key = ("offer", "")
+    def get_offer_scope(table_alias: str | None = None) -> tuple[str, dict]:
+        cache_key = ("offer", str(table_alias or ""))
         cached = scope_cache.get(cache_key)
         if cached:
             return cached
@@ -46,6 +46,7 @@ def build_dashboard_tab_sections(
             branch=branch,
             office_branch=office_branch,
             allowed_customers=allowed_customers,
+            table_alias=table_alias,
         )
         scope_cache[cache_key] = scope
         return scope
@@ -79,8 +80,8 @@ def build_dashboard_tab_sections(
         scope_cache[cache_key] = scope
         return scope
 
-    def get_payment_scope() -> tuple[str, dict]:
-        cache_key = ("payment", "")
+    def get_payment_scope(table_alias: str | None = None) -> tuple[str, dict]:
+        cache_key = ("payment", str(table_alias or ""))
         cached = scope_cache.get(cache_key)
         if cached:
             return cached
@@ -90,12 +91,13 @@ def build_dashboard_tab_sections(
             branch=branch,
             office_branch=office_branch,
             allowed_customers=allowed_customers,
+            table_alias=table_alias,
         )
         scope_cache[cache_key] = scope
         return scope
 
-    def get_payment_collection_scope(due_state: str) -> tuple[str, dict]:
-        cache_key = ("payment_collection", due_state)
+    def get_payment_collection_scope(due_state: str, table_alias: str | None = None) -> tuple[str, dict]:
+        cache_key = ("payment_collection", due_state, str(table_alias or ""))
         cached = scope_cache.get(cache_key)
         if cached:
             return cached
@@ -105,12 +107,14 @@ def build_dashboard_tab_sections(
             branch=branch,
             office_branch=office_branch,
             allowed_customers=allowed_customers,
+            table_alias=table_alias,
         )
         scope_cache[cache_key] = scope
         return scope
 
     if tab_key in {"daily", "sales"}:
         offer_where, offer_values = get_offer_scope()
+        offer_preview_where, offer_preview_values = get_offer_scope("o")
         offer_status_rows = frappe.db.sql(
             f"""
             select status, count(name) as total
@@ -146,12 +150,12 @@ def build_dashboard_tab_sections(
         series["offer_status"] = offer_status_rows
         if tab_key == "daily":
             previews["action_offers"] = get_offer_preview_rows_fn(
-                where_clause=offer_where,
-                values=offer_values,
+                where_clause=offer_preview_where,
+                values=offer_preview_values,
                 limit=20,
                 ready_only=True,
             )
-            policy_where, policy_values = get_policy_scope()
+            policy_where, policy_values = get_policy_scope("p")
             previews["policies"] = get_policy_preview_rows_fn(
                 where_clause=policy_where,
                 values=policy_values,
@@ -165,13 +169,13 @@ def build_dashboard_tab_sections(
             )
         if tab_key == "sales":
             previews["offers"] = get_offer_preview_rows_fn(
-                where_clause=offer_where,
-                values=offer_values,
+                where_clause=offer_preview_where,
+                values=offer_preview_values,
                 limit=20,
             )
             lead_where, lead_values = get_lead_scope()
             previews["leads"] = get_lead_preview_rows_fn(lead_where=lead_where, values=lead_values, limit=20)
-            policy_where, policy_values = get_policy_scope()
+            policy_where, policy_values = get_policy_scope("p")
             previews["policies"] = get_policy_preview_rows_fn(
                 where_clause=policy_where,
                 values=policy_values,
@@ -238,6 +242,9 @@ def build_dashboard_tab_sections(
         payment_where, payment_values = get_payment_scope()
         due_today_where, due_today_values = get_payment_collection_scope("due_today")
         overdue_where, overdue_values = get_payment_collection_scope("overdue")
+        payment_preview_where, payment_preview_values = get_payment_scope("p")
+        due_today_preview_where, due_today_preview_values = get_payment_collection_scope("due_today", "p")
+        overdue_preview_where, overdue_preview_values = get_payment_collection_scope("overdue", "p")
         payment_status_rows = frappe.db.sql(
             f"""
             select status, count(name) as total
@@ -299,20 +306,20 @@ def build_dashboard_tab_sections(
         series["payment_status"] = payment_status_rows
         series["payment_direction"] = payment_direction_rows
         previews["due_today_payments"] = get_payment_preview_rows_fn(
-            where_clause=due_today_where,
-            values=due_today_values,
+            where_clause=due_today_preview_where,
+            values=due_today_preview_values,
             limit=20,
-            order_by="due_date asc, p.modified desc",
+            order_by="p.due_date asc, p.modified desc",
         )
         previews["overdue_payments"] = get_payment_preview_rows_fn(
-            where_clause=overdue_where,
-            values=overdue_values,
+            where_clause=overdue_preview_where,
+            values=overdue_preview_values,
             limit=20,
-            order_by="due_date asc, p.modified desc",
+            order_by="p.due_date asc, p.modified desc",
         )
         previews["payments"] = get_payment_preview_rows_fn(
-            where_clause=payment_where,
-            values=payment_values,
+            where_clause=payment_preview_where,
+            values=payment_preview_values,
             limit=20,
         )
         previews["reconciliation_rows"] = get_reconciliation_open_rows_preview_fn(

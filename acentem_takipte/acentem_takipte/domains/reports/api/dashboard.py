@@ -43,6 +43,7 @@ from acentem_takipte.acentem_takipte.domains.reports.api.dashboard_scopes import
     _build_policy_where,
     _get_scoped_customer_names,
     _get_scoped_policy_names,
+    _qualified_field,
 )
 from acentem_takipte.acentem_takipte.api.v2 import (
     tab_payload as dashboard_tab_sections,
@@ -1837,26 +1838,30 @@ def _build_offer_where(
     branch: str | None,
     office_branch: str | None,
     allowed_customers: list[str] | None,
+    table_alias: str | None = None,
 ) -> tuple[str, dict]:
     conditions = ["1=1"]
     values = {}
+    offer_date_field = _qualified_field("offer_date", table_alias)
+    branch_field = _qualified_field("branch", table_alias)
+    customer_field = _qualified_field("customer", table_alias)
 
     if from_date:
-        conditions.append("offer_date >= %(from_date)s")
+        conditions.append(f"{offer_date_field} >= %(from_date)s")
         values["from_date"] = getdate(from_date)
     if to_date:
-        conditions.append("offer_date <= %(to_date)s")
+        conditions.append(f"{offer_date_field} <= %(to_date)s")
         values["to_date"] = getdate(to_date)
     if branch:
-        conditions.append("branch = %(branch)s")
+        conditions.append(f"{branch_field} = %(branch)s")
         values["branch"] = branch
     if office_branch:
         conditions.append(
-            "customer in (select name from `tabAT Customer` where office_branch = %(office_branch)s)"
+            f"{customer_field} in (select name from `tabAT Customer` where office_branch = %(office_branch)s)"
         )
         values["office_branch"] = office_branch
     if allowed_customers is not None:
-        conditions.append("customer in %(customers)s")
+        conditions.append(f"{customer_field} in %(customers)s")
         values["customers"] = tuple(allowed_customers)
 
     return " and ".join(conditions), values
@@ -1997,7 +2002,7 @@ def _get_offer_preview_rows(
     ready_only: bool = False,
 ) -> list[dict]:
     if where_clause:
-        extra_ready_filter = " and status in ('Sent', 'Accepted')" if ready_only else ""
+        extra_ready_filter = " and o.status in ('Sent', 'Accepted')" if ready_only else ""
         rows = frappe.db.sql(
             f"""
             select
