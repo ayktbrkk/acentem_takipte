@@ -5,7 +5,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
 from frappe.utils import add_days, flt, getdate, nowdate
-from acentem_takipte.acentem_takipte.utils.statuses import ATPaymentStatus
+from acentem_takipte.acentem_takipte.utils.statuses import ATClaimStatus, ATPaymentStatus
 
 from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import fetch_tcmb_rate
 
@@ -90,6 +90,75 @@ class ATPayment(Document):
 
         if self.payment_purpose != "Claim Payout":
             self.payment_purpose = "Claim Payout"
+
+        self._validate_claim_payout_eligibility()
+
+    def _validate_claim_payout_eligibility(self):
+        """A Claim Payout may only be created for an Approved claim with remaining
+        approved amount. Terminal (Rejected/Cancelled/Closed) and already-paid
+        claims cannot receive further payouts; committed payouts (Draft + Paid,
+        excluding Cancelled) must not exceed the approved amount. The cap is
+        compared in the claim currency (TRY claims use the TRY equivalent)."""
+        claim = frappe.db.get_value(
+            "AT Claim",
+            self.claim,
+            ["claim_status", "approved_amount", "currency"],
+            as_dict=True,
+        ) or {}
+        claim_status = str(claim.get("claim_status") or "").strip()
+        approved_amount = flt(claim.get("approved_amount") or 0)
+        claim_currency = str(claim.get("currency") or "TRY").strip().upper() or "TRY"
+
+        if claim_status == ATClaimStatus.PAID:
+            frappe.throw(_("Claim is already paid; no further payouts are allowed."))
+        if claim_status != ATClaimStatus.APPROVED:
+            frappe.throw(
+                _("Only approved claims can receive payouts; claim is currently {0}.").format(
+                    claim_status or "unknown"
+                )
+            )
+
+        # Resolve this payment's amount in the claim currency. Payment currency
+        # already matches the claim currency (enforced in _validate_claim_links);
+        # TRY claims use the TRY equivalent, non-TRY claims use the raw amount.
+        payment_currency = str((self.currency or claim_currency or "TRY")).strip().upper()
+        if payment_currency == "TRY" or claim_currency == "TRY":
+            new_committed = flt(self.amount) * flt(self.fx_rate or 1)
+        else:
+            new_committed = flt(self.amount)
+
+        committed_rows = frappe.db.sql(
+            """
+            select currency, amount, amount_try
+            from `tabAT Payment`
+            where claim = %s
+              and payment_purpose = 'Claim Payout'
+              and status != 'Cancelled'
+              and name != %s
+            """,
+            (self.claim, self.name or ""),
+            as_dict=True,
+        )
+        already_committed = 0.0
+        for row in committed_rows or []:
+            row_currency = str(row.get("currency") or "TRY").strip().upper() or "TRY"
+            if row_currency == "TRY" or claim_currency == "TRY":
+                already_committed += flt(row.get("amount_try") or 0)
+            elif row_currency == claim_currency:
+                already_committed += flt(row.get("amount") or 0)
+
+        total_with_new = already_committed + new_committed
+        if approved_amount > 0 and total_with_new > approved_amount + 0.01:
+            frappe.throw(
+                _(
+                    "Cumulative claim payouts ({0} + {1} = {2}) would exceed the approved amount ({3})."
+                ).format(
+                    round(already_committed, 2),
+                    round(new_committed, 2),
+                    round(total_with_new, 2),
+                    round(approved_amount, 2),
+                )
+            )
 
     def _validate_commission_payout(self):
         if self.payment_purpose != "Commission Payout":

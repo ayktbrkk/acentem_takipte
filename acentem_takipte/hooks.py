@@ -34,6 +34,7 @@ _pay360 = "acentem_takipte.acentem_takipte.domains.payments.services.payment_360
 _cl360 = "acentem_takipte.acentem_takipte.domains.claims.services.claim_360.invalidate_claim_from_doc_event"
 _acct = "acentem_takipte.acentem_takipte.accounting.sync_doc_event"
 _dash = "acentem_takipte.acentem_takipte.domains.reports.api.dashboard_cache.invalidate_dashboard_cache"
+_rep = "acentem_takipte.acentem_takipte.domains.reports.services.runtime.invalidate_payment_dependent_report_cache"
 _rt = "acentem_takipte.acentem_takipte.realtime.on_record_change"
 
 doc_events = {
@@ -84,9 +85,9 @@ doc_events = {
      # AT Payment — affects payment, policy, customer and offer caches
      # ------------------------------------------------------------------
      "AT Payment": {
-         "after_insert": [_acct, _pay360, _p360, _c360, _o360],
-         "on_update":    [_acct, _pay360, _p360, _c360, _o360],
-         "on_trash":     [_acct, _pay360, _p360, _c360, _o360],
+         "after_insert": [_acct, _pay360, _p360, _c360, _o360, _rep],
+         "on_update":    [_acct, _pay360, _p360, _c360, _o360, _rep],
+         "on_trash":     [_acct, _pay360, _p360, _c360, _o360, _rep],
      },
     "AT Payment Installment": {
         "on_update": [_pay360],
@@ -147,6 +148,15 @@ doc_events = {
 }
 
 permission_query_conditions, has_permission = build_runtime_permission_hooks()
+
+# ---------------------------------------------------------------------------
+# Deploy-time cache invalidation
+# ---------------------------------------------------------------------------
+# Runs on every `bench migrate` (deployment). Clears report payload caches and
+# today's snapshots so a release never serves stale financial report data.
+after_migrate = [
+    "acentem_takipte.acentem_takipte.domains.reports.services.runtime.invalidate_all_report_cache",
+]
 
 # ---------------------------------------------------------------------------
 # Scheduler Events

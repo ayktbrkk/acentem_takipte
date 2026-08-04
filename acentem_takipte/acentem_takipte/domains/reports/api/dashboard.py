@@ -803,6 +803,12 @@ def get_customer_workbench_rows(
         total=total,
         page=page_no,
         page_length=per_page,
+        summary=_customer_workbench_summary_counts(
+            query_filters=query_filters,
+            or_filters=or_filters,
+            has_active_policy=has_active_policy,
+            has_open_offer=has_open_offer,
+        ),
     )
 
 
@@ -1047,6 +1053,62 @@ def _is_number(value) -> bool:
         return True
     except (ValueError, TypeError):
         return False
+
+
+def _customer_workbench_summary_counts(
+    *,
+    query_filters: dict,
+    or_filters: list | None,
+    has_active_policy: bool,
+    has_open_offer: bool,
+) -> dict:
+    """Full-filtered-set KPI counts for the customer workbench.
+
+    Uses exactly the same scope as the paginated list (query filters, search
+    or_filters, office branch and permission scope are already baked into
+    ``query_filters``/``or_filters``), so the KPI cards, the footer and the list
+    never disagree and the counts are independent of pagination.
+    """
+    get_kwargs: dict = {"filters": query_filters}
+    if or_filters:
+        get_kwargs["or_filters"] = or_filters
+
+    rows = frappe.get_all(
+        "AT Customer",
+        fields=["name", "customer_type", "consent_status"],
+        limit_page_length=0,
+        **get_kwargs,
+    )
+    names = [str(r.get("name") or "") for r in rows if r.get("name")]
+
+    individual = 0
+    corporate = 0
+    consent_granted = 0
+    for r in rows:
+        ctype = str(r.get("customer_type") or "").strip().lower()
+        if ctype == "individual":
+            individual += 1
+        elif ctype == "corporate":
+            corporate += 1
+        if str(r.get("consent_status") or "").strip() == "Granted":
+            consent_granted += 1
+
+    active = 0
+    if names:
+        active_names = _customer_names_by_portfolio_filters(
+            allowed_customers=names,
+            has_active_policy=has_active_policy or True,
+            has_open_offer=has_open_offer or True,
+        )
+        active = len(active_names or [])
+
+    return {
+        "total": len(names),
+        "active_count": active,
+        "individual_count": individual,
+        "corporate_count": corporate,
+        "consent_granted_count": consent_granted,
+    }
 
 
 def _customer_names_by_portfolio_filters(

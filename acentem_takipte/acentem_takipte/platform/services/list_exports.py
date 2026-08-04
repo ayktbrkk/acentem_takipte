@@ -123,8 +123,10 @@ SCREEN_EXPORTS: dict[str, dict[str, Any]] = {
             _column("full_name", _t("Customer"), getter=lambda row: row.get("full_name") or row.get("name")),
             _column("name", _t("Record")),
             _column("customer_type", _t("Customer Type")),
-            _column("tax_id", _t("Tax ID")),
-            _column("phone", _t("Phone")),
+            # Prefer the backend-masked form so a non-sensitive export never
+            # leaks raw TCKN/VKN or phone, mirroring the list contract.
+            _column("tax_id", _t("Tax ID"), getter=lambda row: row.get("masked_tax_id") or row.get("tax_id")),
+            _column("phone", _t("Phone"), getter=lambda row: row.get("masked_phone") or row.get("phone")),
             _column("email", _t("Email")),
             _column("marital_status", _t("Marital Status")),
             _column("gender", _t("Gender")),
@@ -277,6 +279,8 @@ SCREEN_EXPORTS.update(
                     currency_field="currency",
                 ),
                 _column("paid_amount", _t("Paid Amount"), formatter="currency", currency_field="currency"),
+                _column("currency", _t("Currency")),
+                _column("paid_amount_try", _t("Paid Amount (TRY)"), formatter="currency"),
                 _column("incident_date", _t("Incident Date"), formatter="date"),
                 _column("claim_status", _t("Claim Status")),
             ],

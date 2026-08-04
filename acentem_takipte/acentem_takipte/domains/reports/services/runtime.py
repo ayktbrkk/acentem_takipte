@@ -35,6 +35,58 @@ from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 
+# Report keys whose payloads depend on AT Payment state (collected premium in
+# policy_list, payment status report). These are invalidated on payment writes.
+PAYMENT_DEPENDENT_REPORT_KEYS = ("policy_list", "payment_status")
+
+
+def invalidate_payment_dependent_report_cache(doc=None, method=None) -> None:
+    """Invalidate report cache for namespaces that depend on payment state.
+
+    Called from the AT Payment doc_events on insert/update/trash. Targeted to
+    the payment-dependent report keys only - it clears the Redis payload cache
+    and today's snapshot docs for those reports, never a global cache flush."""
+    for report_key in PAYMENT_DEPENDENT_REPORT_KEYS:
+        _invalidate_report_cache_namespace(report_key)
+
+
+def invalidate_report_cache_namespace(report_key: str) -> None:
+    safe_key = normalize_export_key(report_key)
+    if not safe_key:
+        return
+    _invalidate_report_cache_namespace(safe_key)
+
+
+def invalidate_all_report_cache() -> None:
+    """Deploy-time hook: clear every report payload cache and today's snapshot.
+
+    Runs via ``after_migrate`` so a release never serves stale financial
+    report data. Still scoped to report keys - not a global cache flush."""
+    for report_key in ("policy_list", "payment_status", "agent_performance", "customer_segmentation", "renewal_performance", "claims_operations", "communication_operations", "reconciliation_operations"):
+        _invalidate_report_cache_namespace(report_key)
+
+
+def _invalidate_report_cache_namespace(report_key: str) -> None:
+    try:
+        frappe.cache().delete_keys(f"at_report::{report_key}::")
+    except Exception:
+        log_redacted_error(
+            "Report Redis cache invalidation failed",
+            details={"report_key": report_key},
+        )
+    try:
+        from acentem_takipte.acentem_takipte.domains.reports.services.snapshots import (
+            delete_today_report_snapshots,
+        )
+
+        delete_today_report_snapshots(report_key)
+    except Exception:
+        log_redacted_error(
+            "Report snapshot invalidation failed",
+            details={"report_key": report_key},
+        )
+
+
 def build_safe_report_payload(report_key: str, filters: dict | None, limit: int) -> dict[str, Any]:
     from acentem_takipte.acentem_takipte.platform.permissions.branches import get_scope_hash
 

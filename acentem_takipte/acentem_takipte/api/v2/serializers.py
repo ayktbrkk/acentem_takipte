@@ -32,13 +32,16 @@ def mask_customer_sensitive_fields(rows: list[dict]) -> None:
         row["phone"] = row.get("masked_phone")
 
 
-def build_paged_rows_response(*, rows: list[dict], total: int, page: int, page_length: int) -> dict:
-    return {
+def build_paged_rows_response(*, rows: list[dict], total: int, page: int, page_length: int, summary: dict | None = None) -> dict:
+    response = {
         "rows": rows,
         "total": total,
         "page": page,
         "page_length": page_length,
     }
+    if summary:
+        response.update(summary)
+    return response
 
 
 def reorder_rows_by_name(rows: list[dict], ordered_names: list[str]) -> list[dict]:

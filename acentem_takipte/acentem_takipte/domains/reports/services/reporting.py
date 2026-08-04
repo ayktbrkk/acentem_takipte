@@ -173,7 +173,14 @@ def get_policy_list_report_rows(
             p.end_date,
             p.gross_premium,
             p.net_premium,
-            p.commission_amount
+            p.commission_amount,
+            (
+                SELECT COALESCE(SUM(pmt.amount_try), 0)
+                FROM `tabAT Payment` pmt
+                WHERE pmt.policy = p.name
+                  AND pmt.payment_direction = 'Inbound'
+                  AND pmt.status = 'Paid'
+            ) AS collected_amount_try
         FROM `tabAT Policy` p
         LEFT JOIN `tabAT Customer` c ON c.name = p.customer
         LEFT JOIN `tabAT Sales Entity` se ON se.name = p.sales_entity
@@ -203,6 +210,11 @@ def _get_policy_list_grouped_rows(
     else:  # yearly
         date_format = "%Y"
         label_format = "%Y"
+
+    # frappe.db.sql applies %-formatting to the query, so escape the DATE_FORMAT
+    # specifiers or an empty/other params tuple raises "not enough arguments".
+    sql_date_format = date_format.replace("%", "%%")
+    sql_label_format = label_format.replace("%", "%%")
 
     # Build WHERE clause filters
     where_parts = ["1=1"]
@@ -250,16 +262,23 @@ def _get_policy_list_grouped_rows(
     # Build and execute query
     sql = f"""
         SELECT
-            DATE_FORMAT(`tabAT Policy`.issue_date, '{date_format}') AS period,
-            DATE_FORMAT(`tabAT Policy`.issue_date, '{label_format}') AS period_label,
+            DATE_FORMAT(`tabAT Policy`.issue_date, '{sql_date_format}') AS period,
+            DATE_FORMAT(`tabAT Policy`.issue_date, '{sql_label_format}') AS period_label,
             COUNT(*) AS policy_count,
             SUM(`tabAT Policy`.gross_premium) AS total_gross_premium,
             SUM(`tabAT Policy`.net_premium) AS total_net_premium,
-            SUM(`tabAT Policy`.commission_amount) AS total_commission
+            SUM(`tabAT Policy`.commission_amount) AS total_commission,
+            COALESCE(SUM(pmt.collected_amount_try), 0) AS total_collected_try
         FROM `tabAT Policy`
         LEFT JOIN `tabAT Customer` customer ON customer.name = `tabAT Policy`.customer
+        LEFT JOIN (
+            SELECT policy, SUM(amount_try) AS collected_amount_try
+            FROM `tabAT Payment`
+            WHERE payment_direction = 'Inbound' AND status = 'Paid'
+            GROUP BY policy
+        ) pmt ON pmt.policy = `tabAT Policy`.name
         WHERE {where_clause}
-        GROUP BY DATE_FORMAT(`tabAT Policy`.issue_date, '{date_format}')
+        GROUP BY DATE_FORMAT(`tabAT Policy`.issue_date, '{sql_date_format}')
         ORDER BY period DESC
         LIMIT {max(int(limit or 500), 1)}
     """

@@ -212,6 +212,25 @@ def refresh_report_snapshots(
     }
 
 
+def delete_today_report_snapshots(report_key: str) -> None:
+    """Delete today's snapshot docs for a report so the next load rebuilds live.
+
+    Used by payment-write invalidation: the snapshot would otherwise keep
+    serving a stale financial payload after the TTL expires. Only today's
+    docs are removed (historical snapshots are preserved)."""
+    normalized_report_key = normalize_export_key(report_key)
+    if not normalized_report_key or not _has_snapshot_doctype():
+        return
+    business_date = getdate(today())
+    frappe.db.delete(
+        "AT Report Snapshot",
+        {
+            "report_key": normalized_report_key,
+            "snapshot_date": business_date,
+        },
+    )
+
+
 def _coerce_snapshot_payload(value: Any) -> dict[str, Any]:
     if not isinstance(value, dict):
         return {
