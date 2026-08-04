@@ -49,15 +49,15 @@
     </template>
 
     <template #metrics>
-      <div v-if="loading" class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
-        <SkeletonLoader v-for="i in 4" :key="i" variant="card" />
+      <div v-if="loading" class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+        <SkeletonLoader v-for="i in 5" :key="i" variant="card" />
       </div>
-      <div v-else class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div v-else class="w-full grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
         <SaaSMetricCard :label="t('total_accrued')" :value="formatCurrency(summary.total_accrued_try)" />
         <SaaSMetricCard :label="t('total_paid')" :value="formatCurrency(summary.total_paid_try)" value-class="text-at-green" />
+        <SaaSMetricCard :label="t('total_pending')" :value="formatCurrency(summary.total_pending_try ?? 0)" value-class="text-at-amber" />
         <SaaSMetricCard :label="t('total_remaining')" :value="formatCurrency(summary.total_remaining_try)" value-class="text-brand-600" />
         <SaaSMetricCard
-          v-if="reconciliation.open_items > 0"
           :label="t('reconciliation_open')"
           :value="reconciliation.open_items"
           value-class="text-at-red"
@@ -157,7 +157,7 @@
             <span class="rounded bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">{{ translateEntityType(entity.entity_type) }}</span>
           </div>
 
-          <div class="mb-3 grid grid-cols-2 gap-2">
+          <div class="mb-3 grid grid-cols-3 gap-2">
             <div class="rounded-lg bg-slate-50 p-2 text-center">
               <p class="text-[11px] uppercase text-slate-400">{{ t('accrued') }}</p>
               <p class="text-sm font-bold text-slate-900 tabular-nums">{{ formatCurrency(entity.accrued_try) }}</p>
@@ -165,6 +165,10 @@
             <div class="rounded-lg bg-slate-50 p-2 text-center">
               <p class="text-[11px] uppercase text-slate-400">{{ t('paid') }}</p>
               <p class="text-sm font-bold text-at-green tabular-nums">{{ formatCurrency(entity.paid_try) }}</p>
+            </div>
+            <div class="rounded-lg bg-slate-50 p-2 text-center">
+              <p class="text-[11px] uppercase text-slate-400">{{ t('pending') }}</p>
+              <p class="text-sm font-bold text-at-amber tabular-nums">{{ formatCurrency(entity.pending_try ?? 0) }}</p>
             </div>
           </div>
 
@@ -508,6 +512,7 @@ function _doTabularExport(entitiesToExport) {
     row[t("office_branch")] = e.office_branch;
     row[t("accrued")] = e.accrued_try;
     row[t("paid")] = e.paid_try;
+    row[t("pending")] = e.pending_try ?? 0;
     row[t("remaining")] = e.remaining_try;
     row["%"] = pct(e) + "%";
     row[t("policy_count")] = e.policy_count;
@@ -726,7 +731,7 @@ const paymentColumns = computed(() => [
 const enrichedPolicies = computed(() =>
   (detailData.value?.policies || []).map((p) => ({
     ...p,
-    status_icon: p.payment
+    status_icon: (p.paid_amount_try ?? 0) > 0
       ? t("status_paid")
       : p.aging_days > 90
         ? t("status_overdue")
@@ -736,8 +741,7 @@ const enrichedPolicies = computed(() =>
 
 const paymentRows = computed(() =>
   (detailData.value?.policies || [])
-    .filter((p) => p.payment)
-    .map((p) => ({ ...p.payment, policy_no: p.policy_no })),
+    .flatMap((p) => (p.payments || []).map((pay) => ({ ...pay, policy_no: p.policy_no }))),
 );
 
 const agingSummary = computed(() => {
@@ -761,7 +765,7 @@ const icBreakdown = computed(() => {
     const ic = p.insurance_company || t("unspecified") || "—";
     if (!map[ic]) map[ic] = { name: ic, accrued: 0, paid: 0, remaining: 0 };
     map[ic].accrued += p.commission_amount_try || 0;
-    if (p.payment) map[ic].paid += p.payment.amount_try || 0;
+    map[ic].paid += p.paid_amount_try || 0;
     map[ic].remaining = map[ic].accrued - map[ic].paid;
   }
   return Object.values(map);

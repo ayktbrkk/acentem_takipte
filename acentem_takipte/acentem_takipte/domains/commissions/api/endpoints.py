@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import frappe
+from frappe import _
 from frappe.utils import cint, flt
 
 from acentem_takipte.acentem_takipte.platform.api.security import (
@@ -164,17 +165,46 @@ def generate_commission_missing_external(
     policy_refs: str,
     insurance_company: str | None = None,
     office_branch: str | None = None,
+    statement_batch: str | None = None,
+    statement_period: str | None = None,
 ) -> dict:
     _assert_commission_mutation_access(
         "api.commissions.generate_commission_missing_external",
-        details={"insurance_company": insurance_company, "office_branch": office_branch},
+        details={
+            "insurance_company": insurance_company,
+            "office_branch": office_branch,
+            "statement_batch": statement_batch,
+            "statement_period": statement_period,
+        },
         permission_targets=COMMISSION_MUTATION_DOCTYPES["generate_missing"],
     )
     refs = frappe.parse_json(policy_refs) if isinstance(policy_refs, str) else policy_refs
+    from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
+        _build_statement_batch_id,
+    )
+
+    refs = list(refs or [])
+
+    # The batch identity must come from an explicit statement_batch or an
+    # explicit statement_period — NEVER from the policy reference list. A
+    # period-based batch is deterministic for the same (company, period) so
+    # re-running the same period is idempotent while different periods get
+    # distinct batches for the same policy.
+    batch = str(statement_batch or "").strip()
+    if not batch:
+        period = str(statement_period or "").strip()
+        if period:
+            batch = _build_statement_batch_id(f"period:{period}", insurance_company)
+        else:
+            frappe.throw(
+                _("A statement_batch or statement_period is required to generate Missing External entries.")
+            )
+
     return generate_missing_external_for_commission_statement(
-        policy_refs_from_statement=list(refs or []),
+        policy_refs_from_statement=refs,
         insurance_company=insurance_company,
         office_branch=office_branch,
+        statement_batch=batch,
     )
 
 
@@ -191,6 +221,10 @@ def get_commission_statement_history(
         "You do not have permission to view statement history.",
     )
 
+    from acentem_takipte.acentem_takipte.domains.commissions.services.balance import (
+        _is_commission_entry,
+    )
+
     filters: dict = {
         "source_doctype": "AT Policy",
         "entry_type": "Policy",
@@ -202,10 +236,12 @@ def get_commission_statement_history(
         "AT Accounting Entry",
         filters=filters,
         fields=["name", "insurance_company", "external_ref", "local_amount_try",
-                "external_amount_try", "external_ref", "creation", "payload_json"],
+                "external_amount_try", "creation", "payload_json", "statement_type",
+                "statement_batch", "import_source"],
         order_by="creation desc",
-        limit_page_length=max(cint(limit), 1),
+        limit_page_length=0,
     )
+    entries = [e for e in entries if _is_commission_entry(e)][: max(cint(limit), 1)]
 
     result: list[dict] = []
     for e in entries:
@@ -222,7 +258,9 @@ def get_commission_statement_history(
             "local_total": flt(e.get("local_amount_try") or 0),
             "external_total": flt(e.get("external_amount_try") or 0),
             "created": str(e.get("creation") or ""),
-            "import_source": payload.get("import_source", ""),
+            "import_source": e.get("import_source") or payload.get("import_source", ""),
+            "statement_type": e.get("statement_type") or payload.get("statement_type", ""),
+            "statement_batch": e.get("statement_batch") or payload.get("statement_batch", ""),
         })
 
     return {"history": result}

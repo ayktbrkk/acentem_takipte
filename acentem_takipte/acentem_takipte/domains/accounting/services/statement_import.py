@@ -136,6 +136,8 @@ def import_statement_preview_rows(
         entry.external_amount = row.get("amount_try") or 0
         entry.external_amount_try = row.get("amount_try") or 0
         entry.external_ref = row.get("external_ref") or entry.external_ref
+        entry.statement_type = "premium"
+        entry.import_source = "statement_preview"
         entry.payload_json = frappe.as_json(details_payload)
         entry.integration_hash = _build_statement_row_hash(details_payload)
         entry.status = ATAccountingEntryStatus.SYNCED
@@ -210,44 +212,53 @@ def _build_commission_statement_payload(
 def _get_or_create_commission_statement_entry(
     policy_name: str,
     external_ref: str,
+    statement_batch: str,
 ) -> "frappe.model.document.Document":
     """Find or create an AT Accounting Entry for a commission statement row.
 
-    Uses source_doctype + source_name + external_ref as the idempotency key
-    so that the same policy imported with different statement periods does not
-    overwrite earlier imports.
+    Idempotency key: source_doctype + source_name + statement_type +
+    statement_batch + external_ref. Re-importing the same policy/ref within the
+    same batch updates/no-ops; a different batch always gets its own entry so
+    statement periods never overwrite each other.
 
-    When no entry exists for the given external_ref, a previous 'Missing
-    External' placeholder entry (external_ref="") for the same policy is reused.
-    That way a later statement that finally includes the policy populates the
-    same entry, the stale Missing External open item closes, and no duplicate
-    accounting entry is left behind.
+    When no entry exists for the given external_ref, only a Missing External
+    placeholder (external_ref="") from the SAME statement_batch is reused, so a
+    later real row in that batch populates the same entry and closes the stale
+    open item. Placeholders from other batches are never overwritten.
     """
     normalized_ref = str(external_ref or "").strip()
-    existing = frappe.db.get_value(
-        "AT Accounting Entry",
-        {
-            "source_doctype": "AT Policy",
-            "source_name": policy_name,
-            "external_ref": normalized_ref,
-        },
-        "name",
-    )
+    batch = str(statement_batch or "").strip()
+    lookup: dict[str, Any] = {
+        "source_doctype": "AT Policy",
+        "source_name": policy_name,
+        "statement_type": "commission",
+        "statement_batch": batch,
+        "external_ref": normalized_ref,
+    }
+    existing = frappe.db.get_value("AT Accounting Entry", lookup, "name")
     if existing:
         return frappe.get_doc("AT Accounting Entry", existing)
-    if normalized_ref:
+    if normalized_ref and batch:
         placeholder = frappe.db.get_value(
             "AT Accounting Entry",
             {
                 "source_doctype": "AT Policy",
                 "source_name": policy_name,
+                "statement_type": "commission",
+                "statement_batch": batch,
                 "external_ref": "",
             },
             "name",
         )
         if placeholder:
             return frappe.get_doc("AT Accounting Entry", placeholder)
-    return frappe.new_doc("AT Accounting Entry")
+    return frappe.get_doc(
+        {
+            "doctype": "AT Accounting Entry",
+            "source_doctype": "AT Policy",
+            "source_name": policy_name,
+        }
+    )
 
 
 def import_commission_statement_rows(
@@ -283,24 +294,29 @@ def import_commission_statement_rows(
         statement_type="commission",
     )
 
-    # Filter out duplicate policy_no rows and unmatched rows
-    duplicates = _detect_duplicate_policy_refs(preview["rows"])
+    # Filter out real duplicate rows (same policy + external_ref + amount) and
+    # unmatched rows. A policy may legitimately appear multiple times in one
+    # statement with different refs/amounts; those are imported separately.
+    # For exact duplicates only the first occurrence is imported.
+    seen_imported: set[tuple[str, str, float]] = set()
     importable: list[dict[str, Any]] = []
     skipped_duplicate = 0
     skipped_unmatched = 0
 
     for row in preview["rows"]:
-        pn = str(row.get("policy_no") or "").strip()
-        if pn in duplicates:
-            skipped_duplicate += 1
-            continue
         if row.get("match_status") == "Unmatched":
             skipped_unmatched += 1
             continue
+        identity = _row_identity(row)
+        if identity in seen_imported:
+            skipped_duplicate += 1
+            continue
+        seen_imported.add(identity)
         importable.append(row)
 
     imported = 0
     open_items = 0
+    statement_batch = _build_statement_batch_id(csv_text, insurance_company)
 
     for row in importable:
         matched_policy = row.get("matched_policy") or {}
@@ -310,7 +326,7 @@ def import_commission_statement_rows(
         payload = _build_commission_statement_payload(row, matched_policy)
         external_ref = str(row.get("external_ref") or "").strip()
         entry = _get_or_create_commission_statement_entry(
-            matched_policy["name"], external_ref
+            matched_policy["name"], external_ref, statement_batch
         )
 
         external_amount = flt(row.get("amount_try") or 0)
@@ -318,6 +334,7 @@ def import_commission_statement_rows(
         details_payload = {
             "import_source": "commission_statement",
             "statement_type": "commission",
+            "statement_batch": statement_batch,
             "external_ref": external_ref,
             "policy_no": row.get("policy_no"),
             "customer": row.get("customer"),
@@ -335,6 +352,9 @@ def import_commission_statement_rows(
         entry.external_amount = external_amount
         entry.external_amount_try = external_amount
         entry.external_ref = external_ref or entry.external_ref
+        entry.statement_type = "commission"
+        entry.statement_batch = statement_batch
+        entry.import_source = "commission_statement"
         entry.payload_json = frappe.as_json(details_payload)
         entry.integration_hash = _build_statement_row_hash(details_payload)
         entry.status = ATAccountingEntryStatus.SYNCED
@@ -378,6 +398,7 @@ def import_commission_statement_rows(
             policy_refs_from_statement=policy_refs,
             insurance_company=insurance_company,
             office_branch=office_branch,
+            statement_batch=statement_batch,
         )
 
     return {
@@ -396,6 +417,7 @@ def generate_missing_external_for_commission_statement(
     policy_refs_from_statement: list[str],
     insurance_company: str | None = None,
     office_branch: str | None = None,
+    statement_batch: str,
 ) -> dict[str, int]:
     """Create AT Accounting Entries and Reconciliation Items for policies
     that exist in the system but were not found in the uploaded statement.
@@ -403,11 +425,14 @@ def generate_missing_external_for_commission_statement(
     These show up as 'Missing External' — the insurance company has not
     included the policy's commission in their statement, but the system
     has a record of the accrued commission.
+
+    The statement_batch is created once by the caller (the import flow) and
+    shared with the imported rows so Missing External placeholders belong to
+    the same batch and are resolvable without cross-batch overwrites.
     """
     from acentem_takipte.acentem_takipte.accounting import (
         _close_open_items,
         _evaluate_mismatch,
-        _get_or_create_entry,
         _set_entry_reconciliation_flag,
         _upsert_open_item,
     )
@@ -433,6 +458,8 @@ def generate_missing_external_for_commission_statement(
         limit_page_length=0,
     )
 
+    batch = str(statement_batch or "").strip()
+
     generated = 0
     for policy in system_policies:
         policy_name = policy["name"]
@@ -446,7 +473,9 @@ def generate_missing_external_for_commission_statement(
         if commission_amount <= 0:
             continue
 
-        entry = _get_or_create_entry("AT Policy", policy_name)
+        # Use the commission-statement entry resolver so Missing External never
+        # overwrites a real statement entry or the canonical policy sync entry.
+        entry = _get_or_create_commission_statement_entry(policy_name, "", batch)
         entry.entry_type = "Policy"
         entry.policy = policy_name
         entry.customer = policy.get("customer") or ""
@@ -458,13 +487,19 @@ def generate_missing_external_for_commission_statement(
         entry.external_amount = 0
         entry.external_amount_try = 0
         entry.external_ref = ""
+        entry.statement_type = "commission"
+        entry.statement_batch = batch
+        entry.import_source = "missing_external"
         entry.payload_json = frappe.as_json({
             "import_source": "missing_external",
             "statement_type": "commission",
+            "statement_batch": batch,
             "policy_no": policy_no,
         })
         entry.integration_hash = _build_statement_row_hash({
             "import_source": "missing_external",
+            "statement_type": "commission",
+            "statement_batch": batch,
             "policy_name": policy_name,
         })
         entry.status = ATAccountingEntryStatus.SYNCED
@@ -645,16 +680,28 @@ def _build_payment_map(
     return {str(row.get("payment_no") or "").strip(): row for row in rows}
 
 
-def _detect_duplicate_policy_refs(
-    preview_rows: list[dict[str, Any]],
-) -> set[str]:
-    """Return the set of policy_no values that appear more than once."""
-    seen: dict[str, int] = {}
+def _row_identity(row: dict[str, Any]) -> tuple[str, str, float]:
+    """Stable identity for a statement row.
+
+    A policy may legitimately appear more than once in a statement when it has
+    multiple transactions. Rows are only considered duplicates when the policy,
+    external reference AND amount all match."""
+    return (
+        str(row.get("policy_no") or "").strip(),
+        str(row.get("external_ref") or "").strip(),
+        round(flt(row.get("amount_try") or 0), 2),
+    )
+
+
+def _duplicate_row_keys(preview_rows: list[dict[str, Any]]) -> set[tuple[str, str, float]]:
+    """Return the set of (policy_no, external_ref, amount) identities that appear
+    more than once in the statement rows."""
+    seen: dict[tuple[str, str, float], int] = {}
     for row in preview_rows:
-        pn = str(row.get("policy_no") or "").strip()
-        if pn:
-            seen[pn] = seen.get(pn, 0) + 1
-    return {pn for pn, count in seen.items() if count > 1}
+        key = _row_identity(row)
+        if key[0]:
+            seen[key] = seen.get(key, 0) + 1
+    return {key for key, count in seen.items() if count > 1}
 
 
 def _enrich_commission_preview_rows(
@@ -663,7 +710,7 @@ def _enrich_commission_preview_rows(
 ) -> dict[str, Any]:
     """Add commission-specific fields to each preview row and build an
     enriched summary when statement_type is 'commission'."""
-    duplicates = _detect_duplicate_policy_refs(preview_rows)
+    duplicate_keys = _duplicate_row_keys(preview_rows)
 
     matched = 0
     unmatched = 0
@@ -687,7 +734,7 @@ def _enrich_commission_preview_rows(
             difference = round(external_amount - local_commission, 2)
             row["difference_try"] = difference
 
-            if policy_no_val in duplicates:
+            if _row_identity(row) in duplicate_keys:
                 row["match_status"] = "Mismatched"
                 row["mismatch_type"] = "Duplicate"
                 duplicate_count += 1
@@ -722,6 +769,16 @@ def _enrich_commission_preview_rows(
             "total_difference_try": round(total_difference, 2),
         },
     }
+
+
+def _build_statement_batch_id(csv_text: str, insurance_company: str | None = None) -> str:
+    """Build a stable batch identifier from the raw statement content.
+
+    Re-importing the exact same CSV content yields the same batch id, so the
+    same batch can be detected and deduplicated while different periods/batches
+    get distinct ids."""
+    raw = f"{insurance_company or ''}::{str(csv_text or '')}"
+    return sha256(raw.encode("utf-8")).hexdigest()[:16]
 
 
 def _build_statement_row_hash(payload: dict[str, Any]) -> str:

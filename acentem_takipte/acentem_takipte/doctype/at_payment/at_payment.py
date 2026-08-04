@@ -27,10 +27,13 @@ class ATPayment(Document):
 
         self._validate_status()
         self._validate_claim_links()
+        # Resolve fx_rate/amount_try before commission cap checks so non-TRY
+        # payouts compare against the TRY-equivalent allocation.
+        self._set_exchange_rate()
+        self.amount_try = flt(self.amount) * flt(self.fx_rate)
         self._validate_commission_payout()
         self._validate_amounts()
         self._validate_installments()
-        self._set_exchange_rate()
         self.amount_try = flt(self.amount) * flt(self.fx_rate)
 
         if self.status == ATPaymentStatus.PAID and not self.payment_date:
@@ -95,16 +98,57 @@ class ATPayment(Document):
             self.payment_direction = "Outbound"
         if not self.policy:
             frappe.throw(_("A policy must be linked for commission payouts."))
+        if not self.sales_entity:
+            frappe.throw(_("A sales entity must be linked for commission payouts."))
         self._validate_commission_period_lock()
-        policy_commission = flt(
-            frappe.db.get_value("AT Policy", self.policy, "commission_amount") or 0
-        )
+        policy_data = frappe.db.get_value(
+            "AT Policy",
+            self.policy,
+            ["commission_amount", "commission_distribution", "sales_entity"],
+            as_dict=True,
+        ) or {}
+        policy_commission = flt(policy_data.get("commission_amount") or 0)
         if self.amount <= 0 and policy_commission > 0:
             self.amount = policy_commission
+
+        # fx_rate is resolved in validate() before this runs; amount_try is the
+        # TRY-equivalent used for every cap comparison below.
+        self.amount_try = flt(self.amount) * flt(self.fx_rate or 1)
+        amount_try = self.amount_try
+
+        # The payout entity must actually appear in the policy distribution.
+        distribution_raw = str(policy_data.get("commission_distribution") or "[]")
+        entity_allocation_try = 0.0
+        entity_found = False
+        try:
+            import json
+            distribution = json.loads(distribution_raw) if distribution_raw else []
+        except (json.JSONDecodeError, TypeError):
+            distribution = []
+        for entry in distribution or []:
+            if str(entry.get("entity") or "").strip() == str(self.sales_entity or "").strip():
+                entity_found = True
+                entity_allocation_try = flt(entry.get("amount_try") or 0)
+                break
+        if not entity_found:
+            frappe.throw(
+                _(
+                    "Sales entity {0} is not part of the commission distribution of policy {1}."
+                ).format(self.sales_entity, self.policy)
+            )
+        if entity_allocation_try <= 0:
+            frappe.throw(
+                _(
+                    "Sales entity {0} has no commission allocation for policy {1}; payouts are not allowed."
+                ).format(self.sales_entity, self.policy)
+            )
+
+        # Policy-level cap (TRY): total committed payouts must not exceed the
+        # policy commission. Cancelled payouts are excluded.
         already_paid = flt(
             frappe.db.sql(
                 """
-                select ifnull(sum(amount), 0)
+                select ifnull(sum(amount_try), 0)
                 from `tabAT Payment`
                 where policy = %s
                   and payment_purpose = 'Commission Payout'
@@ -114,13 +158,47 @@ class ATPayment(Document):
                 (self.policy, self.name or ""),
             )[0][0]
         )
-        total_with_new = already_paid + flt(self.amount)
+        total_with_new = already_paid + amount_try
         if total_with_new > policy_commission + 0.01:
             frappe.throw(
                 _(
                     "Cumulative commission payouts ({0} + {1} = {2}) would exceed policy commission ({3})."
                 ).format(
-                    already_paid, self.amount, total_with_new, policy_commission
+                    round(already_paid, 2),
+                    round(amount_try, 2),
+                    round(total_with_new, 2),
+                    round(policy_commission, 2),
+                )
+            )
+
+        # Entity-level allocation cap (TRY): committed (Draft + Paid) payouts to
+        # this entity must not exceed its share of the policy distribution.
+        already_paid_entity = flt(
+            frappe.db.sql(
+                """
+                select ifnull(sum(amount_try), 0)
+                from `tabAT Payment`
+                where policy = %s
+                  and sales_entity = %s
+                  and payment_purpose = 'Commission Payout'
+                  and status != 'Cancelled'
+                  and name != %s
+                """,
+                (self.policy, self.sales_entity, self.name or ""),
+            )[0][0]
+        )
+        entity_total_with_new = already_paid_entity + amount_try
+        if entity_total_with_new > entity_allocation_try + 0.01:
+            frappe.throw(
+                _(
+                    "Cumulative payouts to {0} for policy {1} ({2} + {3} = {4}) would exceed its commission allocation ({5})."
+                ).format(
+                    self.sales_entity,
+                    self.policy,
+                    round(already_paid_entity, 2),
+                    round(amount_try, 2),
+                    round(entity_total_with_new, 2),
+                    round(entity_allocation_try, 2),
                 )
             )
 

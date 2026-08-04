@@ -108,7 +108,6 @@ class ATPolicy(Document):
             frappe.throw(_("Start date cannot be later than end date."))
 
         self._validate_company_policy_number_uniqueness()
-        self._validate_commission_period_lock()
         self.net_premium = normalized["net_premium"]
         self.tax_amount = normalized["tax_amount"]
         self.commission_amount = normalized["commission_amount"]
@@ -128,6 +127,8 @@ class ATPolicy(Document):
             flt(self.fx_rate),
         )
         self._validate_commission_distribution_total()
+        self._validate_distribution_path_shares()
+        self._validate_commission_period_lock()
 
     def _validate_commission_distribution_total(self) -> None:
         """Ensure commission distribution total equals commission_amount."""
@@ -142,6 +143,27 @@ class ATPolicy(Document):
             frappe.throw(
                 _("Commission distribution total ({0}) does not match commission amount ({1}).").format(
                     round(total, 2), round(flt(self.commission_amount), 2)
+                )
+            )
+        for entry in entries:
+            if flt(entry.get("amount", 0)) < -0.01 or flt(entry.get("amount_try", 0)) < -0.01:
+                frappe.throw(
+                    _("Commission distribution contains a negative amount for {0}.").format(
+                        entry.get("entity_name") or entry.get("entity") or "?"
+                    )
+                )
+
+    def _validate_distribution_path_shares(self) -> None:
+        if not self.sales_entity:
+            return
+        from acentem_takipte.acentem_takipte.domains.commissions.services.balance import (
+            validate_distribution_path_shares,
+        )
+        valid, violations = validate_distribution_path_shares(self.sales_entity)
+        if not valid:
+            frappe.throw(
+                _("Commission distribution path is invalid: {0}").format(
+                    " ".join(violations)
                 )
             )
 
@@ -167,24 +189,88 @@ class ATPolicy(Document):
             )
 
     def _validate_commission_period_lock(self) -> None:
-        if not self.insurance_company or not self.issue_date:
-            return
         from acentem_takipte.acentem_takipte.doctype.at_commission_period.at_commission_period import (
             is_commission_period_locked,
         )
-        if is_commission_period_locked(self.insurance_company, self.issue_date):
-            if not self.is_new():
-                old_commission = frappe.db.get_value(
-                    "AT Policy", self.name, "commission_amount"
-                )
-                if flt(old_commission) != flt(self.commission_amount):
-                    frappe.throw(
-                        _("Cannot change commission amount for a policy in a locked commission period.")
-                    )
-            else:
-                frappe.throw(
-                    _("Cannot create a policy in a locked commission period.")
-                )
+
+        old: dict = {}
+        if not self.is_new():
+            old = frappe.db.get_value(
+                "AT Policy",
+                self.name,
+                [
+                    "commission_amount",
+                    "commission_distribution",
+                    "sales_entity",
+                    "insurance_company",
+                    "issue_date",
+                    "currency",
+                    "fx_rate",
+                ],
+                as_dict=True,
+            ) or {}
+
+        # A policy is locked if EITHER its old (pre-edit) company+date or its
+        # new company+date falls in a locked commission period.
+        old_company = str((old.get("insurance_company") or self.insurance_company or "")).strip()
+        old_issue = str((old.get("issue_date") or self.issue_date or ""))[:10]
+        new_company = str(self.insurance_company or "").strip()
+        new_issue = str(self.issue_date or "")[:10]
+
+        locked = False
+        if old_company and old_issue and is_commission_period_locked(old_company, old_issue):
+            locked = True
+        if new_company and new_issue and is_commission_period_locked(new_company, new_issue):
+            locked = True
+        if not locked:
+            return
+
+        if self.is_new():
+            frappe.throw(
+                _("Cannot create a policy in a locked commission period.")
+            )
+
+        if flt(old.get("commission_amount") or 0) != flt(self.commission_amount):
+            frappe.throw(
+                _("Cannot change commission amount for a policy in a locked commission period.")
+            )
+        if str(old.get("sales_entity") or "").strip() != str(self.sales_entity or "").strip():
+            frappe.throw(
+                _("Cannot change the sales entity for a policy in a locked commission period.")
+            )
+        if old_company != new_company:
+            frappe.throw(
+                _("Cannot change the insurance company for a policy in a locked commission period.")
+            )
+        if old_issue != new_issue:
+            frappe.throw(
+                _("Cannot change the issue date for a policy in a locked commission period.")
+            )
+        old_dist = str(old.get("commission_distribution") or "")
+        new_dist = str(self.commission_distribution or "")
+        if (old_dist or "") != (new_dist or ""):
+            frappe.throw(
+                _("Cannot change the commission distribution for a policy in a locked commission period.")
+            )
+        # Currency/fx changes that would alter the TRY-equivalent commission.
+        old_currency = str(old.get("currency") or "").strip().upper()
+        new_currency = str(self.currency or "").strip().upper()
+        if old_currency and old_currency != new_currency:
+            frappe.throw(
+                _("Cannot change the currency for a policy in a locked commission period.")
+            )
+        old_fx = flt(old.get("fx_rate") or 0)
+        new_fx = flt(self.fx_rate or 0)
+        if old_fx and new_fx and abs(old_fx - new_fx) > 0.0001:
+            frappe.throw(
+                _("Cannot change the exchange rate for a policy in a locked commission period.")
+            )
+        old_try = round(flt(old.get("commission_amount") or 0) * old_fx, 2)
+        new_try = round(flt(self.commission_amount) * new_fx, 2)
+        if abs(old_try - new_try) > 0.01:
+            frappe.throw(
+                _("Cannot change the TRY-equivalent commission amount for a policy in a locked commission period.")
+            )
 
     def after_insert(self):
         notification_policy_no = self.policy_no or self.name

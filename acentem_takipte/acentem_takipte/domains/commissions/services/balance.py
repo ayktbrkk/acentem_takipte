@@ -5,6 +5,7 @@ import logging
 from datetime import timedelta
 
 import frappe
+from frappe import _
 from frappe.utils import cint, flt, getdate, nowdate
 
 from acentem_takipte.acentem_takipte.domains.accounting.services.runtime import (
@@ -145,17 +146,20 @@ def compute_commission_balances(
                     bucket_ic_policy_count[key] = bucket_ic_policy_count.get(key, 0) + 1
 
     # --- Paid from Commission Payout payments ----------------------
+    # Only status=Paid counts toward paid balances. Draft payouts are
+    # reported separately as pending (reserved); Cancelled is excluded.
     paid_by_entity: dict[str, float] = {}
     paid_by_entity_ic: dict[tuple, float] = {}
     bucket_paid_by_entity_ic: dict[tuple, float] = {}
+    pending_by_entity: dict[str, float] = {}
     policy_ic_cache: dict[str, str] = {}
     payments = frappe.get_all(
         "AT Payment",
         filters={
             "payment_purpose": "Commission Payout",
-            "status": ["!=", "Cancelled"],
+            "status": ["in", ["Paid", "Draft"]],
         },
-        fields=["sales_entity", "amount_try", "policy"],
+        fields=["sales_entity", "amount_try", "policy", "status"],
         limit_page_length=0,
     )
     for row in payments:
@@ -167,7 +171,10 @@ def compute_commission_balances(
                 continue
         entity = str(row.get("sales_entity") or "").strip()
         amount = flt(row.get("amount_try") or 0)
-        if entity and amount > 0:
+        if not entity or amount <= 0:
+            continue
+        status = str(row.get("status") or "").strip()
+        if status == "Paid":
             paid_by_entity[entity] = paid_by_entity.get(entity, 0) + amount
             policy_name = str(row.get("policy") or "").strip()
             if policy_name:
@@ -181,9 +188,11 @@ def compute_commission_balances(
                     paid_by_entity_ic[ic_key] = paid_by_entity_ic.get(ic_key, 0) + amount
                     if aging_bucket != "all":
                         bucket_paid_by_entity_ic[ic_key] = bucket_paid_by_entity_ic.get(ic_key, 0) + amount
+        elif status == "Draft":
+            pending_by_entity[entity] = pending_by_entity.get(entity, 0) + amount
 
     # --- Build entity list -----------------------------------------
-    all_names = set(accrued_by_entity.keys()) | set(paid_by_entity.keys())
+    all_names = set(accrued_by_entity.keys()) | set(paid_by_entity.keys()) | set(pending_by_entity.keys())
 
     if office_branch:
         office_branch = str(office_branch).strip()
@@ -199,9 +208,10 @@ def compute_commission_balances(
         else:
             accrued = accrued_by_entity.get(name, 0)
         paid = paid_by_entity.get(name, 0)
+        pending = pending_by_entity.get(name, 0)
         remaining = accrued - paid
 
-        if remaining <= 0 and accrued <= 0:
+        if remaining <= 0 and accrued <= 0 and pending <= 0:
             continue
 
         aging = aging_by_entity.get(name, {})
@@ -217,6 +227,7 @@ def compute_commission_balances(
                 "office_branch": _entity_info(name).get("office_branch") or "",
                 "accrued_try": round(accrued, 2),
                 "paid_try": round(paid, 2),
+                "pending_try": round(pending, 2),
                 "remaining_try": round(remaining, 2),
                 "aging": {
                     "current": round(aging.get("current", 0), 2),
@@ -236,6 +247,7 @@ def compute_commission_balances(
     # --- Compute summary from FULL filtered set, not just the limited slice
     total_accrued = round(sum(e["accrued_try"] for e in entity_list), 2)
     total_paid = round(sum(e["paid_try"] for e in entity_list), 2)
+    total_pending = round(sum(e["pending_try"] for e in entity_list), 2)
     total_remaining = round(sum(e["remaining_try"] for e in entity_list), 2)
 
     # --- Add insurance_companies breakdown per entity ----------------
@@ -277,6 +289,7 @@ def compute_commission_balances(
         "summary": {
             "total_accrued_try": total_accrued,
             "total_paid_try": total_paid,
+            "total_pending_try": total_pending,
             "total_remaining_try": total_remaining,
         },
         "total_count": total_count,
@@ -286,13 +299,37 @@ def compute_commission_balances(
     }
 
 
+def _is_commission_entry(entry: dict) -> bool:
+    """Return True for commission-statement-sourced AT Accounting Entries.
+
+    Uses the statement_type/import_source fields when present and falls back
+    to the payload for legacy records."""
+    if str(entry.get("statement_type") or "").strip() == "commission":
+        return True
+    if str(entry.get("statement_type") or "").strip() == "premium":
+        return False
+    payload = {}
+    raw = entry.get("payload_json") or "{}"
+    try:
+        payload = json.loads(raw) if isinstance(raw, str) else raw
+    except (json.JSONDecodeError, TypeError):
+        payload = {}
+    return str(payload.get("import_source") or "").strip() in (
+        "commission_statement",
+        "missing_external",
+    )
+
+
 def _commission_reconciliation_summary(
     insurance_company: str | None = None,
     from_date: str | None = None,
     to_date: str | None = None,
 ) -> dict[str, int]:
     """Count open AT Reconciliation Items linked to commission statement
-    AT Accounting Entries, optionally filtered by insurance_company and date."""
+    AT Accounting Entries, optionally filtered by insurance_company and date.
+
+    Only commission-statement and missing-external sourced entries are counted;
+    generic policy sync entries and premium imports are excluded."""
     entry_filters: dict = {"source_doctype": "AT Policy", "entry_type": "Policy"}
     if insurance_company:
         entry_filters["insurance_company"] = insurance_company
@@ -306,13 +343,15 @@ def _commission_reconciliation_summary(
     entries = frappe.get_all(
         "AT Accounting Entry",
         filters=entry_filters,
-        fields=["name"],
+        fields=["name", "statement_type", "payload_json"],
         limit_page_length=0,
     )
-    if not entries:
+    entry_names = [
+        e["name"] for e in entries if _is_commission_entry(e)
+    ]
+    if not entry_names:
         return {"open_items": 0, "total_items": 0}
 
-    entry_names = [e["name"] for e in entries]
     open_items = frappe.db.count(
         "AT Reconciliation Item",
         {"accounting_entry": ["in", entry_names], "status": "Open"},
@@ -407,13 +446,13 @@ def compute_entity_detail(entity_name: str, limit: int = 50) -> dict:
             }
         )
 
-    # Payment history for this entity
+    # Payment history for this entity (only Paid payouts; Draft is pending)
     payment_rows = frappe.get_all(
         "AT Payment",
         filters={
             "payment_purpose": "Commission Payout",
             "sales_entity": doc_name,
-            "status": ["!=", "Cancelled"],
+            "status": "Paid",
         },
         fields=["name", "payment_no", "amount_try", "payment_date", "reference_no"],
         order_by="payment_date desc",
@@ -562,14 +601,14 @@ def compute_commission_policy_detail(
             }
         )
 
-    # --- Resolve payments for these policies ------------------------
+    # --- Resolve payments for these policies (aggregate ALL Paid payouts) ---
     policy_payments: dict[str, dict] = {}
     if policy_names:
         payments = frappe.get_all(
             "AT Payment",
             filters={
                 "payment_purpose": "Commission Payout",
-                "status": ["!=", "Cancelled"],
+                "status": "Paid",
                 "policy": ["in", policy_names],
             },
             fields=["name", "payment_no", "amount_try", "payment_date", "reference_no", "policy"],
@@ -577,27 +616,52 @@ def compute_commission_policy_detail(
         )
         for payment in payments:
             policy_name = str(payment.get("policy") or "").strip()
-            if policy_name:
-                policy_payments[policy_name] = {
+            if not policy_name:
+                continue
+            agg = policy_payments.setdefault(
+                policy_name,
+                {"payments": [], "paid_amount_try": 0.0, "last_payment_date": None},
+            )
+            amt = flt(payment.get("amount_try") or 0)
+            agg["paid_amount_try"] = round(agg["paid_amount_try"] + amt, 2)
+            agg["payments"].append(
+                {
                     "name": payment["name"],
                     "payment_no": payment.get("payment_no") or payment["name"],
-                    "amount_try": round(flt(payment.get("amount_try") or 0), 2),
+                    "amount_try": round(amt, 2),
                     "payment_date": str(payment.get("payment_date") or ""),
                     "reference_no": str(payment.get("reference_no") or ""),
                 }
+            )
+            payment_date = str(payment.get("payment_date") or "")
+            if payment_date and (
+                not agg["last_payment_date"] or payment_date > agg["last_payment_date"]
+            ):
+                agg["last_payment_date"] = payment_date
 
     for p in policy_list:
-        p["payment"] = policy_payments.get(p["policy_name"])
+        agg = policy_payments.get(p["policy_name"])
+        if agg:
+            p["payments"] = agg["payments"]
+            p["paid_amount_try"] = agg["paid_amount_try"]
+            p["last_payment_date"] = agg["last_payment_date"]
+            # Backward-compatible single-payment reference (most recent)
+            p["payment"] = agg["payments"][-1] if agg["payments"] else None
+        else:
+            p["payment"] = None
+            p["payments"] = []
+            p["paid_amount_try"] = 0.0
+            p["last_payment_date"] = None
+
+    # --- Totals over the FULL filtered set, before any limit slice ------
+    total_commission = round(sum(p["commission_amount_try"] for p in policy_list), 2)
+    total_paid = round(sum(p["paid_amount_try"] for p in policy_list), 2)
+    total_gross_premium = round(sum(p["gross_premium"] for p in policy_list), 2)
+    total_policy_count = len(policy_list)
 
     # --- Sort and limit ---------------------------------------------
     policy_list.sort(key=lambda p: p["issue_date"], reverse=True)
     policy_list = policy_list[:safe_limit]
-
-    # --- Totals -----------------------------------------------------
-    total_commission = round(sum(p["commission_amount_try"] for p in policy_list), 2)
-    total_paid = round(
-        sum(p["payment"]["amount_try"] for p in policy_list if p["payment"]), 2
-    )
 
     filtered_ic_display = ""
     if insurance_company:
@@ -613,8 +677,8 @@ def compute_commission_policy_detail(
         "insurance_company": filtered_ic_display,
         "policies": policy_list,
         "totals": {
-            "policies": len(policy_list),
-            "gross_premium": round(sum(p["gross_premium"] for p in policy_list), 2),
+            "policies": total_policy_count,
+            "gross_premium": total_gross_premium,
             "commission": total_commission,
             "paid": total_paid,
             "remaining": round(total_commission - total_paid, 2),
@@ -802,6 +866,42 @@ def validate_share_pct_totals(office_branch: str | None = None) -> list[dict]:
     return violations
 
 
+def validate_distribution_path_shares(sales_entity: str | None) -> tuple[bool, list[str]]:
+    """Validate that the non-root commission share chain to the root does not
+    exceed 100%.
+
+    Each non-root entity keeps share_pct% of the ORIGINAL commission amount,
+    so the sum of non-root shares along the chain must stay <= 100 or the
+    root remainder would go negative. Returns (valid, violations)."""
+    if not sales_entity:
+        return True, []
+    shares: list[float] = []
+    current = str(sales_entity).strip()
+    visited: set[str] = set()
+    level = 0
+    while current and current not in visited:
+        visited.add(current)
+        entity_data = frappe.db.get_value(
+            "AT Sales Entity",
+            current,
+            ["commission_share_pct", "is_root", "parent_entity"],
+            as_dict=True,
+        ) or {}
+        if entity_data.get("is_root"):
+            break
+        shares.append(flt(entity_data.get("commission_share_pct") or 0))
+        current = entity_data.get("parent_entity")
+        level += 1
+        if level > 20:
+            break
+    total = round(sum(shares), 2)
+    if total > 100:
+        return False, [
+            f"Non-root commission share chain sums to {total}% (>100%) for {sales_entity}."
+        ]
+    return True, []
+
+
 def build_commission_distribution(
     sales_entity: str | None,
     commission_amount: float,
@@ -812,12 +912,25 @@ def build_commission_distribution(
     Each non-root entity retains commission_amount * share_pct / 100 of the original
     commission amount. The root entity receives all remaining commission.
 
+    Guarantees (and rejects instead of silently fixing):
+    - a non-root share chain that sums above 100% is rejected
+    - no negative root or negative entry amount is ever produced
+    - the distribution total equals commission_amount and the TRY total equals
+      commission_amount * fx_rate exactly (the final entry absorbs rounding)
+
     This is the canonical implementation shared by at_policy.py and recalc_commission_dist.py.
     """
     commission = flt(commission_amount)
     fx = flt(fx_rate) or 1
     if commission <= 0 or not sales_entity:
         return "[]"
+
+    valid, violations = validate_distribution_path_shares(sales_entity)
+    if not valid:
+        frappe.throw(
+            _("Commission distribution path is invalid: {0}").format(" ".join(violations))
+        )
+
     entries: list[dict] = []
     level = 0
     current_entity: str | None = sales_entity
@@ -833,7 +946,7 @@ def build_commission_distribution(
             as_dict=True,
         ) or {}
         share_pct = flt(entity_data.get("commission_share_pct") or 0)
-        share_pct = max(0.0, min(100.0, share_pct))
+        share_pct = max(0.0, share_pct)
         is_root = entity_data.get("is_root")
         entity_name = entity_data.get("full_name") or current_entity
         office_branch = entity_data.get("office_branch")
@@ -858,10 +971,15 @@ def build_commission_distribution(
         level += 1
         if level > 20:
             break
+
+    target_try = round(commission * fx, 2)
     if root_entry is not None:
         root_amount = round(commission - non_root_total, 2)
         root_entry["amount"] = root_amount
-        root_entry["amount_try"] = round(root_amount * fx, 2)
+        # The final entry absorbs TRY rounding so the total matches exactly.
+        root_entry["amount_try"] = round(
+            target_try - sum(flt(e["amount_try"]) for e in entries), 2
+        )
         entries.append(root_entry)
     elif entries and non_root_total < commission - 0.01:
         # No explicit is_root entity found; the top-most entity in the chain
@@ -869,6 +987,18 @@ def build_commission_distribution(
         # distribution always totals commission_amount.
         remainder = round(commission - non_root_total, 2)
         entries[-1]["amount"] = round(entries[-1]["amount"] + remainder, 2)
-        entries[-1]["amount_try"] = round(entries[-1]["amount"] * fx, 2)
+        entries[-1]["amount_try"] = round(
+            target_try - sum(flt(e["amount_try"]) for e in entries[:-1]), 2
+        )
         entries[-1]["is_root"] = True
+
+    # Final guarantee checks (defensive; reject instead of shipping bad data).
+    if any(flt(e["amount"]) < -0.01 or flt(e["amount_try"]) < -0.01 for e in entries):
+        frappe.throw(_("Commission distribution produced a negative amount."))
+    total = round(sum(flt(e["amount"]) for e in entries), 2)
+    total_try = round(sum(flt(e["amount_try"]) for e in entries), 2)
+    if abs(total - commission) > 0.01:
+        frappe.throw(_("Commission distribution total does not match commission amount."))
+    if abs(total_try - target_try) > 0.01:
+        frappe.throw(_("Commission distribution TRY total does not match commission amount_try."))
     return json.dumps(entries)

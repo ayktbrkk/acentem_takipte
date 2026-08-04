@@ -179,6 +179,25 @@
    "fieldtype": "Long Text",
    "label": "Payload JSON",
    "read_only": 1
+  },
+  {
+   "fieldname": "statement_type",
+   "fieldtype": "Select",
+   "label": "Statement Type",
+   "options": "\npremium\ncommission",
+   "read_only": 1
+  },
+  {
+   "fieldname": "statement_batch",
+   "fieldtype": "Data",
+   "label": "Statement Batch",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_source",
+   "fieldtype": "Data",
+   "label": "Import Source",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,

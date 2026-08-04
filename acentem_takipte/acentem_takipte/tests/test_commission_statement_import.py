@@ -7,8 +7,9 @@ from frappe.tests.utils import FrappeTestCase
 
 from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
     build_statement_import_preview,
-    _detect_duplicate_policy_refs,
+    _duplicate_row_keys,
     _enrich_commission_preview_rows,
+    _row_identity,
 )
 
 
@@ -65,23 +66,32 @@ def _make_policy(name, policy_no, commission_amount=1000.00, insurance_company="
 
 class TestCommissionStatementImport(FrappeTestCase):
 
-    # -- _detect_duplicate_policy_refs -----------------------------------
+    # -- duplicate detection (policy + external_ref + amount) ---------
 
     def test_detect_duplicate_no_duplicates(self):
         rows = [
-            {"policy_no": "A"},
-            {"policy_no": "B"},
-            {"policy_no": "C"},
+            {"policy_no": "A", "external_ref": "R1", "amount_try": 100},
+            {"policy_no": "B", "external_ref": "R2", "amount_try": 200},
         ]
-        assert _detect_duplicate_policy_refs(rows) == set()
+        assert _duplicate_row_keys(rows) == set()
 
-    def test_detect_duplicate_finds_duplicates(self):
+    def test_detect_duplicate_finds_exact_duplicates(self):
         rows = [
-            {"policy_no": "A"},
-            {"policy_no": "B"},
-            {"policy_no": "A"},
+            {"policy_no": "A", "external_ref": "R1", "amount_try": 100},
+            {"policy_no": "B", "external_ref": "R2", "amount_try": 200},
+            {"policy_no": "A", "external_ref": "R1", "amount_try": 100},
         ]
-        assert _detect_duplicate_policy_refs(rows) == {"A"}
+        assert _duplicate_row_keys(rows) == {("A", "R1", 100.0)}
+
+    def test_same_policy_different_refs_are_not_duplicates(self):
+        """A policy may legitimately appear multiple times with different
+        external references/amounts; those rows are NOT duplicates."""
+        rows = [
+            {"policy_no": "A", "external_ref": "R1", "amount_try": 100},
+            {"policy_no": "A", "external_ref": "R2", "amount_try": 300},
+        ]
+        assert _duplicate_row_keys(rows) == set()
+        assert _row_identity(rows[0]) != _row_identity(rows[1])
 
     # -- _enrich_commission_preview_rows ---------------------------------
 
@@ -125,17 +135,33 @@ class TestCommissionStatementImport(FrappeTestCase):
         assert rows[0]["local_commission_try"] == 0.0
         assert rows[0]["external_commission_try"] == 500.0
 
-    def test_enrich_duplicate_policy(self):
+    def test_enrich_same_policy_different_refs_are_separate(self):
+        """Same policy with different external refs/amounts is a legitimate
+        multi-transaction statement; each row is matched/mismatched, not dup."""
         policy_map = {"34567890": _make_policy("AT-POL-2026-000001", "34567890", 1000)}
         rows = [
             {"policy_no": "34567890", "amount_try": 1000, "external_ref": "DEC-001"},
             {"policy_no": "34567890", "amount_try": 800, "external_ref": "DEC-002"},
         ]
         result = _enrich_commission_preview_rows(rows, policy_map)
+        assert result["summary"]["duplicate_rows"] == 0
+        assert result["summary"]["matched_rows"] == 1
+        assert result["summary"]["mismatched_rows"] == 1
+        assert rows[0]["match_status"] == "Matched"
+        assert rows[1]["match_status"] == "Mismatched"
+        assert rows[1]["mismatch_type"] == "Amount"
+
+    def test_enrich_exact_duplicate_row(self):
+        """Two rows with the same policy + external_ref + amount are duplicates."""
+        policy_map = {"34567890": _make_policy("AT-POL-2026-000001", "34567890", 1000)}
+        rows = [
+            {"policy_no": "34567890", "amount_try": 1000, "external_ref": "DEC-001"},
+            {"policy_no": "34567890", "amount_try": 1000, "external_ref": "DEC-001"},
+        ]
+        result = _enrich_commission_preview_rows(rows, policy_map)
         assert result["summary"]["duplicate_rows"] == 2
         assert rows[0]["match_status"] == "Mismatched"
         assert rows[0]["mismatch_type"] == "Duplicate"
-        assert rows[1]["match_status"] == "Mismatched"
         assert rows[1]["mismatch_type"] == "Duplicate"
 
     # -- build_statement_import_preview (commission) ---------------------
@@ -176,12 +202,17 @@ class TestCommissionStatementImport(FrappeTestCase):
         assert result["rows"][0]["mismatch_type"] == "Missing Local"
 
     @patch("frappe.get_all")
-    def test_preview_commission_duplicate(self, mock_get_all):
+    def test_preview_commission_exact_duplicate(self, mock_get_all):
         policy = _make_policy("AT-POL-2026-000001", "34567890", 1000)
         mock_get_all.return_value = [policy]
 
         result = build_statement_import_preview(
-            csv_text=DUPLICATE_CSV, statement_type="commission",
+            csv_text=_csv(
+                "policy_no,amount_try,external_ref",
+                "34567890,1000.00,DEC-001",
+                "34567890,1000.00,DEC-001",
+            ),
+            statement_type="commission",
         )
         assert result["summary"]["duplicate_rows"] == 2
 
@@ -337,8 +368,11 @@ class TestCommissionStatementImport(FrappeTestCase):
             if doctype == "AT Accounting Entry" and isinstance(filters, dict):
                 if filters.get("external_ref") == "STM-001":
                     return None  # no exact statement entry yet
-                if filters.get("external_ref") == "":
-                    return "AT-ACC-PLACEHOLDER"  # existing Missing External placeholder
+                if (
+                    filters.get("external_ref") == ""
+                    and filters.get("statement_batch") == "BATCH-1"
+                ):
+                    return "AT-ACC-PLACEHOLDER"  # existing Missing External placeholder in same batch
             return None
 
         mock_db_get_value.side_effect = get_value_side_effect
@@ -347,10 +381,50 @@ class TestCommissionStatementImport(FrappeTestCase):
         fresh_doc = object()
         mock_new_doc.return_value = fresh_doc
 
-        result = _get_or_create_commission_statement_entry("POL-001", "STM-001")
+        result = _get_or_create_commission_statement_entry("POL-001", "STM-001", "BATCH-1")
 
         assert result is placeholder_doc
         mock_get_doc.assert_called_once_with("AT Accounting Entry", "AT-ACC-PLACEHOLDER")
+
+    @patch("frappe.new_doc")
+    @patch("frappe.get_doc")
+    @patch("frappe.db.get_value")
+    def test_same_policy_different_batch_creates_new_entry(
+        self, mock_db_get_value, mock_get_doc, mock_new_doc,
+    ):
+        """A real statement row in a different batch must NOT reuse another
+        batch's placeholder; each batch gets its own entry."""
+        from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
+            _get_or_create_commission_statement_entry,
+        )
+
+        def get_value_side_effect(doctype, filters, field=None, **kwargs):
+            if doctype == "AT Accounting Entry" and isinstance(filters, dict):
+                if filters.get("external_ref") == "":
+                    return "AT-ACC-PLACEHOLDER-B1"  # placeholder from batch B1
+            return None
+
+        mock_db_get_value.side_effect = get_value_side_effect
+        fresh_doc = object()
+        mock_get_doc.return_value = fresh_doc  # new-entry creation path
+        mock_new_doc.return_value = fresh_doc
+
+        # Lookup for batch B2: exact ref not found; the B1 placeholder must NOT
+        # be reused because the batch differs.
+        result = _get_or_create_commission_statement_entry("POL-001", "STM-001", "B2")
+        assert result is fresh_doc
+        # The placeholder lookup (external_ref="") was filtered to batch B2, so
+        # the B1 placeholder was never returned.
+        placeholder_calls = [
+            c for c in mock_db_get_value.call_args_list
+            if c.args[0] == "AT Accounting Entry"
+        ]
+        # At least the exact-match lookup ran with batch B2 in the filters.
+        any_b2 = any(
+            isinstance(c.args[1], dict) and c.args[1].get("statement_batch") == "B2"
+            for c in placeholder_calls
+        )
+        assert any_b2
 
     @patch("frappe.db.commit")
     @patch("frappe.db.sql")
@@ -486,9 +560,57 @@ class TestCommissionStatementImport(FrappeTestCase):
             csv_text=csv,
             insurance_company="AT-IC-2026-00001",
         )
-        assert result["imported"] == 0
-        assert result["skipped"] == 3
-        assert result["skipped_duplicate"] == 2
+        # Same policy with different refs/amounts is legitimate (imported);
+        # only the unmatched row is skipped.
+        assert result["imported"] == 2
+        assert result["skipped"] == 1
+        assert result["skipped_duplicate"] == 0
+
+    @patch("frappe.db.commit")
+    @patch("frappe.db.sql")
+    @patch("frappe.db.get_value")
+    @patch("frappe.new_doc")
+    @patch("frappe.get_doc")
+    @patch("frappe.get_all")
+    def test_import_skips_exact_duplicate_rows(
+        self, mock_get_all, mock_get_doc, mock_new_doc, mock_db_get_value, mock_sql, mock_commit,
+    ):
+        """Two rows with identical policy + external_ref + amount are duplicates
+        and are skipped on import."""
+        policy = _make_policy("AT-POL-2026-000001", "34567890", 1000)
+        mock_get_all.return_value = [policy]
+        mock_db_get_value.return_value = None
+        mock_sql.return_value = [[0]]
+
+        def new_doc_side_effect(doctype):
+            e = type("Fake", (), {})()
+            e.name = ""
+            e.source_doctype = "AT Policy"
+            e.source_name = "AT-POL-2026-000001"
+            e.status = "Draft"
+            e.integration_hash = ""
+            e.save = lambda **kw: setattr(e, "name", e.name or "AT-ACC-2026-000001")
+            e.insert = lambda **kw: setattr(e, "name", "AT-ACC-2026-000001")
+            return e
+
+        mock_new_doc.side_effect = new_doc_side_effect
+        mock_get_doc.return_value = new_doc_side_effect("AT Accounting Entry")
+
+        csv = _csv(
+            "policy_no,amount_try,external_ref",
+            "34567890,1000.00,DEC-001",
+            "34567890,1000.00,DEC-001",
+        )
+
+        from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
+            import_commission_statement_rows,
+        )
+        result = import_commission_statement_rows(
+            csv_text=csv,
+            insurance_company="AT-IC-2026-00001",
+        )
+        assert result["imported"] == 1
+        assert result["skipped_duplicate"] == 1
 
     @patch("frappe.db.commit")
     @patch("frappe.db.sql")
@@ -675,34 +797,41 @@ class TestCommissionStatementResolutionFlow(FrappeTestCase):
 
         deps = self._create_policy("FLOW-2026-0001", 1000.0)
 
-        # 1. Policy is not in the statement -> Missing External placeholder.
+        # 1. Policy is not in the statement -> Missing External placeholder
+        #    bound to batch B1.
         result = generate_missing_external_for_commission_statement(
             policy_refs_from_statement=[],
             insurance_company=deps["insurance_company"],
             office_branch=deps["office_branch"],
+            statement_batch="B1",
         )
         self.assertEqual(result["generated"], 1)
 
-        entry_name = frappe.db.get_value(
+        placeholder_name = frappe.db.get_value(
             "AT Accounting Entry",
-            {"source_doctype": "AT Policy", "source_name": deps["policy"]},
+            {
+                "source_doctype": "AT Policy",
+                "source_name": deps["policy"],
+                "import_source": "missing_external",
+            },
             "name",
         )
-        self.assertTrue(entry_name)
-        placeholder = frappe.get_doc("AT Accounting Entry", entry_name)
+        self.assertTrue(placeholder_name)
+        placeholder = frappe.get_doc("AT Accounting Entry", placeholder_name)
         self.assertEqual(placeholder.external_ref, "")
+        self.assertEqual(placeholder.statement_batch, "B1")
         self.assertTrue(
             frappe.db.exists(
                 "AT Reconciliation Item",
                 {
-                    "accounting_entry": entry_name,
+                    "accounting_entry": placeholder_name,
                     "status": "Open",
                     "mismatch_type": "Missing External",
                 },
             )
         )
 
-        # 2. A later statement now includes the policy.
+        # 2. A later statement (a different batch) now includes the policy.
         csv = _csv(
             "policy_no,amount_try,external_ref",
             f"{deps['policy_no']},1000.00,STM-001",
@@ -716,24 +845,40 @@ class TestCommissionStatementResolutionFlow(FrappeTestCase):
         self.assertEqual(import_result["imported"], 1)
         self.assertEqual(import_result["open_items"], 0)
 
-        # 3. The SAME entry is reused (no duplicate) with the real external ref.
+        # 3. Different batches keep separate entries: the B1 placeholder is
+        #    preserved and a new entry carries the real ref.
         entries = frappe.get_all(
             "AT Accounting Entry",
             filters={"source_doctype": "AT Policy", "source_name": deps["policy"]},
-            fields=["name", "external_ref"],
+            fields=["name", "external_ref", "statement_batch", "import_source"],
         )
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0]["external_ref"], "STM-001")
+        self.assertEqual(len(entries), 2)
+        by_source = {e["import_source"]: e for e in entries}
+        self.assertEqual(by_source["missing_external"]["external_ref"], "")
+        self.assertEqual(by_source["missing_external"]["statement_batch"], "B1")
+        self.assertEqual(by_source["commission_statement"]["external_ref"], "STM-001")
+        self.assertNotEqual(
+            by_source["commission_statement"]["statement_batch"], "B1"
+        )
 
-        # 4. The stale Missing External item is closed.
+        # 4. The batch-B1 Missing External item stays open (its period genuinely
+        #    has no external data); the real statement entry is matched.
         self.assertEqual(
             frappe.db.count(
                 "AT Reconciliation Item",
                 {
-                    "accounting_entry": entry_name,
+                    "accounting_entry": placeholder_name,
                     "status": "Open",
                     "mismatch_type": "Missing External",
                 },
+            ),
+            1,
+        )
+        real_entry_name = by_source["commission_statement"]["name"]
+        self.assertEqual(
+            frappe.db.count(
+                "AT Reconciliation Item",
+                {"accounting_entry": real_entry_name, "status": "Open"},
             ),
             0,
         )
@@ -803,6 +948,7 @@ class TestMissingExternalGeneration(FrappeTestCase):
         result = generate_missing_external_for_commission_statement(
             policy_refs_from_statement=["34567890"],
             insurance_company="AT-IC-2026-00001",
+            statement_batch="B1",
         )
         assert result["generated"] == 2  # POL-002 and POL-003
 
@@ -826,5 +972,6 @@ class TestMissingExternalGeneration(FrappeTestCase):
         result = generate_missing_external_for_commission_statement(
             policy_refs_from_statement=[],
             insurance_company="AT-IC-2026-00001",
+            statement_batch="B1",
         )
         assert result["generated"] == 0

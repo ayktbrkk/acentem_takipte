@@ -140,8 +140,8 @@ class TestCommissionBalances(FrappeTestCase):
              "insurance_company": company_b},
         ]
         payments = [
-            {"sales_entity": entity, "amount_try": 500, "policy": "POL-A"},
-            {"sales_entity": entity, "amount_try": 300, "policy": "POL-B"},
+            {"status": "Paid", "sales_entity": entity, "amount_try": 500, "policy": "POL-A"},
+            {"status": "Paid", "sales_entity": entity, "amount_try": 300, "policy": "POL-B"},
         ]
 
         def get_all_side_effect(doctype, filters=None, fields=None, **kwargs):
@@ -187,8 +187,8 @@ class TestCommissionBalances(FrappeTestCase):
              "insurance_company": company_b},
         ]
         payments = [
-            {"sales_entity": entity, "amount_try": 500, "policy": "POL-A"},
-            {"sales_entity": entity, "amount_try": 300, "policy": "POL-B"},
+            {"status": "Paid", "sales_entity": entity, "amount_try": 500, "policy": "POL-A"},
+            {"status": "Paid", "sales_entity": entity, "amount_try": 300, "policy": "POL-B"},
         ]
 
         def get_all_side_effect(doctype, filters=None, fields=None, **kwargs):
@@ -244,8 +244,8 @@ class TestCommissionBalances(FrappeTestCase):
              "insurance_company": "AT-IC-2026-00001"},
         ]
         payments = [
-            {"sales_entity": entity, "amount_try": 500, "policy": "POL-A"},
-            {"sales_entity": entity, "amount_try": 200, "policy": "POL-X"},
+            {"status": "Paid", "sales_entity": entity, "amount_try": 500, "policy": "POL-A"},
+            {"status": "Paid", "sales_entity": entity, "amount_try": 200, "policy": "POL-X"},
         ]
 
         def get_all_side_effect(doctype, filters=None, fields=None, **kwargs):
@@ -336,8 +336,8 @@ class TestCommissionBalances(FrappeTestCase):
              "insurance_company": "AT-IC-2026-00001"},
         ]
         payments = [
-            {"sales_entity": entity, "amount_try": 2000, "policy": "POL-OLD"},
-            {"sales_entity": entity, "amount_try": 1000, "policy": "POL-CUR"},
+            {"status": "Paid", "sales_entity": entity, "amount_try": 2000, "policy": "POL-OLD"},
+            {"status": "Paid", "sales_entity": entity, "amount_try": 1000, "policy": "POL-CUR"},
         ]
 
         def get_all_side_effect(doctype, filters=None, fields=None, **kwargs):
@@ -531,8 +531,8 @@ class TestCommissionBalances(FrappeTestCase):
              "insurance_company": "AT-IC-2026-00001"},
         ]
         payments = [
-            {"sales_entity": entity, "amount_try": 2000, "policy": "POL-OLD"},
-            {"sales_entity": entity, "amount_try": 1000, "policy": "POL-CUR"},
+            {"status": "Paid", "sales_entity": entity, "amount_try": 2000, "policy": "POL-OLD"},
+            {"status": "Paid", "sales_entity": entity, "amount_try": 1000, "policy": "POL-CUR"},
         ]
 
         def get_all_side_effect(doctype, filters=None, fields=None, **kwargs):
@@ -578,8 +578,8 @@ class TestCommissionBalances(FrappeTestCase):
              "insurance_company": company_b},
         ]
         payments = [
-            {"sales_entity": entity, "amount_try": 5000, "policy": "POL-A"},
-            {"sales_entity": entity, "amount_try": 1000, "policy": "POL-B"},
+            {"status": "Paid", "sales_entity": entity, "amount_try": 5000, "policy": "POL-A"},
+            {"status": "Paid", "sales_entity": entity, "amount_try": 1000, "policy": "POL-B"},
         ]
 
         def get_all_side_effect(doctype, filters=None, fields=None, **kwargs):
@@ -962,7 +962,7 @@ class TestEntityDetailWithPolicies(FrappeTestCase):
              "issue_date": date(2026, 1, 15), "commission_distribution": _make_distribution(entity, 1000)},
         ]
         payments = [
-            {"name": "PAY-001", "payment_no": "T-001", "amount_try": 500,
+            {"name": "PAY-001", "payment_no": "T-001", "status": "Paid", "amount_try": 500,
              "payment_date": "2026-02-01", "reference_no": "REF-001"},
         ]
 
