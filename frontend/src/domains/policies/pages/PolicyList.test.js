@@ -102,6 +102,27 @@ vi.mock("frappe-ui", () => ({
       return resource;
     }
 
+    if (url === "acentem_takipte.acentem_takipte.domains.policies.api.endpoints.get_policy_list_summary") {
+      const resource = {
+        data: ref(null),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData: vi.fn(),
+        reload: vi.fn(async () => ({
+          total: 73,
+          active: 71,
+          pending: 1,
+          cancelled: 1,
+          archived: 0,
+          total_premium_try: 730000,
+        })),
+        submit: vi.fn(async () => ({})),
+      };
+      createdResources.push({ config, resource });
+      return resource;
+    }
+
     const resource = {
       data: ref([]),
       loading: ref(false),
@@ -199,6 +220,41 @@ describe("PolicyList page store integration", () => {
 
     await wrapper.findAll("action-button-stub")[1].trigger("click");
     expect(wrapper.vm.showQuickPolicyDialog).toBe(true);
+  });
+
+  it("uses the full-dataset summary for KPI cards instead of the page rows", async () => {
+    const policyStore = usePolicyStore();
+
+    const wrapper = mount(PolicyList, {
+      global: {
+        stubs: {
+          Dialog: true,
+          ActionButton: true,
+          DataTableCell: genericStub,
+          StatusBadge: true,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateDialogShell: genericStub,
+          QuickCreateFormRenderer: true,
+          QuickCreateLauncher: true,
+          TableEntityCell: true,
+          TableFactsCell: true,
+          TablePagerFooter: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+        },
+      },
+    });
+
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await nextTick();
+    await waitForPolicyStoreRows(policyStore, 2);
+
+    // Server count (2) drives the pager; the full-dataset summary (73) drives
+    // the "Toplam Poliçe" KPI so the header, KPI and pager never disagree.
+    expect(policyStore.state.summary.total).toBe(73);
+    expect(wrapper.text()).toContain("Toplam Poliçe");
+    expect(wrapper.text()).toContain("2 / 2 kayıt gösteriliyor");
   });
 
   it("loads only convertible offers for the quick policy source offer picker", async () => {

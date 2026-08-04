@@ -87,9 +87,64 @@ class TestAccountingReconciliation(IntegrationTestCase):
             {
                 "processed": 2,
                 "skipped": 0,
+                "failed": 0,
+                "failed_items": [],
                 "resolution_action": "Ignored",
             },
         )
+
+    def test_bulk_resolve_reports_partial_failures_without_rolling_back_successes(self):
+        """A permission failure on one row must not roll back rows that already
+        resolved; the failed row is reported so the user can retry it."""
+        with patch.object(accounting_api, "_assert_accounting_mutation_access") as mutation_mock:
+            with patch.object(
+                accounting_api,
+                "assert_doc_permission",
+                side_effect=[None, PermissionError("denied"), None],
+            ) as doc_permission_mock:
+                with patch.object(
+                    accounting_api,
+                    "resolve_reconciliation_item",
+                    side_effect=[{"status": "Resolved", "item": "REC-001"}, {"status": "Resolved", "item": "REC-003"}],
+                ) as resolve_mock:
+                    result = accounting_api.bulk_resolve_items(
+                        item_names=["REC-001", "REC-002", "REC-003"],
+                        resolution_action="Matched",
+                    )
+
+        assert doc_permission_mock.call_count == 3
+        self.assertEqual(resolve_mock.call_count, 2)
+        self.assertEqual(
+            result,
+            {
+                "processed": 2,
+                "skipped": 0,
+                "failed": 1,
+                "failed_items": ["REC-002"],
+                "resolution_action": "Matched",
+            },
+        )
+
+    def test_bulk_resolve_counts_skipped_rows_and_reports_nothing_processed(self):
+        with patch.object(accounting_api, "_assert_accounting_mutation_access"):
+            with patch.object(accounting_api, "assert_doc_permission", return_value=None):
+                with patch.object(
+                    accounting_api,
+                    "resolve_reconciliation_item",
+                    side_effect=[
+                        {"status": "Skipped", "reason": "already_resolved"},
+                        {"status": "Skipped", "reason": "missing_item"},
+                    ],
+                ):
+                    result = accounting_api.bulk_resolve_items(
+                        item_names=["REC-001", "REC-002"],
+                        resolution_action="Matched",
+                    )
+
+        self.assertEqual(result["processed"], 0)
+        self.assertEqual(result["skipped"], 2)
+        self.assertEqual(result["failed"], 0)
+        self.assertEqual(result["failed_items"], [])
 
     def test_sync_does_not_fabricate_external_data(self):
         """The accounting sync writes local journal data only; external amounts
@@ -211,6 +266,33 @@ class TestAccountingReconciliation(IntegrationTestCase):
 
         rec_doc = frappe.get_doc("AT Reconciliation Item", rec_name)
         self.assertEqual(rec_doc.status, "Resolved")
+
+    def test_resolve_reconciliation_item_is_idempotent(self):
+        """Re-resolving an already-resolved item is a no-op (Skipped) and never
+        rewrites resolved_by/resolved_on or saves the document again."""
+        from acentem_takipte.acentem_takipte.accounting import resolve_reconciliation_item
+
+        class _FakeItem:
+            status = "Resolved"
+            resolution_action = "Matched"
+            notes = "keep"
+            accounting_entry = None
+
+        fake = _FakeItem()
+        fake.save = frappe.__dict__.get("_sentinel", lambda *a, **k: None)
+        with (
+            patch("frappe.db.exists", return_value=True),
+            patch("frappe.get_doc", return_value=fake),
+            patch.object(fake, "save") as save_mock,
+            patch(
+                "acentem_takipte.acentem_takipte.accounting._set_entry_reconciliation_flag",
+                return_value=None,
+            ),
+        ):
+            result = resolve_reconciliation_item("REC-001", resolution_action="Matched")
+
+        self.assertEqual(result, {"status": "Skipped", "reason": "already_resolved"})
+        save_mock.assert_not_called()
 
     def test_commission_accrual_preview_counts_record_and_active_policies(self):
         """The reconciliation workbench commission accrual/aging/by-entity must use
@@ -345,16 +427,21 @@ class TestAccountingReconciliation(IntegrationTestCase):
         self.assertEqual(round(aging["total_amount"], 2), 350.0)
 
     @patch("frappe.get_all", return_value=[])
-    def test_commission_aging_and_by_entity_use_unbounded_policy_queries(self, mock_get_all):
-        """Workbench commission aging/by-entity must not silently truncate at a
-        fixed row cap (2000): a large policy set would otherwise under-report
-        the metrics while looking correct."""
-        _compute_commission_aging(None)
-        _compute_commission_by_entity(None)
+    def test_commission_aging_and_by_entity_use_bounded_queries_with_truncation_flag(self, mock_get_all):
+        """Workbench commission aging/by-entity must not run unbounded queries.
+        They scan up to a generous defensive cap and expose a ``truncated`` flag
+        so a very large policy set is reported as approximate instead of
+        silently under-counting the metrics."""
+        mock_get_all.return_value = []
+        aging = _compute_commission_aging(None)
+        by_entity = _compute_commission_by_entity(None)
 
         self.assertEqual(mock_get_all.call_count, 2)
         for call in mock_get_all.call_args_list:
-            self.assertEqual(call.kwargs.get("limit_page_length"), 0)
+            self.assertEqual(call.kwargs.get("limit_page_length"), 20001)
+        self.assertIn("truncated", aging)
+        self.assertFalse(aging["truncated"])
+        self.assertIsInstance(by_entity, list)
 
     @patch("frappe.get_all")
     def test_commission_aging_missing_issue_date_buckets_current(self, mock_get_all):

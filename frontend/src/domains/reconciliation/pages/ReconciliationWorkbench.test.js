@@ -687,7 +687,7 @@ describe("ReconciliationWorkbench page store integration", () => {
 
     await loadWorkbench(wrapper);
 
-    await wrapper.vm.runBulkResolution("Matched");
+    await wrapper.vm.runBulkResolution("Matched", ["REC-001"]);
     await settleAsyncWork();
 
     expect(confirmMock).toHaveBeenCalled();

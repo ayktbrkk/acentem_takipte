@@ -4,6 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import frappe
+
 import acentem_takipte.acentem_takipte.platform.api.quick_create as quick_create_api
 from acentem_takipte.acentem_takipte.platform.services import quick_create_auxiliary
 from acentem_takipte.acentem_takipte.domains.customers.services import quick_create as quick_create_customer_flow
@@ -21,12 +23,12 @@ def _mock_frappe_runtime(monkeypatch):
     monkeypatch.setattr(quick_create_auxiliary, "nowdate", lambda: "2026-01-01", raising=False)
     fake_db = MagicMock(exists=MagicMock(return_value=True))
     monkeypatch.setattr(
-        quick_create_api.frappe,
+        frappe,
         "local",
         MagicMock(request=object(), flags=MagicMock(in_test=True)),
         raising=False,
     )
-    monkeypatch.setattr(quick_create_api.frappe, "db", fake_db, raising=False)
+    monkeypatch.setattr(frappe, "db", fake_db, raising=False)
     monkeypatch.setattr(
         quick_create_policy_task.frappe,
         "local",
@@ -205,7 +207,7 @@ def test_create_quick_call_note_uses_service_payload():
             "call_status": "Completed",
             "call_outcome": "Information shared",
             "note_at": "2026-03-09 10:30:00",
-            "next_follow_up_on": quick_create_api.frappe.utils.getdate("2026-03-12"),
+            "next_follow_up_on": frappe.utils.getdate("2026-03-12"),
             "notes": "Customer was contacted",
         }
     )
@@ -278,7 +280,7 @@ def test_create_quick_campaign_uses_service_payload():
             "channel": "WHATSAPP",
             "office_branch": "IST",
             "status": "Planned",
-            "scheduled_for": quick_create_api.frappe.utils.get_datetime("2026-03-15 10:00:00"),
+            "scheduled_for": frappe.utils.get_datetime("2026-03-15 10:00:00"),
             "notes": "WhatsApp dispatch",
         }
     )
@@ -321,25 +323,21 @@ def test_create_quick_ownership_assignment_uses_service_payload():
             "assignment_role": "Owner",
             "status": "Open",
             "priority": "High",
-            "due_date": quick_create_api.frappe.utils.getdate("2026-03-12"),
+            "due_date": frappe.utils.getdate("2026-03-12"),
             "notes": "Renewal owner assignment",
         }
     )
     assert result == {"ownership_assignment": "AT-ASN-2026-00001"}
 
 
-def test_delete_quick_aux_record_checks_delete_permission_and_calls_service():
+def test_delete_quick_aux_record_checks_delete_permission_and_deletes_doc():
     fake_doc = MagicMock()
     fake_doc.doctype = "AT Customer Relation"
     fake_doc.name = "REL-001"
 
-    with patch.object(quick_create_special, "_assert_delete_permission") as delete_permission_mock:
-        with patch.object(quick_create_special.frappe, "get_doc", return_value=fake_doc):
-            with patch.object(
-                quick_create_special,
-                "delete_aux_record_service",
-                return_value={"record": "REL-001", "doctype": "AT Customer Relation", "deleted": True},
-            ) as service_mock:
+    with patch.object(quick_create_special, "_normalize_aux_delete_doctype", return_value="AT Customer Relation"):
+        with patch.object(quick_create_special, "_assert_delete_permission") as delete_permission_mock:
+            with patch.object(quick_create_special.frappe, "get_doc", return_value=fake_doc):
                 result = quick_create_api.delete_quick_aux_record("AT Customer Relation", "REL-001")
 
     delete_permission_mock.assert_called_once_with(
@@ -347,8 +345,8 @@ def test_delete_quick_aux_record_checks_delete_permission_and_calls_service():
         "You do not have permission to delete this record.",
     )
     fake_doc.check_permission.assert_called_once_with("delete")
-    service_mock.assert_called_once_with(fake_doc)
-    assert result == {"record": "REL-001", "doctype": "AT Customer Relation", "deleted": True}
+    fake_doc.delete.assert_called_once_with()
+    assert result == {"name": "REL-001", "deleted": True}
 
 
 def test_create_quick_payment_normalizes_installment_fields_and_uses_service_payload():

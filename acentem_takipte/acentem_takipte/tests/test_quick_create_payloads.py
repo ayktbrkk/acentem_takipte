@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import frappe
 import pytest
 
 import acentem_takipte.acentem_takipte.platform.api.quick_create as quick_create_api
@@ -29,28 +30,14 @@ def _mock_frappe_runtime(monkeypatch):
     monkeypatch.setattr(quick_create_policy_task, "_", lambda value: value, raising=False)
     monkeypatch.setattr(quick_create_policy_task, "nowdate", lambda: "2026-01-01", raising=False)
     monkeypatch.setattr(
-        quick_create_api.frappe,
-        "local",
-        SimpleNamespace(request=object(), flags=SimpleNamespace(in_test=True)),
-        raising=False,
-    )
-    monkeypatch.setattr(
-        quick_create_special.frappe,
-        "local",
-        SimpleNamespace(request=object(), flags=SimpleNamespace(in_test=True)),
-        raising=False,
-    )
-    monkeypatch.setattr(
-        quick_create_policy_task.frappe,
+        frappe,
         "local",
         SimpleNamespace(request=object(), flags=SimpleNamespace(in_test=True)),
         raising=False,
     )
     fake_db = MagicMock()
     fake_db.exists.return_value = True
-    monkeypatch.setattr(quick_create_api.frappe, "db", fake_db, raising=False)
-    monkeypatch.setattr(quick_create_special.frappe, "db", fake_db, raising=False)
-    monkeypatch.setattr(quick_create_policy_task.frappe, "db", fake_db, raising=False)
+    monkeypatch.setattr(frappe, "db", fake_db, raising=False)
     return fake_db
 
 

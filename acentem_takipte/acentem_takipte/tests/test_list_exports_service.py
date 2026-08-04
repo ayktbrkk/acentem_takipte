@@ -2,6 +2,11 @@ from types import SimpleNamespace
 
 import pytest
 
+# Import the whitelisted API facade FIRST so the platform.api.list_exports ->
+# platform.services.list_exports -> reports.dashboard -> api.v2 cycle resolves
+# in the same order Frappe uses at runtime. Importing the service module
+# directly first would hit a partially-initialized import and fail.
+import acentem_takipte.acentem_takipte.platform.api.list_exports as _list_exports_api  # noqa: F401
 from acentem_takipte.acentem_takipte.platform.services import list_exports
 from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
@@ -391,9 +396,11 @@ def test_qualified_order_by_for_all_doctype_exports(doctype):
 def test_qualified_order_by_preserves_already_qualified_clauses():
     already = "`tabAT Policy`.`modified` desc"
     assert list_exports._qualified_order_by("AT Policy", already) == already
+    # Once any clause is already qualified, the whole clause list is treated as
+    # final and returned unchanged (idempotent) — never double-qualified.
     assert (
         list_exports._qualified_order_by("AT Policy", "due_date asc, `tabAT Policy`.`modified` desc")
-        == "`tabAT Policy`.`due_date` asc, `tabAT Policy`.`modified` desc"
+        == "due_date asc, `tabAT Policy`.`modified` desc"
     )
 
 

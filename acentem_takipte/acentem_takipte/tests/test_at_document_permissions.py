@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.doctype import at_document
+import frappe
+
+from acentem_takipte.acentem_takipte.doctype.at_document import at_document
 
 
 def test_at_document_query_reuses_linked_record_scope(monkeypatch):
@@ -22,7 +24,7 @@ def test_at_document_query_reuses_linked_record_scope(monkeypatch):
         "get_permission_query_conditions",
         lambda user=None: "`tabAT Customer`.`origin_office_branch` in ('IST')",
     )
-    monkeypatch.setattr(at_document.frappe, "db", SimpleNamespace(escape=lambda value: f"'{value}'"))
+    monkeypatch.setattr(frappe.db, "escape", lambda value: f"'{value}'")
 
     condition = at_document.get_permission_query_conditions("agent@example.com")
 

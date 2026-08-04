@@ -38,6 +38,7 @@ def test_clear_user_scope_cache_publishes_realtime_event(monkeypatch):
     branches.clear_user_scope_cache("manager@example.com")
 
     assert cache.deleted == [
+        "at_scope::manager@example.com::complete",
         "at_scope::manager@example.com::branches",
         "at_scope::manager@example.com::sales_entities",
     ]

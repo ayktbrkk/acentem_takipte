@@ -127,6 +127,38 @@ describe("PaymentsBoard page store integration", () => {
         }),
       },
       {
+        data: ref(2),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => 2),
+      },
+      {
+        data: ref(null),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => ({
+          summary: {
+            total: 2,
+            pending: 1,
+            collected: 1,
+            overdue: 0,
+            cancelled: 0,
+            total_amount_try: 1400,
+            currency: "TRY",
+          },
+          total_count: 2,
+        })),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
         data: installmentRows,
         loading: ref(false),
         error: ref(null),
@@ -160,13 +192,6 @@ describe("PaymentsBoard page store integration", () => {
           ];
           return installmentRows.value;
         }),
-      },
-      {
-        data: ref([]),
-        loading: ref(false),
-        error: ref(null),
-        params: {},
-        reload: vi.fn(async () => []),
       },
       {
         data: ref([]),

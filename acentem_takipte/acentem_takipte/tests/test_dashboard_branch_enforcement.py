@@ -1,10 +1,22 @@
 from __future__ import annotations
 
+import frappe
+
 import acentem_takipte.acentem_takipte.domains.reports.api.dashboard as dashboard
+
+
+def _force_cache_miss(monkeypatch):
+    """Dashboard endpoints read a Redis cache key; a stale entry from a previous
+    pytest process would short-circuit before the mocks run. Force a miss so the
+    test exercises the real normalization path."""
+    cache = frappe.cache()
+    monkeypatch.setattr(cache, "get_value", lambda *args, **kwargs: None)
+    monkeypatch.setattr(cache, "set_value", lambda *args, **kwargs: None)
 
 
 def test_get_dashboard_kpis_normalizes_requested_office_branch(monkeypatch):
     captured = {}
+    _force_cache_miss(monkeypatch)
 
     monkeypatch.setattr(
         dashboard,
@@ -25,6 +37,7 @@ def test_get_dashboard_kpis_normalizes_requested_office_branch(monkeypatch):
 
 def test_get_dashboard_tab_payload_normalizes_requested_office_branch(monkeypatch):
     captured = {}
+    _force_cache_miss(monkeypatch)
 
     monkeypatch.setattr(
         dashboard,

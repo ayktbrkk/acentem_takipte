@@ -8,6 +8,8 @@ def test_create_quick_notification_draft_uses_customer_office_branch(monkeypatch
     enqueued = []
 
     monkeypatch.setattr(communication, "_assert_dispatch_mutation_access", lambda *args, **kwargs: None)
+    monkeypatch.setattr(communication, "assert_doc_permission", lambda *args, **kwargs: None)
+    monkeypatch.setattr(communication, "assert_office_branch_access", lambda branch=None: branch)
     monkeypatch.setattr(
         communication.frappe.db,
         "exists",

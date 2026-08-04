@@ -6,6 +6,11 @@ def test_get_queue_snapshot_applies_normalized_office_branch(monkeypatch):
     sql_calls = []
 
     monkeypatch.setattr(communication, "assert_authenticated", lambda: None)
+    monkeypatch.setattr(
+        communication,
+        "assert_doctype_permission",
+        lambda doctype, permtype, message=None: None,
+    )
     monkeypatch.setattr(communication, "normalize_requested_office_branch", lambda branch: "Istanbul")
     monkeypatch.setattr(
         communication.frappe,

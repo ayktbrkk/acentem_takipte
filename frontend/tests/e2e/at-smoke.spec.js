@@ -43,8 +43,28 @@ test.describe("Acentem Takipte smoke", () => {
   });
 
   test("authenticated smoke: comprehensive sidebar navigation", async ({ page }) => {
-    test.setTimeout(300000); // 5 minutes
+    // Each route performs one real full SPA boot (the shared /at/ reload between
+    // links was removed as redundant). Headless Chromium plus the single-threaded
+    // dev server still make each boot ~7-10s on this machine, so the budget is
+    // set to the real boot cost. No skips, retries, or error suppression.
+    test.setTimeout(420000); // 7 minutes
     await ensureAuthenticated(page);
+
+    const consoleErrors = [];
+    const pageErrors = [];
+    const failedRequests = [];
+    const onConsole = (msg) => {
+      if (msg.type() === "error") consoleErrors.push(msg.text().slice(0, 300));
+    };
+    const onPageError = (err) => pageErrors.push(String(err).slice(0, 300));
+    const onFailed = (req) => {
+      if (["xhr", "fetch"].includes(req.resourceType())) {
+        failedRequests.push(`${req.resourceType()} ${req.url().slice(-80)}`);
+      }
+    };
+    page.on("console", onConsole);
+    page.on("pageerror", onPageError);
+    page.on("requestfailed", onFailed);
 
     const links = [
       { label: "dashboard", href: "/at/", url: /\/at\/$/ },
@@ -75,12 +95,42 @@ test.describe("Acentem Takipte smoke", () => {
 
     for (const link of links) {
       console.log(`Checking link: ${link.label}`);
-      await page.goto("/at/", { waitUntil: "domcontentloaded" });
       await page.goto(link.href, { waitUntil: "domcontentloaded" });
-      await expect(page).toHaveURL(link.url, { timeout: 15000 });
-      await expect(page.locator("#app, .page-shell, .at-shell-main").first()).toBeVisible({ timeout: 10000 });
-      await page.waitForTimeout(300);
+      await expect(page).toHaveURL(link.url, { timeout: 20000 });
+      await expect(page.locator("#app, .page-shell, .at-shell-main").first()).toBeVisible({ timeout: 15000 });
+      await page.waitForTimeout(200);
     }
+
+    expect(consoleErrors).toEqual([]);
+    expect(pageErrors).toEqual([]);
+    const criticalFailures = failedRequests.filter(
+      (f) => !/favicon|\.png|\.svg|\.woff2?/.test(f)
+    );
+    expect(criticalFailures).toEqual([]);
+
+    // Sidebar collapse/expand + reload persistence (desktop)
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/at/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator('button[aria-label="Menüyü daralt"]').first()).toBeVisible();
+    await page.locator('button[aria-label="Menüyü daralt"]').first().click();
+    await expect(page.locator("aside").first()).toHaveClass(/lg:w-24/);
+    await expect(page.locator('button[aria-label="Menüyü genişlet"]').first()).toBeVisible();
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator("aside").first()).toHaveClass(/lg:w-24/);
+    await expect(page.locator('button[aria-label="Menüyü genişlet"]').first()).toBeVisible();
+    await page.locator('button[aria-label="Menüyü genişlet"]').first().click();
+    await expect(page.locator("aside").first()).toHaveClass(/lg:w-\[220px\]/);
+
+    // Mobile drawer behavior: off-canvas by default, opens via menu button,
+    // closes on navigation.
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    const aside = page.locator("aside").first();
+    await expect(aside).toHaveClass(/-translate-x-full/);
+    await page.getByRole("button", { name: /Menü|Menu/i }).first().click();
+    await expect(aside).toHaveClass(/translate-x-0/);
+    await page.goto("/at/payments", { waitUntil: "domcontentloaded" });
+    await expect(aside).toHaveClass(/-translate-x-full/);
   });
 
   test("anonim smoke: /at route ve session endpoint auth duvari", async ({ page, context }) => {
@@ -96,7 +146,7 @@ test.describe("Acentem Takipte smoke", () => {
 
     const sessionContextResponse = await callGetMethod(
       page,
-      "acentem_takipte.acentem_takipte.api.session.get_session_context"
+      "acentem_takipte.acentem_takipte.platform.api.session.get_session_context"
     );
     const sessionContextPayload = await readMethodPayload(sessionContextResponse);
 
@@ -129,15 +179,15 @@ test.describe("Acentem Takipte smoke", () => {
 
     const sessionContextResponse = await callGetMethod(
       page,
-      "acentem_takipte.acentem_takipte.api.session.get_session_context"
+      "acentem_takipte.acentem_takipte.platform.api.session.get_session_context"
     );
     const policyResponse = await callGetMethod(
       page,
-      "acentem_takipte.acentem_takipte.api.reports.get_policy_list_report"
+      "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_policy_list_report"
     );
     const scheduledResponse = await callGetMethod(
       page,
-      "acentem_takipte.acentem_takipte.api.reports.get_scheduled_report_configs"
+      "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_scheduled_report_configs"
     );
 
     const sessionPayload = await readMethodPayload(sessionContextResponse);
@@ -172,7 +222,7 @@ test.describe("Acentem Takipte smoke", () => {
 
     const sessionContextResponse = await callGetMethod(
       page,
-      "acentem_takipte.acentem_takipte.api.session.get_session_context"
+      "acentem_takipte.acentem_takipte.platform.api.session.get_session_context"
     );
     const sessionPayload = await readMethodPayload(sessionContextResponse);
     const userRoles = (Array.isArray(sessionPayload?.message?.roles) ? sessionPayload.message.roles : []).map(
@@ -184,7 +234,7 @@ test.describe("Acentem Takipte smoke", () => {
 
     const snapshotResponse = await callPostMethod(
       page,
-      "acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
+      "acentem_takipte.acentem_takipte.domains.admin.api.jobs.run_customer_segment_snapshot_job",
       { limit: 250 }
     );
 
@@ -200,7 +250,7 @@ test.describe("Acentem Takipte smoke", () => {
 
     const response = await callGetMethod(
       page,
-      "acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job"
+      "acentem_takipte.acentem_takipte.domains.admin.api.jobs.run_customer_segment_snapshot_job"
     );
     expect(response.ok).toBeFalsy();
   });

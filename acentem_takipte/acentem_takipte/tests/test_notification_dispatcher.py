@@ -129,7 +129,13 @@ class TestNotificationDispatcher(IntegrationTestCase):
         outbox.status = "Processing"
         outbox.save(ignore_permissions=True)
 
-        result = communication_api.requeue_outbox_item(outbox.name)
+        result = None
+        previous_user = getattr(frappe.session, "user", None)
+        frappe.session.user = "Administrator"
+        try:
+            result = communication_api.requeue_outbox_item(outbox.name)
+        finally:
+            frappe.session.user = previous_user
         self.assertEqual(result.get("status"), "Queued")
         self.assertEqual(result.get("outbox"), outbox.name)
 

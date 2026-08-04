@@ -12,6 +12,11 @@ def test_get_reconciliation_operations_report_enforces_auth_and_builds_payload(m
     )
     monkeypatch.setattr(
         reports,
+        "apply_scope_filters_to_report",
+        lambda report_key, filters=None, **kwargs: filters or {},
+    )
+    monkeypatch.setattr(
+        reports,
         "build_safe_report_payload",
         lambda key, filters=None, limit=500: {
             "report_key": key,

@@ -126,7 +126,7 @@ def test_get_pool_sales_entity_name_uses_branch_and_pool_filters(monkeypatch):
 
 
 def test_reassign_sales_entity_records_to_branch_pool_updates_only_open_rows(monkeypatch):
-    updated: list[tuple[str, str, str, str]] = []
+    sql_calls: list[tuple[str, tuple]] = []
 
     def fake_get_all(doctype, filters=None, fields=None, limit_page_length=0, order_by=None):
         if doctype == "AT Lead":
@@ -143,9 +143,7 @@ def test_reassign_sales_entity_records_to_branch_pool_updates_only_open_rows(mon
     db = SimpleNamespace(
         has_column=lambda doctype, column: True,
         get_value=lambda doctype, name, fieldname: "BR-1",
-        set_value=lambda doctype, name, fieldname, value, update_modified=False: updated.append(
-            (doctype, name, fieldname, value)
-        ),
+        sql=lambda query, params=None: sql_calls.append((query, params)),
     )
     monkeypatch.setattr(
         sales_entity_service,
@@ -157,6 +155,11 @@ def test_reassign_sales_entity_records_to_branch_pool_updates_only_open_rows(mon
         "get_pool_sales_entity_name",
         lambda office_branch, include_inactive=False, exclude_sales_entity=None: "POOL-1",
     )
+    monkeypatch.setattr(
+        sales_entity_service,
+        "_recompute_commission_distributions_for_policies",
+        lambda policy_names: None,
+    )
 
     result = sales_entity_service.reassign_sales_entity_records_to_branch_pool(
         "SE-1",
@@ -164,10 +167,9 @@ def test_reassign_sales_entity_records_to_branch_pool_updates_only_open_rows(mon
     )
 
     assert result == {"AT Lead": 2, "AT Policy": 1}
-    assert updated == [
-        ("AT Lead", "LEAD-1", "sales_entity", "POOL-1"),
-        ("AT Lead", "LEAD-2", "sales_entity", "POOL-1"),
-        ("AT Policy", "POL-1", "sales_entity", "POOL-1"),
+    assert sql_calls == [
+        ("UPDATE `tabAT Lead` SET `sales_entity` = %s WHERE name IN %s", ("POOL-1", ("LEAD-1", "LEAD-2"))),
+        ("UPDATE `tabAT Policy` SET `sales_entity` = %s WHERE name IN %s", ("POOL-1", ("POL-1",))),
     ]
 
 

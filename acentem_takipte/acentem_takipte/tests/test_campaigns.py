@@ -26,9 +26,8 @@ def test_execute_campaign_creates_drafts_for_matched_customers():
         get=lambda key: "Merhaba",
     )
 
-    inserted_draft = SimpleNamespace(name="DRF-001")
     inserted_doc = MagicMock()
-    inserted_doc.insert.return_value = inserted_draft
+    inserted_doc.name = "DRF-001"
 
     with patch.object(campaigns_service.frappe, "get_doc", side_effect=[campaign_doc, template_doc, inserted_doc]):
         with patch.object(

@@ -6,7 +6,7 @@ import acentem_takipte.acentem_takipte.domains.accounting.api.endpoints as accou
 
 
 def test_accounting_mutation_access_uses_shared_mutation_helper():
-    with patch.object(accounting_api, "assert_mutation_access") as mutation_access:
+    with patch.object(accounting_api, "assert_role_based_write_access") as mutation_access:
         accounting_api._assert_accounting_mutation_access(
             "api.accounting.run_sync",
             details={"limit": 10},
@@ -16,8 +16,7 @@ def test_accounting_mutation_access_uses_shared_mutation_helper():
     mutation_access.assert_called_once_with(
         action="api.accounting.run_sync",
         roles=accounting_api.ACCOUNTING_ADMIN_ROLES,
-        doctype_permissions=("AT Accounting Entry",),
-        permtype="write",
+        permission_targets=("AT Accounting Entry",),
         details={"limit": 10},
         role_message="You do not have permission to run accounting operations.",
         post_message="Only POST requests are allowed for accounting mutations.",

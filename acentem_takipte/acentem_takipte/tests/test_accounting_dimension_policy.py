@@ -1,24 +1,22 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
-
 import pytest
 
-from acentem_takipte.acentem_takipte.doctype.at_accounting_entry.at_accounting_entry import (
-    ATAccountingEntry,
-)
-import acentem_takipte.acentem_takipte.doctype.at_accounting_entry as accounting_entry_module
+import frappe
 
 
 def test_accounting_entry_autofills_dimensions_from_policy(monkeypatch):
-    doc = SimpleNamespace(
-        policy="POL-001",
-        customer=None,
-        office_branch=None,
-        sales_entity=None,
-        local_amount_try=100,
-        external_amount_try=100,
-        status="Synced",
+    doc = frappe.get_doc(
+        {
+            "doctype": "AT Accounting Entry",
+            "policy": "POL-001",
+            "customer": None,
+            "office_branch": None,
+            "sales_entity": None,
+            "local_amount_try": 100,
+            "external_amount_try": 100,
+            "status": "Synced",
+        }
     )
 
     def _fake_get_value(doctype, name, fieldname, as_dict=False):
@@ -30,9 +28,9 @@ def test_accounting_entry_autofills_dimensions_from_policy(monkeypatch):
             }
         return None
 
-    monkeypatch.setattr(accounting_entry_module.frappe.db, "get_value", _fake_get_value)
+    monkeypatch.setattr(frappe.db, "get_value", _fake_get_value)
 
-    ATAccountingEntry.validate(doc)
+    doc.validate()
 
     assert doc.customer == "CUS-001"
     assert doc.office_branch == "BR-IST"
@@ -40,14 +38,17 @@ def test_accounting_entry_autofills_dimensions_from_policy(monkeypatch):
 
 
 def test_accounting_entry_rejects_sales_entity_office_mismatch(monkeypatch):
-    doc = SimpleNamespace(
-        policy=None,
-        customer=None,
-        office_branch="BR-IST",
-        sales_entity="SE-ANK",
-        local_amount_try=100,
-        external_amount_try=100,
-        status="Synced",
+    doc = frappe.get_doc(
+        {
+            "doctype": "AT Accounting Entry",
+            "policy": None,
+            "customer": None,
+            "office_branch": "BR-IST",
+            "sales_entity": "SE-ANK",
+            "local_amount_try": 100,
+            "external_amount_try": 100,
+            "status": "Synced",
+        }
     )
 
     def _fake_get_value(doctype, name, fieldname, as_dict=False):
@@ -55,7 +56,7 @@ def test_accounting_entry_rejects_sales_entity_office_mismatch(monkeypatch):
             return "BR-ANK"
         return None
 
-    monkeypatch.setattr(accounting_entry_module.frappe.db, "get_value", _fake_get_value)
+    monkeypatch.setattr(frappe.db, "get_value", _fake_get_value)
 
     with pytest.raises(Exception):
-        ATAccountingEntry.validate(doc)
+        doc.validate()

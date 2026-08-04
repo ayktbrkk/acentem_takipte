@@ -1,6 +1,7 @@
 import pytest
 
 import acentem_takipte.acentem_takipte.domains.reports.api.endpoints as reports
+import acentem_takipte.acentem_takipte.domains.reports.services.runtime as runtime
 from acentem_takipte.acentem_takipte.domains.admin.services import alert_settings as ops_alert_settings
 
 
@@ -31,7 +32,12 @@ def test_report_getters_enforce_auth_and_build_payload(monkeypatch, method_name,
     )
     monkeypatch.setattr(
         reports,
-        "build_report_payload",
+        "apply_scope_filters_to_report",
+        lambda report_key, filters=None, **kwargs: filters or {},
+    )
+    monkeypatch.setattr(
+        reports,
+        "build_safe_report_payload",
         lambda key, filters=None, limit=500: {
             "report_key": key,
             "columns": ["name", "status"],
@@ -54,16 +60,19 @@ def test_report_getters_enforce_auth_and_build_payload(monkeypatch, method_name,
 def test_export_policy_list_report_sets_download_response(monkeypatch):
     monkeypatch.setattr(
         reports,
-        "get_policy_list_report",
-        lambda filters=None, limit=1000: {
+        "_get_report_payload",
+        lambda report_key, filters=None, limit=500: {
             "report_key": "policy_list",
             "columns": ["name"],
             "rows": [{"name": "POL-001"}],
             "filters": {"office_branch": "BR-IST"},
         },
     )
-    monkeypatch.setattr(reports, "render_report_xlsx", lambda **kwargs: b"xlsx-bytes")
-    monkeypatch.setattr(reports, "build_report_filename", lambda report_key, export_format: "policy_list.xlsx")
+    monkeypatch.setattr(
+        reports,
+        "build_report_download_response",
+        lambda **kwargs: {"filename": "policy_list.xlsx", "filecontent": b"xlsx-bytes", "type": "download"},
+    )
     monkeypatch.setattr(reports.frappe, "response", {})
 
     reports.export_policy_list_report(filters={"office_branch": "FORBIDDEN"}, export_format="xlsx", limit=100)
@@ -76,16 +85,19 @@ def test_export_policy_list_report_sets_download_response(monkeypatch):
 def test_export_payment_status_report_sets_pdf_response(monkeypatch):
     monkeypatch.setattr(
         reports,
-        "get_payment_status_report",
-        lambda filters=None, limit=1000: {
+        "_get_report_payload",
+        lambda report_key, filters=None, limit=500: {
             "report_key": "payment_status",
             "columns": ["name"],
             "rows": [{"name": "PAY-001"}],
             "filters": {"office_branch": "BR-ANK"},
         },
     )
-    monkeypatch.setattr(reports, "render_report_pdf", lambda **kwargs: b"pdf-bytes")
-    monkeypatch.setattr(reports, "build_report_filename", lambda report_key, export_format: "payment_status.pdf")
+    monkeypatch.setattr(
+        reports,
+        "build_report_download_response",
+        lambda **kwargs: {"filename": "payment_status.pdf", "filecontent": b"pdf-bytes", "type": "download"},
+    )
     monkeypatch.setattr(reports.frappe, "response", {})
 
     reports.export_payment_status_report(filters={"office_branch": "FORBIDDEN"}, export_format="pdf", limit=100)
@@ -98,16 +110,19 @@ def test_export_payment_status_report_sets_pdf_response(monkeypatch):
 def test_export_agent_performance_report_sets_download_response(monkeypatch):
     monkeypatch.setattr(
         reports,
-        "get_agent_performance_report",
-        lambda filters=None, limit=1000: {
+        "_get_report_payload",
+        lambda report_key, filters=None, limit=500: {
             "report_key": "agent_performance",
             "columns": ["sales_entity", "offer_conversion_rate", "renewal_success_rate"],
             "rows": [{"sales_entity": "AGENT-001", "offer_conversion_rate": 66.7, "renewal_success_rate": 80.0}],
             "filters": {"office_branch": "BR-IST"},
         },
     )
-    monkeypatch.setattr(reports, "render_report_xlsx", lambda **kwargs: b"xlsx-bytes")
-    monkeypatch.setattr(reports, "build_report_filename", lambda report_key, export_format: "agent_performance.xlsx")
+    monkeypatch.setattr(
+        reports,
+        "build_report_download_response",
+        lambda **kwargs: {"filename": "agent_performance.xlsx", "filecontent": b"xlsx-bytes", "type": "download"},
+    )
     monkeypatch.setattr(reports.frappe, "response", {})
 
     reports.export_agent_performance_report(filters={"office_branch": "BR-IST"}, export_format="xlsx", limit=250)
@@ -120,19 +135,18 @@ def test_export_agent_performance_report_sets_download_response(monkeypatch):
 def test_export_customer_segmentation_report_sets_download_response(monkeypatch):
     monkeypatch.setattr(
         reports,
-        "get_customer_segmentation_report",
-        lambda filters=None, limit=1000: {
+        "_get_report_payload",
+        lambda report_key, filters=None, limit=500: {
             "report_key": "customer_segmentation",
             "columns": ["name", "claim_history_segment", "loyalty_segment"],
             "rows": [{"name": "CUST-001", "claim_history_segment": "Hasarli", "loyalty_segment": "Sadik"}],
             "filters": {"office_branch": "BR-ANK"},
         },
     )
-    monkeypatch.setattr(reports, "render_report_pdf", lambda **kwargs: b"pdf-bytes")
     monkeypatch.setattr(
         reports,
-        "build_report_filename",
-        lambda report_key, export_format: "customer_segmentation.pdf",
+        "build_report_download_response",
+        lambda **kwargs: {"filename": "customer_segmentation.pdf", "filecontent": b"pdf-bytes", "type": "download"},
     )
     monkeypatch.setattr(reports.frappe, "response", {})
 
@@ -147,12 +161,12 @@ def test_build_report_payload_safe_normalizes_non_positive_limit(monkeypatch):
     captured = {}
 
     monkeypatch.setattr(
-        reports,
+        runtime,
         "build_report_payload",
         lambda key, filters=None, limit=500: captured.setdefault("payload", {"report_key": key, "limit": limit}),
     )
 
-    payload = reports._build_report_payload_safe("policy_list", filters={"status": "Active"}, limit=0)
+    payload = runtime.build_safe_report_payload("policy_list", filters={"status": "Active"}, limit=0)
 
     assert payload["limit"] == 1
     assert payload["report_key"] == "policy_list"
@@ -161,14 +175,15 @@ def test_build_report_payload_safe_normalizes_non_positive_limit(monkeypatch):
 def test_report_payload_error_is_wrapped_and_logged(monkeypatch):
     monkeypatch.setattr(reports, "assert_authenticated", lambda: None)
     monkeypatch.setattr(reports, "assert_doctype_permission", lambda doctype, permtype: None)
+    monkeypatch.setattr(reports, "apply_scope_filters_to_report", lambda report_key, filters=None, **kwargs: filters or {})
     monkeypatch.setattr(
-        reports,
+        runtime,
         "build_report_payload",
         lambda report_key, filters=None, limit=500: (_ for _ in ()).throw(ValueError("db down")),
     )
     captured = {}
     monkeypatch.setattr(
-        reports,
+        runtime,
         "log_redacted_error",
         lambda message, details=None, traceback_text=None: captured.update(
             {"message": message, "details": details, "traceback_text": traceback_text}
@@ -179,6 +194,7 @@ def test_report_payload_error_is_wrapped_and_logged(monkeypatch):
         raise RuntimeError(message)
 
     monkeypatch.setattr(reports.frappe, "throw", _raise)
+    monkeypatch.setattr(reports.frappe, "log_error", lambda *args, **kwargs: None)
 
     with pytest.raises(RuntimeError, match="Report cannot be loaded"):
         reports.get_policy_list_report(filters={"status": "Active"}, limit=20)
@@ -312,6 +328,7 @@ def test_get_report_payload_coerces_json_filters_and_positive_limit(monkeypatch)
     monkeypatch.setattr(reports, "assert_authenticated", lambda: None)
     monkeypatch.setattr(reports, "assert_doctype_permission", lambda *args, **kwargs: None)
     monkeypatch.setattr(reports, "get_report_definition", lambda key: {"permission_doctype": "AT Policy"})
+    monkeypatch.setattr(reports, "apply_scope_filters_to_report", lambda report_key, filters=None, **kwargs: filters or {})
     captured = {}
     monkeypatch.setattr(
         reports,
@@ -346,7 +363,7 @@ def test_respond_with_report_file_coerces_invalid_download_payload(monkeypatch):
 
     assert reports.frappe.response["filename"] == "report.xlsx"
     assert reports.frappe.response["type"] == "download"
-    assert reports.frappe.response["content_type"] == "application/octet-stream"
+    assert reports.frappe.response["content_type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     assert reports.frappe.response["filecontent"] == b""
 
 
@@ -444,12 +461,13 @@ def test_get_report_payload_coerces_invalid_report_shape(monkeypatch):
     monkeypatch.setattr(reports, "assert_authenticated", lambda: None)
     monkeypatch.setattr(reports, "assert_doctype_permission", lambda *args, **kwargs: None)
     monkeypatch.setattr(reports, "get_report_definition", lambda key: {"permission_doctype": "AT Policy"})
+    monkeypatch.setattr(reports, "apply_scope_filters_to_report", lambda report_key, filters=None, **kwargs: filters or {})
     monkeypatch.setattr(reports, "build_safe_report_payload", lambda *args, **kwargs: {"report_key": " ", "columns": "name", "rows": {"bad": 1}, "filters": "status=Open"})
 
     payload = reports._get_report_payload(" policy_list ", filters='{"office_branch":"Istanbul"}', limit=0)
 
     assert payload["report_key"] == "policy_list"
-    assert payload["columns"] == []
+    assert payload["columns"] == ["name"]
     assert payload["rows"] == []
     assert payload["filters"] == {"office_branch": "Istanbul"}
 
@@ -458,6 +476,7 @@ def test_get_report_payload_falls_back_when_safe_builder_returns_non_dict(monkey
     monkeypatch.setattr(reports, "assert_authenticated", lambda: None)
     monkeypatch.setattr(reports, "assert_doctype_permission", lambda *args, **kwargs: None)
     monkeypatch.setattr(reports, "get_report_definition", lambda key: {"permission_doctype": "AT Policy"})
+    monkeypatch.setattr(reports, "apply_scope_filters_to_report", lambda report_key, filters=None, **kwargs: filters or {})
     monkeypatch.setattr(reports, "build_safe_report_payload", lambda *args, **kwargs: None)
 
     payload = reports._get_report_payload("policy_list", filters={"status": "Open"}, limit=50)

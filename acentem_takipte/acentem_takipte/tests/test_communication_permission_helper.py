@@ -17,7 +17,6 @@ def test_dispatch_mutation_access_uses_shared_mutation_helper():
         action="api.communication.send_draft_now",
         roles=communication_api.COMMUNICATION_ADMIN_ROLES,
         doctype_permissions=("AT Notification Draft",),
-        permtype="write",
         details={"draft": "DRF-0001"},
         role_message="You do not have permission to run communication actions.",
         post_message="Only POST requests are allowed for communication mutations.",

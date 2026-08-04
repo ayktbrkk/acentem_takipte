@@ -1,10 +1,12 @@
 from types import SimpleNamespace
 
-import acentem_takipte.acentem_takipte.doctype.at_offer as offer_module
+import frappe
+
+import acentem_takipte.acentem_takipte.doctype.at_offer.at_offer as offer_module
 
 
 def test_resolve_offer_office_branch_prefers_explicit_value(monkeypatch):
-    monkeypatch.setattr(offer_module, "get_default_office_branch", lambda: "DEFAULT")
+    monkeypatch.setattr(offer_module, "get_default_office_branch", lambda user=None: "DEFAULT")
     monkeypatch.setattr(offer_module, "assert_office_branch_access", lambda requested_office_branch=None, user=None: requested_office_branch)
 
     customer = SimpleNamespace(office_branch="CUSTOMER-BRANCH")
@@ -16,15 +18,18 @@ def test_resolve_offer_office_branch_prefers_explicit_value(monkeypatch):
 
 
 def test_resolve_offer_office_branch_uses_customer_branch(monkeypatch):
-    monkeypatch.setattr(offer_module, "get_default_office_branch", lambda: "DEFAULT")
+    monkeypatch.setattr(offer_module, "get_default_office_branch", lambda user=None: "DEFAULT")
     monkeypatch.setattr(offer_module, "assert_office_branch_access", lambda requested_office_branch=None, user=None: requested_office_branch)
     monkeypatch.setattr(
-        offer_module.frappe,
-        "db",
-        SimpleNamespace(
-            exists=lambda doctype, name: doctype == "AT Customer" and name == "CUST-001",
-            get_value=lambda *_args, **_kwargs: "CUSTOMER-BRANCH",
-        ),
+        frappe.db,
+        "exists",
+        lambda doctype, name: doctype == "AT Customer" and name == "CUST-001",
+        raising=False,
+    )
+    monkeypatch.setattr(
+        frappe.db,
+        "get_value",
+        lambda *_args, **_kwargs: "CUSTOMER-BRANCH",
         raising=False,
     )
 
@@ -35,15 +40,18 @@ def test_resolve_offer_office_branch_uses_customer_branch(monkeypatch):
 
 
 def test_resolve_offer_office_branch_falls_back_to_default(monkeypatch):
-    monkeypatch.setattr(offer_module, "get_default_office_branch", lambda: "DEFAULT")
+    monkeypatch.setattr(offer_module, "get_default_office_branch", lambda user=None: "DEFAULT")
     monkeypatch.setattr(offer_module, "assert_office_branch_access", lambda requested_office_branch=None, user=None: requested_office_branch)
     monkeypatch.setattr(
-        offer_module.frappe,
-        "db",
-        SimpleNamespace(
-            exists=lambda *_args, **_kwargs: False,
-            get_value=lambda *_args, **_kwargs: None,
-        ),
+        frappe.db,
+        "exists",
+        lambda *_args, **_kwargs: False,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        frappe.db,
+        "get_value",
+        lambda *_args, **_kwargs: None,
         raising=False,
     )
 
@@ -61,17 +69,20 @@ def test_create_quick_offer_validates_derived_office_branch_access_before_insert
 
     monkeypatch.setattr(offer_module, "assert_authenticated", lambda: None)
     monkeypatch.setattr(offer_module, "assert_post_request", lambda *_args, **_kwargs: None)
-    monkeypatch.setattr(offer_module.frappe, "has_permission", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr(frappe, "has_permission", lambda *_args, **_kwargs: True)
     monkeypatch.setattr(offer_module, "_resolve_or_create_quick_customer", lambda **_kwargs: ("CUST-1", False))
     monkeypatch.setattr(
-        offer_module.frappe,
-        "db",
-        SimpleNamespace(
-            exists=lambda doctype, name: doctype == "AT Customer" and name == "CUST-1",
-            get_value=lambda doctype, name, fieldname: "BR-DERIVED"
-            if (doctype, name, fieldname) == ("AT Customer", "CUST-1", "office_branch")
-            else None,
-        ),
+        frappe.db,
+        "exists",
+        lambda doctype, name: doctype == "AT Customer" and name == "CUST-1",
+        raising=False,
+    )
+    monkeypatch.setattr(
+        frappe.db,
+        "get_value",
+        lambda doctype, name, fieldname: "BR-DERIVED"
+        if (doctype, name, fieldname) == ("AT Customer", "CUST-1", "office_branch")
+        else None,
         raising=False,
     )
 
@@ -86,7 +97,7 @@ def test_create_quick_offer_validates_derived_office_branch_access_before_insert
         called["get_doc"] = True
         return SimpleNamespace(flags=SimpleNamespace(ignore_mandatory=False), insert=lambda: None)
 
-    monkeypatch.setattr(offer_module.frappe, "get_doc", _fake_get_doc)
+    monkeypatch.setattr(frappe, "get_doc", _fake_get_doc)
 
     with pytest.raises(Exception):
         offer_module.create_quick_offer(customer="CUST-1")

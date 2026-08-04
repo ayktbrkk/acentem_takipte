@@ -32,8 +32,10 @@ if "frappe" not in sys.modules:
     utils_stub.today = lambda: "2026-01-01"
     sys.modules["frappe.utils"] = utils_stub
 
+import frappe
+
 from acentem_takipte.acentem_takipte.doctype.at_sales_entity.at_sales_entity import ATSalesEntity
-import acentem_takipte.acentem_takipte.doctype.at_sales_entity as module
+import acentem_takipte.acentem_takipte.doctype.at_sales_entity.at_sales_entity as module
 
 
 def _raising_throw(message):
@@ -54,18 +56,18 @@ def _make_doc(**overrides):
     return SimpleNamespace(**data, get=lambda key, default=None: getattr(SimpleNamespace(**data), key, default))
 
 
+def _patch_frappe_db(monkeypatch, *, get_value_return):
+    # The class methods resolve the GLOBAL frappe module, so patch it directly.
+    monkeypatch.setattr(frappe, "throw", _raising_throw)
+    monkeypatch.setattr(frappe.db, "has_column", lambda doctype, column: True)
+    monkeypatch.setattr(frappe.db, "get_value", lambda doctype, name, fieldname: get_value_return)
+    monkeypatch.setattr(frappe, "get_all", lambda *args, **kwargs: [])
+
+
 def test_validate_rejects_multiple_pool_entities(monkeypatch):
     doc = _make_doc(is_pool=1)
 
-    monkeypatch.setattr(module.frappe, "throw", _raising_throw, raising=False)
-    monkeypatch.setattr(
-        module.frappe,
-        "db",
-        SimpleNamespace(
-            has_column=lambda doctype, column: True,
-            get_value=lambda doctype, name, fieldname: None,
-        ),
-    )
+    _patch_frappe_db(monkeypatch, get_value_return="ROOT-1")
     monkeypatch.setattr(module.sales_entity_service, "is_office_branch_active", lambda office_branch: True)
     monkeypatch.setattr(
         module.sales_entity_service,
@@ -80,16 +82,7 @@ def test_validate_rejects_multiple_pool_entities(monkeypatch):
 def test_validate_rejects_deactivating_pool_in_active_branch(monkeypatch):
     doc = _make_doc(is_pool=1, is_active=0)
 
-    monkeypatch.setattr(module.frappe, "throw", _raising_throw, raising=False)
-    monkeypatch.setattr(module.frappe, "flags", SimpleNamespace())
-    monkeypatch.setattr(
-        module.frappe,
-        "db",
-        SimpleNamespace(
-            has_column=lambda doctype, column: True,
-            get_value=lambda doctype, name, fieldname: None,
-        ),
-    )
+    _patch_frappe_db(monkeypatch, get_value_return="ROOT-1")
     monkeypatch.setattr(module.sales_entity_service, "is_office_branch_active", lambda office_branch: True)
     monkeypatch.setattr(
         module.sales_entity_service,
@@ -104,15 +97,7 @@ def test_validate_rejects_deactivating_pool_in_active_branch(monkeypatch):
 def test_validate_requires_pool_for_active_branch(monkeypatch):
     doc = _make_doc(is_pool=0, is_active=1)
 
-    monkeypatch.setattr(module.frappe, "throw", _raising_throw, raising=False)
-    monkeypatch.setattr(
-        module.frappe,
-        "db",
-        SimpleNamespace(
-            has_column=lambda doctype, column: True,
-            get_value=lambda doctype, name, fieldname: None,
-        ),
-    )
+    _patch_frappe_db(monkeypatch, get_value_return="ROOT-1")
     monkeypatch.setattr(module.sales_entity_service, "is_office_branch_active", lambda office_branch: True)
     monkeypatch.setattr(
         module.sales_entity_service,

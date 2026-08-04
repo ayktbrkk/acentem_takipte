@@ -3,7 +3,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from acentem_takipte.acentem_takipte.platform.api import quick_create
+import acentem_takipte.acentem_takipte.platform.api.quick_create  # noqa: F401  # resolves facade circular import
+from acentem_takipte.acentem_takipte.services import quick_create
 
 
 def test_insert_doc_logs_create_audit_event():

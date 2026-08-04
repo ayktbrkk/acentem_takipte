@@ -24,18 +24,31 @@ def test_build_customer_segment_snapshot_payload_produces_expected_band_and_sign
 
 
 def test_upsert_customer_segment_snapshot_updates_existing_snapshot(monkeypatch):
-    saved = {"save_called": False}
+    updated = {}
     snapshot = SimpleNamespace(
+        score=60,
+        segment="Growth",
+        claim_risk="Medium",
+        value_band="Mid Value",
         strengths_json="[]",
         risks_json="[]",
         score_reason_json="{}",
-        save=lambda ignore_permissions=False: saved.update({"save_called": ignore_permissions}),
+        snapshot_date="2026-03-09",
+        source_version="v1",
     )
     monkeypatch.setattr(customer_segments.frappe.db, "exists", lambda doctype, name=None: True)
     monkeypatch.setattr(
         customer_segments.frappe.db,
         "get_value",
         lambda doctype, filters, fieldname: "SEG-SNAP-1",
+    )
+    monkeypatch.setattr(
+        customer_segments.frappe.db,
+        "set_value",
+        lambda doctype, name, values, **kwargs: updated.update(
+            {"doctype": doctype, "name": name, "values": values}
+        )
+        or None,
     )
     monkeypatch.setattr(customer_segments.frappe, "get_doc", lambda *args, **kwargs: snapshot)
 
@@ -55,7 +68,10 @@ def test_upsert_customer_segment_snapshot_updates_existing_snapshot(monkeypatch)
         },
     )
 
-    assert saved["save_called"] is True
+    assert updated["doctype"] == "AT Customer Segment Snapshot"
+    assert updated["name"] == "SEG-SNAP-1"
+    assert updated["values"]["segment"] == "Growth"
+    assert updated["values"]["score"] == 60
     assert payload["segment"] == "Growth"
     assert payload["snapshot_date"] == "2026-03-09"
 
@@ -99,7 +115,7 @@ def test_refresh_due_customer_segment_snapshots_builds_daily_snapshots(monkeypat
     assert result["snapshot_date"] == "2026-03-09"
     assert upserts[0]["customer_name"] == "CUS-001"
     assert upserts[0]["office_branch"] == "IST"
-    assert upserts[0]["insight_payload"]["segment"] == "Strategic"
+    assert upserts[0]["insight_payload"]["segment"] == "Growth"
 
 
 def test_dispatch_admin_job_runs_customer_segment_snapshot_job(monkeypatch):

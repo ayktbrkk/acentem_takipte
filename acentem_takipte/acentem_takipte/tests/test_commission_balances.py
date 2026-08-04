@@ -219,6 +219,65 @@ class TestCommissionBalances(FrappeTestCase):
 
     @patch("frappe.db.get_value")
     @patch("frappe.get_all")
+    def test_free_text_query_scopes_entities_and_summary(self, mock_get_all, mock_db_get_value):
+        entity_a = "ENT-A"
+        entity_b = "ENT-B"
+
+        policies = [
+            {"name": "POL-A", "issue_date": None, "sales_entity": entity_a,
+             "commission_distribution": _make_distribution(entity_a, 500),
+             "insurance_company": "AT-IC-2026-00001"},
+            {"name": "POL-B", "issue_date": None, "sales_entity": entity_b,
+             "commission_distribution": _make_distribution(entity_b, 300),
+             "insurance_company": "AT-IC-2026-00002"},
+        ]
+        payments: list[dict] = []
+
+        def get_all_side_effect(doctype, filters=None, fields=None, **kwargs):
+            if doctype == "AT Policy":
+                return policies
+            if doctype == "AT Payment":
+                return payments
+            return []
+
+        mock_get_all.side_effect = get_all_side_effect
+
+        def db_get_value_side_effect(doctype, name, field, **kw):
+            if doctype == "AT Sales Entity":
+                return _fake_entity_info(name)
+            if doctype == "AT Insurance Company":
+                return _fake_ic_display(name)
+            if doctype == "AT Office Branch":
+                return _fake_office_branch_name(name)
+            return ""
+
+        mock_db_get_value.side_effect = db_get_value_side_effect
+
+        # Query matching only one entity by display name keeps both the table
+        # and the summary on the same scope.
+        result = compute_commission_balances(query="ENT-A")
+        assert result["total_count"] == 1
+        assert result["summary"]["total_accrued_try"] == 500.0
+        assert [e["entity_name"] for e in result["entities"]] == ["ENT-A"]
+
+        # Query matching the insurance company display name filters by company.
+        result_ic = compute_commission_balances(query="Axa")
+        assert result_ic["total_count"] == 1
+        assert result_ic["summary"]["total_accrued_try"] == 300.0
+
+        # Non-matching query empties both table and summary consistently.
+        result_none = compute_commission_balances(query="ZZZNOMATCH")
+        assert result_none["total_count"] == 0
+        assert result_none["summary"]["total_accrued_try"] == 0
+        assert result_none["entities"] == []
+
+        # No query keeps the full set (summary equals the sum of entities).
+        result_all = compute_commission_balances()
+        assert result_all["total_count"] == 2
+        assert result_all["summary"]["total_accrued_try"] == 800.0
+
+    @patch("frappe.db.get_value")
+    @patch("frappe.get_all")
     def test_insurance_company_filter_no_match_zero_summary(self, mock_get_all, mock_db_get_value):
         policies: list[dict] = []
         payments: list[dict] = []

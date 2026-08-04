@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import acentem_takipte.acentem_takipte.platform.api.quick_create as quick_create
+from acentem_takipte.acentem_takipte.platform.services import quick_create_helpers as quick_create
 
 
 def test_resolve_office_branch_prefers_explicit(monkeypatch):
     monkeypatch.setattr(quick_create, "_normalize_link", lambda doctype, value, required=False: value)
+    monkeypatch.setattr(quick_create, "assert_office_branch_access", lambda office_branch=None, user=None: office_branch)
 
     resolved = quick_create._resolve_office_branch("BR-EXPLICIT")
 

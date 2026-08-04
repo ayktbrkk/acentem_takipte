@@ -29,6 +29,7 @@ def test_dispatch_scheduled_reports_sends_attachment(monkeypatch):
             }
         ],
     )
+    monkeypatch.setattr(scheduled_reports, "save_scheduled_report_configs", lambda payload: None)
     monkeypatch.setattr(
         scheduled_reports,
         "build_report_payload",
@@ -118,6 +119,7 @@ def test_dispatch_scheduled_reports_can_queue_notification_delivery(monkeypatch)
             }
         ],
     )
+    monkeypatch.setattr(scheduled_reports, "save_scheduled_report_configs", lambda payload: None)
     monkeypatch.setattr(
         scheduled_reports,
         "build_report_payload",
@@ -166,6 +168,7 @@ def test_dispatch_scheduled_reports_tracks_outbox_queue_failures(monkeypatch):
             }
         ],
     )
+    monkeypatch.setattr(scheduled_reports, "save_scheduled_report_configs", lambda payload: None)
     monkeypatch.setattr(
         scheduled_reports,
         "build_report_payload",
@@ -211,6 +214,7 @@ def test_dispatch_scheduled_reports_normalizes_string_recipients_and_filters(mon
         }
     ]
     monkeypatch.setattr(scheduled_reports, "load_scheduled_report_configs", lambda: configs)
+    monkeypatch.setattr(scheduled_reports, "save_scheduled_report_configs", lambda payload: None)
     monkeypatch.setattr(
         scheduled_reports,
         "build_report_payload",
@@ -255,6 +259,7 @@ def test_dispatch_scheduled_reports_uses_config_locale_for_title(monkeypatch):
         }
     ]
     monkeypatch.setattr(scheduled_reports, "load_scheduled_report_configs", lambda: configs)
+    monkeypatch.setattr(scheduled_reports, "save_scheduled_report_configs", lambda payload: None)
     monkeypatch.setattr(
         scheduled_reports,
         "build_report_payload",
@@ -299,6 +304,7 @@ def test_dispatch_scheduled_reports_passes_locale_to_xlsx_renderer(monkeypatch):
     ]
     captured = {}
     monkeypatch.setattr(scheduled_reports, "load_scheduled_report_configs", lambda: configs)
+    monkeypatch.setattr(scheduled_reports, "save_scheduled_report_configs", lambda payload: None)
     monkeypatch.setattr(
         scheduled_reports,
         "build_report_payload",

@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import frappe
+
 from acentem_takipte.acentem_takipte.doctype import branch_permissions
-from acentem_takipte.acentem_takipte.doctype import at_customer
+import acentem_takipte.acentem_takipte.doctype.at_customer.at_customer as at_customer
 
 
 def test_build_office_branch_permission_query_returns_empty_for_all_access_user(monkeypatch):
@@ -54,15 +56,12 @@ def test_build_branch_and_sales_entity_permission_query_falls_back_to_branch_whe
 
 def test_customer_permission_query_conditions_combine_agent_and_branch_scope(monkeypatch):
     monkeypatch.setattr(at_customer, "_can_access_all_customers", lambda user: False)
-    monkeypatch.setattr(
-        at_customer,
-        "frappe",
-        SimpleNamespace(get_roles=lambda user: ["AT Agent"], db=SimpleNamespace(escape=lambda value: f"'{value}'")),
-    )
+    monkeypatch.setattr(frappe, "get_roles", lambda user: ["AT Agent"])
+    monkeypatch.setattr(frappe.db, "escape", lambda value: f"'{value}'")
     monkeypatch.setattr(
         at_customer,
         "build_office_branch_permission_query",
-        lambda doctype, user=None: "`tabAT Customer`.`office_branch` in ('ANK')",
+        lambda doctype, fieldname="office_branch", user=None: "`tabAT Customer`.`office_branch` in ('ANK')",
     )
 
     condition = at_customer.get_permission_query_conditions("agent@example.com")
@@ -95,8 +94,8 @@ def test_has_branch_and_sales_entity_permission_denies_when_entity_out_of_scope(
 
 def test_customer_has_permission_requires_matching_branch_for_agent(monkeypatch):
     monkeypatch.setattr(at_customer, "_can_access_all_customers", lambda user: False)
-    monkeypatch.setattr(at_customer.frappe, "get_roles", lambda user: ["AT Agent"])
-    monkeypatch.setattr(at_customer, "has_office_branch_permission", lambda doc, user=None: False)
+    monkeypatch.setattr(frappe, "get_roles", lambda user: ["AT Agent"])
+    monkeypatch.setattr(at_customer, "has_office_branch_permission", lambda doc, fieldname="office_branch", user=None: False)
 
     doc = SimpleNamespace(assigned_agent="agent@example.com", owner="owner@example.com", office_branch="IST")
 
@@ -119,7 +118,7 @@ def test_notification_draft_permission_query_uses_office_branch_scope(monkeypatc
 
     condition = branch_permissions.get_notification_draft_permission_query_conditions("manager@example.com")
 
-    assert "`tabAT Notification Draft`.`office_branch` in (" in condition
+    assert "`tabAT Notification Draft`.`origin_office_branch` in (" in condition
 
 
 def test_notification_outbox_permission_query_uses_office_branch_scope(monkeypatch):
@@ -128,7 +127,7 @@ def test_notification_outbox_permission_query_uses_office_branch_scope(monkeypat
 
     condition = branch_permissions.get_notification_outbox_permission_query_conditions("manager@example.com")
 
-    assert "`tabAT Notification Outbox`.`office_branch` in (" in condition
+    assert "`tabAT Notification Outbox`.`origin_office_branch` in (" in condition
 
 
 def test_activity_task_reminder_and_ownership_queries_use_branch_scope(monkeypatch):
@@ -140,10 +139,10 @@ def test_activity_task_reminder_and_ownership_queries_use_branch_scope(monkeypat
     reminder_q = branch_permissions.get_reminder_permission_query_conditions("manager@example.com")
     ownership_q = branch_permissions.get_ownership_assignment_permission_query_conditions("manager@example.com")
 
-    assert "`tabAT Activity`.`office_branch` in (" in activity_q
-    assert "`tabAT Task`.`office_branch` in (" in task_q
-    assert "`tabAT Reminder`.`office_branch` in (" in reminder_q
-    assert "`tabAT Ownership Assignment`.`office_branch` in (" in ownership_q
+    assert "`tabAT Activity`.`origin_office_branch` in (" in activity_q
+    assert "`tabAT Task`.`origin_office_branch` in (" in task_q
+    assert "`tabAT Reminder`.`origin_office_branch` in (" in reminder_q
+    assert "`tabAT Ownership Assignment`.`origin_office_branch` in (" in ownership_q
 
 
 def test_policy_endorsement_permission_query_inherits_policy_scope(monkeypatch):

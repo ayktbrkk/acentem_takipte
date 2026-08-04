@@ -42,7 +42,7 @@ test.describe("business role operational /at smoke", () => {
 
     const sessionResponse = await callMethod(
       page,
-      "acentem_takipte.acentem_takipte.api.session.get_session_context"
+      "acentem_takipte.acentem_takipte.platform.api.session.get_session_context"
     );
     expect(sessionResponse.ok).toBeTruthy();
     const roles = sessionResponse.json?.message?.roles || [];
@@ -71,7 +71,7 @@ test.describe("business role operational /at smoke", () => {
 
     const reportResponse = await callMethod(
       page,
-      "acentem_takipte.acentem_takipte.api.reports.get_policy_list_report",
+      "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_policy_list_report",
       { filters: {}, limit: 5 }
     );
     expect(reportResponse.ok).toBeTruthy();
@@ -79,7 +79,7 @@ test.describe("business role operational /at smoke", () => {
 
     const exportResponse = await callMethod(
       page,
-      "acentem_takipte.acentem_takipte.api.reports.export_policy_list_report",
+      "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.export_policy_list_report",
       { filters: {}, export_format: "xlsx", limit: 5 }
     );
     expect(exportResponse.ok).toBeTruthy();
