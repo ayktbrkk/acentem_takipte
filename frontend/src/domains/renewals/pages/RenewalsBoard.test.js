@@ -139,6 +139,104 @@ describe("RenewalsBoard page store integration", () => {
     expect(renewalStore.state.filters.query).toBe("pol");
   });
 
+  it("derives the status KPI breakdown from the full dataset including in-progress", async () => {
+    resourceQueue.push(
+      {
+        data: ref([
+          { name: "REN-001", policy: "POL-001", status: "Open" },
+          { name: "REN-002", policy: "POL-002", status: "Open" },
+          { name: "REN-003", policy: "POL-003", status: "In Progress" },
+          { name: "REN-004", policy: "POL-004", status: "Done" },
+          { name: "REN-005", policy: "POL-005", status: "Cancelled" },
+        ]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+    );
+
+    const wrapper = mount(RenewalsBoard, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: true,
+          StatusBadge: true,
+          WorkbenchFilterToolbar: genericStub,
+        },
+      },
+    });
+
+    await nextTick();
+
+    const items = wrapper.vm.renewalSummaryItems;
+    const valueFor = (key) => items.find((item) => item.key === key)?.value || "0";
+    expect(valueFor("total")).toBe("5");
+    expect(valueFor("open")).toBe("2");
+    expect(valueFor("in_progress")).toBe("1");
+    expect(valueFor("done")).toBe("1");
+    expect(valueFor("cancelled")).toBe("1");
+  });
+
+  it("renders a wrapping actions toolbar so the primary action stays on-screen on mobile", async () => {
+    resourceQueue.push(
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+    );
+
+    const wrapper = mount(RenewalsBoard, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          QuickCreateManagedDialog: true,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await nextTick();
+
+    const actionsWrapper = wrapper.find("div[data-testid='renewals-actions']");
+    expect(actionsWrapper.exists()).toBe(true);
+    expect(actionsWrapper.attributes("class")).toContain("flex-wrap");
+  });
+
   it("submits renewal status mutation and reloads rows", async () => {
     const reloadMock = vi.fn(async () => [
       { name: "REN-001", policy: "POL-001", status: "Open" },

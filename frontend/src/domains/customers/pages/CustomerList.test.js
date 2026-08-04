@@ -59,6 +59,10 @@ vi.mock("frappe-ui", () => ({
               gender: "Male",
               birth_date: "1975-10-01",
               assigned_agent: "Acentem Operasyon",
+              tax_id: "20289398438",
+              masked_tax_id: "20*******38",
+              phone: "05321234567",
+              masked_phone: "053******67",
             },
             {
               name: "CUST-002",
@@ -67,6 +71,10 @@ vi.mock("frappe-ui", () => ({
               customer_type: "Corporate",
               occupation: "Finance Manager",
               sales_entity: "Corporate North",
+              tax_id: "12345678901",
+              masked_tax_id: "12*******01",
+              phone: "05320000000",
+              masked_phone: "053*****000",
             },
           ],
           total: 2,
@@ -172,5 +180,17 @@ describe("CustomerList page", () => {
     expect(columns.personal_primary).toBe("Personal");
     expect(columns.mgmt_primary).toBe("Management");
     expect(wrapper.vm.filterConfig[0].label).toBe("Consent");
+  });
+
+  it("renders masked TCKN/VKN and phone in the list by default", async () => {
+    // Even when the backend supplies a raw tax_id/phone, the list row must
+    // prefer the backend-masked form so PII never renders in the table.
+    const wrapper = await mountCustomerList("tr");
+
+    const row = wrapper.vm.rows[0];
+    expect(row.identity_secondary).toContain("20*******38");
+    expect(row.identity_secondary).not.toContain("20289398438");
+    expect(row.contact_primary).toBe("053******67");
+    expect(row.contact_primary).not.toBe("05321234567");
   });
 });

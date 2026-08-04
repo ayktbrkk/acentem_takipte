@@ -209,14 +209,40 @@ class TestDashboardContractSmoke(unittest.TestCase):
                                         side_effect=lambda rows, summary: rows,
                                     ):
                                         with patch.object(dashboard_api, "has_sensitive_access", return_value=True):
-                                            payload = dashboard_api.get_customer_workbench_rows(filters={}, page=1, page_length=20)
+                                            with patch.object(
+                                                dashboard_api,
+                                                "_customer_workbench_summary_counts",
+                                                return_value={
+                                                    "total": 1,
+                                                    "active_count": 0,
+                                                    "individual_count": 1,
+                                                    "corporate_count": 0,
+                                                    "consent_granted_count": 0,
+                                                },
+                                            ):
+                                                payload = dashboard_api.get_customer_workbench_rows(filters={}, page=1, page_length=20)
 
-        self.assertEqual(set(payload.keys()), {"rows", "total", "page", "page_length"})
+        self.assertEqual(
+            set(payload.keys()),
+            {
+                "rows",
+                "total",
+                "page",
+                "page_length",
+                "active_count",
+                "individual_count",
+                "corporate_count",
+                "consent_granted_count",
+            },
+        )
         self.assertEqual(payload["total"], 1)
         self.assertEqual(payload["page"], 1)
         self.assertEqual(payload["page_length"], 20)
         self.assertIsInstance(payload["rows"], list)
         self.assertEqual(payload["rows"][0]["name"], "CUST-0001")
+        self.assertEqual(payload["active_count"], 0)
+        self.assertEqual(payload["individual_count"], 1)
+        self.assertEqual(payload["corporate_count"], 0)
 
     def test_get_lead_workbench_rows_response_contract_smoke(self):
         parsed_filters = {

@@ -471,6 +471,76 @@ describe("ClaimsBoard page store integration", () => {
     window.location = originalLocation;
   });
 
+  it("disables the payment action for rejected, paid and closed claims", async () => {
+    const reloadMock = vi.fn(async () => [
+      { name: "CLM-REJ", claim_no: "H-REJ", policy: "POL-R", claim_status: "Rejected", approved_amount: 1000, paid_amount: 0 },
+      { name: "CLM-PAID", claim_no: "H-PAID", policy: "POL-P", claim_status: "Paid", approved_amount: 1000, paid_amount: 1000 },
+      { name: "CLM-CLS", claim_no: "H-CLS", policy: "POL-C", claim_status: "Closed", approved_amount: 1000, paid_amount: 0 },
+      { name: "CLM-APP", claim_no: "H-APP", policy: "POL-A", claim_status: "Approved", approved_amount: 1000, paid_amount: 300 },
+    ]);
+    const submitMock = vi.fn(async () => ({ name: "CLM-REJ" }));
+    const originalLocation = window.location;
+    delete window.location;
+    window.location = { assign: vi.fn(), href: "" };
+
+    resourceQueue.push(
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: reloadMock,
+      },
+      {
+        data: ref(null),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => null),
+        submit: submitMock,
+      },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+    );
+
+    const wrapper = mount(ClaimsBoard, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          AmountPairSummary: true,
+          DataTableCell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: true,
+          TableFactsCell: true,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+          TableEntityCell: true,
+        },
+      },
+    });
+
+    await loadClaimRows(wrapper);
+
+    const actions = wrapper.vm.claimsListRowsWithActions;
+    const paymentDisabled = (row) => row._actions[1].disabled;
+    expect(paymentDisabled(actions.find((r) => r.name === "CLM-REJ"))).toBe(true);
+    expect(paymentDisabled(actions.find((r) => r.name === "CLM-PAID"))).toBe(true);
+    expect(paymentDisabled(actions.find((r) => r.name === "CLM-CLS"))).toBe(true);
+    expect(paymentDisabled(actions.find((r) => r.name === "CLM-APP"))).toBe(false);
+
+    // Only the approved claim may navigate to the payments screen
+    actions.find((r) => r.name === "CLM-APP")._actions[1].onClick();
+    expect(window.location.assign).toHaveBeenCalledWith("/at/payments?policy=POL-A&query=H-APP");
+    expect(submitMock).not.toHaveBeenCalled();
+    window.location = originalLocation;
+  });
+
   it("does not render a row-level documents action", async () => {
     const originalLocation = window.location;
     delete window.location;

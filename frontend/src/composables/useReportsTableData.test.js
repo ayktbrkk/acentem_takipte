@@ -46,6 +46,67 @@ describe("useReportsTableData", () => {
     expect(result.summaryItems.value).toHaveLength(4);
   });
 
+  it("computes collected premium from the backend collected_amount_try field", () => {
+    const filters = ref({
+      reportKey: "policy_list",
+      fromDate: "",
+      toDate: "",
+      granularity: "",
+    });
+    const rows = ref([
+      { name: "R1", gross_premium: 100, collected_amount_try: 12400 },
+      { name: "R2", gross_premium: 200, collected_amount_try: 8500 },
+    ]);
+    const columns = ref(["name", "gross_premium", "collected_amount_try"]);
+    const comparisonRows = ref([]);
+
+    const result = useReportsTableData({
+      filters: filters.value,
+      rows,
+      columns,
+      comparisonRows,
+      activeLocale: ref("tr"),
+      localeCode: ref("tr-TR"),
+      branchScopeLabel: computed(() => "Ofis Şube: IST"),
+      t: (key) => key,
+    });
+
+    const paidMetric = result.summaryItems.value.find((item) => item.key === "paid_amount");
+    expect(paidMetric).toBeDefined();
+    // 12400 + 8500 = 20900
+    expect(String(paidMetric.value)).toContain("20.900");
+  });
+
+  it("computes collected premium for the granularity report from total_collected_try", () => {
+    const filters = ref({
+      reportKey: "policy_list",
+      fromDate: "",
+      toDate: "",
+      granularity: "monthly",
+    });
+    const rows = ref([
+      { period_label: "06.2026", total_gross_premium: 100, total_collected_try: 5000 },
+      { period_label: "07.2026", total_gross_premium: 200, total_collected_try: 6000 },
+    ]);
+    const columns = ref(["period_label", "total_gross_premium", "total_collected_try"]);
+    const comparisonRows = ref([]);
+
+    const result = useReportsTableData({
+      filters: filters.value,
+      rows,
+      columns,
+      comparisonRows,
+      activeLocale: ref("tr"),
+      localeCode: ref("tr-TR"),
+      branchScopeLabel: computed(() => "Ofis Şube: IST"),
+      t: (key) => key,
+    });
+
+    const paidMetric = result.summaryItems.value.find((item) => item.key === "paid_amount");
+    expect(paidMetric).toBeDefined();
+    expect(String(paidMetric.value)).toContain("11.000");
+  });
+
   it("uses translated fallback labels for empty group keys", () => {
     const filters = ref({
       reportKey: "policy_list",
