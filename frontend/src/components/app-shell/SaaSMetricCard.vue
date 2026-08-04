@@ -1,5 +1,5 @@
 <template>
-  <div class="at-metric-card">
+  <div class="at-metric-card" :title="title || undefined">
     <p class="at-metric-label">{{ label }}</p>
     <div class="flex items-baseline gap-2">
       <p :class="['at-metric-value tabular-nums', valueClass || 'text-slate-900']">{{ value }}</p>
@@ -15,5 +15,6 @@ defineProps({
   valueClass: { type: String, default: "" },
   trend: { type: String, default: "" },
   trendClass: { type: String, default: "" },
+  title: { type: String, default: "" },
 });
 </script>

@@ -82,6 +82,7 @@ export function usePolicyListTableData({
         total: Number(serverSummary.total) || 0,
         active: Number(serverSummary.active) || 0,
         pending: Number(serverSummary.pending) || 0,
+        cancelled: Number(serverSummary.cancelled) || 0,
         totalPremium: Number(serverSummary.total_premium_try) || 0,
       };
     }

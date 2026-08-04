@@ -114,6 +114,13 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     };
   }
 
+  function buildClaimSummaryParams() {
+    return {
+      status: filters.status || "",
+      office_branch: branchStore.requestBranch || "",
+    };
+  }
+
   function withOfficeBranchFilter(params) {
     const officeBranch = branchStore.requestBranch || "";
     if (!officeBranch) return params;
@@ -133,6 +140,10 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
   });
   const claimsCountResource = createResource({
     url: "frappe.client.get_count",
+    auto: false,
+  });
+  const claimsSummaryResource = createResource({
+    url: "acentem_takipte.acentem_takipte.domains.claims.api.endpoints.get_claims_workbench_summary",
     auto: false,
   });
   const claimMutationResource = createResource({
@@ -213,11 +224,12 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     return Math.ceil((target.getTime() - Date.now()) / 86400000);
   }
 
-  function formatCurrency(value) {
+  function formatCurrency(value, currency = "TRY") {
     const amount = Number(value || 0);
+    const code = String(currency || "TRY").toUpperCase();
     return new Intl.NumberFormat(localeCode.value, {
       style: "currency",
-      currency: "TRY",
+      currency: code,
       maximumFractionDigits: 0,
     }).format(amount);
   }
@@ -322,12 +334,41 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     const rows = claimsListFilteredRows.value;
     const reserveTotal = rows.reduce((sum, claim) => sum + Number(claim.estimated_amount || 0), 0);
     const paidTotal = rows.reduce((sum, claim) => sum + Number(claim.paid_amount || 0), 0);
+    const server = unref(claimsSummaryResource.data);
+    if (server && Number.isFinite(Number(server.total))) {
+      const otherCount = Number(server.other) || 0;
+      return {
+        total: Number(server.total) || 0,
+        open: Number(server.open) || 0,
+        approved: Number(server.approved) || 0,
+        paid: Number(server.paid) || 0,
+        under_review: Number(server.under_review) || 0,
+        rejected: Number(server.rejected) || 0,
+        closed: Number(server.closed) || 0,
+        other: otherCount,
+        reserveTry: Number(server.reserve_try) || 0,
+        paidTry: Number(server.paid_try) || 0,
+        reserveVsPaid: `${formatCurrency(Number(server.reserve_try) || 0)} / ${formatCurrency(Number(server.paid_try) || 0)}`,
+        non_try_breakdown: server.non_try_breakdown || {},
+        missing_fx_count: Number(server.missing_fx_count) || 0,
+        missing_fx_claims: server.missing_fx_claims || [],
+      };
+    }
     return {
       total: claimsTotalCount.value || rows.length,
       open: rows.filter((claim) => String(claim.claim_status || "").trim() === "Open").length,
       approved: rows.filter((claim) => String(claim.claim_status || "").trim() === "Approved").length,
       paid: rows.filter((claim) => String(claim.claim_status || "").trim() === "Paid").length,
+      under_review: rows.filter((claim) => String(claim.claim_status || "").trim() === "Under Review").length,
+      rejected: rows.filter((claim) => String(claim.claim_status || "").trim() === "Rejected").length,
+      closed: rows.filter((claim) => String(claim.claim_status || "").trim() === "Closed").length,
+      other: 0,
+      reserveTry: reserveTotal,
+      paidTry: paidTotal,
       reserveVsPaid: `${formatCurrency(reserveTotal)} / ${formatCurrency(paidTotal)}`,
+      non_try_breakdown: {},
+      missing_fx_count: 0,
+      missing_fx_claims: [],
     };
   });
 
@@ -649,6 +690,7 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     return Promise.all([
       claimsResource.reload(),
       claimsCountResource.reload(buildClaimCountParams()),
+      claimsSummaryResource.reload(buildClaimSummaryParams()),
     ])
       .then(([result, total]) => {
         claimsTotalCount.value = Number(total) || 0;

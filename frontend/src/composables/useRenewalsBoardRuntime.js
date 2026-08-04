@@ -173,18 +173,20 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
   const renewalSummaryItems = computed(() => {
     const rows = renewals.value;
     const openRows = rows.filter((row) => row.status === "Open");
+    const inProgressRows = rows.filter((row) => row.status === "In Progress");
     const doneRows = rows.filter((row) => row.status === "Done");
     const cancelledRows = rows.filter((row) => row.status === "Cancelled");
     return [
       { key: "total", label: t("metricTotal"), value: formatCount(rows.length), valueClass: "text-slate-900" },
       { key: "open", label: t("metricOpen"), value: formatCount(openRows.length), valueClass: "text-brand-600" },
+      { key: "in_progress", label: t("metricInProgress"), value: formatCount(inProgressRows.length), valueClass: "text-at-amber" },
       { key: "done", label: t("metricDone"), value: formatCount(doneRows.length), valueClass: "text-at-green" },
       { key: "cancelled", label: t("metricCancelled"), value: formatCount(cancelledRows.length), valueClass: "text-at-red" },
       {
         key: "due",
         label: t("metricDue"),
         value: formatCount(rows.filter((row) => String(row.due_date || "").trim()).length),
-        valueClass: "text-at-amber",
+        valueClass: "text-slate-500",
       },
     ];
   });

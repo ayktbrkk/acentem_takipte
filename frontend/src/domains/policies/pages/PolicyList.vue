@@ -18,10 +18,11 @@
     </template>
 
     <template #metrics>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <SaaSMetricCard :label="t('summaryTotal')" :value="formatCount(policySummary.total)" />
         <SaaSMetricCard :label="t('summaryActive')" :value="formatCount(policySummary.active)" value-class="text-brand-600" />
         <SaaSMetricCard :label="t('summaryPending')" :value="formatCount(policySummary.pending)" value-class="text-at-amber" />
+        <SaaSMetricCard :label="t('summaryCancelled')" :value="formatCount(policySummary.cancelled)" value-class="text-at-red" />
         <SaaSMetricCard :label="t('summaryTotalPremium')" :value="formatCurrency(policySummary.totalPremium, 'TRY')" value-class="text-at-green" />
       </div>
     </template>

@@ -36,6 +36,7 @@
           :label="item.label"
           :value="item.value"
           :value-class="item.valueClass"
+          :title="item.title"
         />
       </div>
     </template>

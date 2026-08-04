@@ -42,8 +42,11 @@ export function mapCustomerRecordToTableRow(row, { t }) {
   return {
     ...row,
     identity_primary: row.full_name || unspecified,
-    identity_secondary: `${row.name || unspecified} | ${customerType} | ${row.tax_id || unspecified}`,
-    contact_primary: row.phone || unspecified,
+    // TCKN/VKN must render masked by default in the list. The backend always
+    // provides a masked form; fall back to the raw field only as a last resort
+    // so a future backend change can never surface raw PII in the list.
+    identity_secondary: `${row.name || unspecified} | ${customerType} | ${row.masked_tax_id || row.tax_id || unspecified}`,
+    contact_primary: row.masked_phone || row.phone || unspecified,
     contact_secondary: row.email || unspecified,
     personal_primary: maritalStatus
       ? normalizeMaritalStatus(maritalStatus, t, unspecified)

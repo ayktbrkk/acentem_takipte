@@ -18,7 +18,7 @@
     </template>
 
     <template #metrics>
-      <ClaimsBoardMetricsPanel :claim-summary="claimSummary" :format-count="formatCount" :t="t" />
+      <ClaimsBoardMetricsPanel :claim-summary="claimSummary" :format-count="formatCount" :format-currency="formatCurrency" :t="t" />
     </template>
 
     <ClaimsBoardFilterSection

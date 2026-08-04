@@ -279,7 +279,12 @@ export function useReportsTableData({
       return [
         buildMetricItem("gross_premium", t("summaryGrossPremium"), formatSummaryCurrency(numericTotal(["total_gross_premium"]))),
         buildMetricItem("commission", t("summaryCommission"), formatSummaryCurrency(numericTotal(["total_commission"]))),
-        buildMetricItem("paid_amount", t("summaryPaidAmount"), formatSummaryCurrency(0)),
+        buildMetricItem(
+          "paid_amount",
+          t("summaryCollectedPremium"),
+          formatSummaryCurrency(numericTotal(["total_collected_try"])),
+          { title: t("summaryCollectedPremiumHint") },
+        ),
         buildMetricItem("net_premium", t("summaryNetPremium"), formatSummaryCurrency(numericTotal(["total_net_premium"]))),
       ];
     }
@@ -288,7 +293,12 @@ export function useReportsTableData({
       return [
         buildMetricItem("gross_premium", t("summaryGrossPremium"), formatSummaryCurrency(numericTotal(["gross_premium", "total_gross_premium"]))),
         buildMetricItem("commission", t("summaryCommission"), formatSummaryCurrency(numericTotal(["commission_amount", "total_commission"]))),
-        buildMetricItem("paid_amount", t("summaryPaidAmount"), formatSummaryCurrency(numericTotal(["paid_amount", "approved_amount"]))),
+        buildMetricItem(
+          "paid_amount",
+          t("summaryCollectedPremium"),
+          formatSummaryCurrency(numericTotal(["collected_amount_try"])),
+          { title: t("summaryCollectedPremiumHint") },
+        ),
         buildMetricItem("net_premium", t("summaryNetPremium"), formatSummaryCurrency(numericTotal(["net_premium", "total_net_premium"]))),
       ];
     }
@@ -368,6 +378,7 @@ export function useReportsTableData({
       value: item.value,
       valueClass: item.valueClass,
       sub: index === 0 ? branchScopeLabel.value : undefined,
+      title: item.title,
       variant: getHeroVariant(item.key, index),
     })),
   );

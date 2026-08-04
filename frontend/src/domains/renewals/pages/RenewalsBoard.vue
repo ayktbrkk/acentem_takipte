@@ -7,7 +7,7 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <div class="flex items-center gap-2">
+      <div data-testid="renewals-actions" class="flex flex-wrap items-center gap-2">
         <div class="mr-2 flex rounded-lg border border-slate-200 bg-white p-1" role="group" :aria-label="t('viewMode')">
           <button
             type="button"
@@ -48,10 +48,10 @@
     </template>
 
     <template #metrics>
-      <div v-if="renewalsLoading && !renewals.length" class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
-        <SkeletonLoader v-for="i in 5" :key="i" variant="card" />
+      <div v-if="renewalsLoading && !renewals.length" class="w-full grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <SkeletonLoader v-for="i in 6" :key="i" variant="card" />
       </div>
-      <div v-else class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+      <div v-else class="w-full grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <SaaSMetricCard
           v-for="item in renewalSummaryItems"
           :key="item.key"

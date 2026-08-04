@@ -7,7 +7,7 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <div class="mr-2 flex rounded-lg border border-slate-200 bg-white p-1" role="group" :aria-label="t('viewMode')">
           <button
             type="button"
