@@ -4,7 +4,7 @@
     <SaaSMetricCard :label="t('summaryPending')" :value="formatCount(paymentSummary.pending)" value-class="text-at-amber" />
     <SaaSMetricCard :label="t('summaryCollected')" :value="formatCount(paymentSummary.collected)" value-class="text-at-green" />
     <SaaSMetricCard :label="t('summaryOverdue')" :value="formatCount(paymentSummary.overdue)" value-class="text-at-red" />
-    <SaaSMetricCard :label="t('summaryTotalAmount')" :value="formatCurrency(paymentSummary.totalAmount)" />
+    <SaaSMetricCard :label="t('summaryTotalAmount')" :value="formatCurrency(paymentSummary.totalAmount)" :trend="t('tryEquivalent')" trend-class="text-at-green" />
   </div>
 </template>
 

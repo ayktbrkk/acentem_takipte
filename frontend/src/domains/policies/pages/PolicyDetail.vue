@@ -448,7 +448,9 @@ const commissionColumns = computed(() => [
   { key: "level", label: t("level"), type: "text" },
   { key: "entity_label", label: t("sales_entity"), type: "text" },
   { key: "share_pct_display", label: t("sharePct"), type: "text" },
-  { key: "amount_formatted", label: t("commission_amount"), type: "currency" },
+  { key: "amount_formatted", label: t("commission_accrued"), type: "currency" },
+  { key: "paid_formatted", label: t("commission_paid"), type: "currency" },
+  { key: "remaining_formatted", label: t("commission_remaining"), type: "currency" },
   { key: "status_translated", label: t("status"), type: "text" },
 ]);
 

@@ -7,6 +7,7 @@ function createPolicyInitialState() {
     selected: null,
     loading: false,
     error: "",
+    summary: null,
     filters: {
       query: "",
       insurance_company: "",
@@ -88,9 +89,14 @@ export const usePolicyStore = defineStore("policy", () => {
     state.pagination.total = Number.isFinite(total) ? total : 0;
   }
 
-  function applyListPayload(items, total) {
+  function setSummary(value) {
+    state.summary = value && typeof value === "object" ? value : null;
+  }
+
+  function applyListPayload(items, total, summary = null) {
     setItems(items);
     setTotal(total);
+    if (summary !== null) setSummary(summary);
   }
 
   function reset() {
@@ -116,6 +122,7 @@ export const usePolicyStore = defineStore("policy", () => {
     setFilters,
     setPagination,
     setTotal,
+    setSummary,
     applyListPayload,
     reset,
   };

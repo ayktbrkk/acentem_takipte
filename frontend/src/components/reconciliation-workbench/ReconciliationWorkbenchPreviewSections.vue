@@ -81,6 +81,9 @@
             {{ props.t('aging90plusLabel') }}: {{ props.formatMoney(props.commissionAging.buckets['90_plus']) }}
           </span>
         </div>
+        <p v-if="props.commissionAging.truncated" class="mt-2 rounded-md border border-at-amber/20 bg-at-amber/5 px-2 py-1 text-[11px] font-medium text-at-amber" role="status">
+          {{ props.t("previewTruncated") }}
+        </p>
       </div>
       <ul class="space-y-2 text-sm">
         <MetaListCard

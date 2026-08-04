@@ -4,6 +4,7 @@ import unicodedata
 
 import frappe
 from frappe import _
+from frappe.utils import flt
 from frappe.utils.logger import get_logger
 
 from acentem_takipte.acentem_takipte.platform.services.document_center import build_document_profile
@@ -14,6 +15,34 @@ LOGGER = get_logger("acentem_takipte.policy_360")
 
 def _fold_ascii(value: str | None) -> str:
     return unicodedata.normalize("NFKD", str(value or "")).encode("ascii", "ignore").decode("ascii").lower()
+
+
+def _get_commission_entity_paid_try(policy_name: str) -> dict[str, float]:
+    """Return per-sales-entity paid TRY amounts for a policy's commission payouts.
+
+    Only status=Paid Commission Payout payments count; Draft is reserved and
+    Cancelled is excluded from paid totals (matches the commission balances
+    rules). The map key is the AT Sales Entity doc name so it can be joined to
+    the commission_distribution JSON entries on the policy doc."""
+    if not policy_name:
+        return {}
+    payout_rows = frappe.get_all(
+        "AT Payment",
+        filters={
+            "policy": policy_name,
+            "payment_purpose": "Commission Payout",
+            "status": "Paid",
+        },
+        fields=["sales_entity", "amount_try"],
+        limit_page_length=0,
+    )
+    ledger: dict[str, float] = {}
+    for row in payout_rows:
+        entity = str(row.get("sales_entity") or "").strip()
+        if not entity:
+            continue
+        ledger[entity] = round(ledger.get(entity, 0) + flt(row.get("amount_try") or 0), 2)
+    return ledger
 
 
 def build_policy_360_payload(name: str) -> dict:
@@ -101,6 +130,7 @@ def build_policy_360_payload(name: str) -> dict:
             order_by="due_date asc",
             limit_page_length=200,
         ),
+        "commission_entity_paid_try": _get_commission_entity_paid_try(policy_name),
         "files": files,
         "document_profile": build_document_profile(files),
         "at_documents": _get_at_documents_for_policy(policy_name),

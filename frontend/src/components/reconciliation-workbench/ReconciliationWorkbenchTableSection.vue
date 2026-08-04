@@ -29,6 +29,28 @@
       <EmptyState :title="props.t('emptyTitle')" :description="props.t('empty')" />
     </div>
     <div v-else class="mt-4 space-y-4">
+      <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2">
+        <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+          <input
+            type="checkbox"
+            class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+            :checked="props.allVisibleSelected"
+            :disabled="props.rows.length === 0"
+            :aria-label="props.t('selectAllRows')"
+            @change="$emit('toggle-select-all', $event.target.checked)"
+          />
+          <span>{{ props.t("selectAllRows") }}</span>
+        </label>
+        <div class="flex items-center gap-3">
+          <span v-if="props.selectedCount > 0" class="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700">
+            {{ props.selectedCount }} {{ props.t("selectedRows") }}
+          </span>
+          <ActionButton v-if="props.selectedCount > 0" variant="ghost" size="xs" @click="$emit('clear-selection')">
+            {{ props.t("clearSelection") }}
+          </ActionButton>
+        </div>
+      </div>
+
       <ListTable
         :columns="props.reconciliationListColumns"
         :rows="props.reconciliationListRows"
@@ -36,7 +58,18 @@
         :loading="false"
         :empty-message="props.t('empty')"
         @row-click="$emit('row-click', $event)"
-      />
+      >
+        <template #cell(_selected)="{ row }">
+          <input
+            type="checkbox"
+            class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+            :checked="Boolean(row._selected)"
+            :aria-label="`${props.t('selectedRows')}: ${row.name}`"
+            @click.stop
+            @change="$emit('toggle-row-select', row.name, $event.target.checked)"
+          />
+        </template>
+      </ListTable>
       <ListPager
         :shown="props.shownCount"
         :total="props.totalCount"
@@ -71,7 +104,17 @@ const props = defineProps({
   totalCount: { type: Number, default: 0 },
   hasNextPage: { type: Boolean, default: false },
   fetchTruncated: { type: Boolean, default: false },
+  selectedCount: { type: Number, default: 0 },
+  allVisibleSelected: { type: Boolean, default: false },
 });
 
-defineEmits(["row-click", "retry", "previous-page", "next-page"]);
+defineEmits([
+  "row-click",
+  "retry",
+  "previous-page",
+  "next-page",
+  "toggle-row-select",
+  "toggle-select-all",
+  "clear-selection",
+]);
 </script>

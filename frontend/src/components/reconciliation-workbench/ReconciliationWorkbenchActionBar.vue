@@ -6,7 +6,8 @@
     <ActionButton
       variant="secondary"
       size="sm"
-      :disabled="props.bulkActionLoading || props.openRowCount === 0"
+      :disabled="props.bulkActionLoading || !props.canBulkAction || props.selectedCount === 0"
+      :title="props.selectedCount === 0 ? props.t('selectRowsFirst') : undefined"
       @click="$emit('bulk-resolve')"
     >
       {{ props.bulkActionLoading ? props.t("bulkResolving") : props.t("bulkResolve") }}
@@ -14,11 +15,15 @@
     <ActionButton
       variant="secondary"
       size="sm"
-      :disabled="props.bulkActionLoading || props.openRowCount === 0"
+      :disabled="props.bulkActionLoading || !props.canBulkAction || props.selectedCount === 0"
+      :title="props.selectedCount === 0 ? props.t('selectRowsFirst') : undefined"
       @click="$emit('bulk-ignore')"
     >
       {{ props.bulkActionLoading ? props.t("bulkIgnoring") : props.t("bulkIgnore") }}
     </ActionButton>
+    <span v-if="props.selectedCount > 0" class="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700">
+      {{ props.selectedCount }} {{ props.t("selectedRows") }}
+    </span>
     <ActionButton variant="secondary" size="sm" :disabled="props.syncing" @click="$emit('sync')">
       {{ props.syncing ? props.t("syncing") : props.t("sync") }}
     </ActionButton>
@@ -46,6 +51,8 @@ const props = defineProps({
   reconciling: { type: Boolean, default: false },
   bulkActionLoading: { type: Boolean, default: false },
   openRowCount: { type: Number, default: 0 },
+  selectedCount: { type: Number, default: 0 },
+  canBulkAction: { type: Boolean, default: true },
   workbenchLoading: { type: Boolean, default: false },
 });
 

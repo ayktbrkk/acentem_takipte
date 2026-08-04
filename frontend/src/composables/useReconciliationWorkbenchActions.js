@@ -10,7 +10,7 @@ import {
 export function useReconciliationWorkbenchActions({
   t,
   router,
-  rows,
+  rows: _rows,
   reloadWorkbench,
   syncResource,
   runReconciliationResource,
@@ -22,6 +22,7 @@ export function useReconciliationWorkbenchActions({
   const reconciling = ref(false);
   const operationError = ref("");
   const bulkActionLoading = ref(false);
+  const bulkActionResult = ref("");
   const showActionDialog = ref(false);
   const actionDialogMode = ref("Note");
   const actionDialogRow = ref(null);
@@ -80,24 +81,37 @@ export function useReconciliationWorkbenchActions({
     }
   }
 
-  async function runBulkResolution(resolutionAction) {
-    const itemNames = rows.value
-      .filter((row) => String(row?.status || "") === "Open")
-      .map((row) => row.name)
+  async function runBulkResolution(resolutionAction, itemNames = []) {
+    const names = (Array.isArray(itemNames) ? itemNames : [])
+      .map((name) => String(name || "").trim())
       .filter(Boolean);
-    if (!itemNames.length) return;
+    if (!names.length) return;
 
-    const confirmText = resolutionAction === "Ignored" ? t("bulkIgnoreConfirm") : t("bulkResolveConfirm");
+    const confirmText =
+      resolutionAction === "Ignored"
+        ? t("bulkIgnoreConfirm") + ` (${names.length})`
+        : t("bulkResolveConfirm") + ` (${names.length})`;
     if (!globalThis.confirm?.(confirmText)) return;
 
     bulkActionLoading.value = true;
     operationError.value = "";
+    bulkActionResult.value = "";
     try {
-      await bulkResolveResource.submit({
-        item_names: itemNames,
+      const result = await bulkResolveResource.submit({
+        item_names: names,
         resolution_action: resolutionAction,
       });
       await reloadWorkbench();
+      const payload = result || {};
+      const processed = Number(payload.processed) || 0;
+      const skipped = Number(payload.skipped) || 0;
+      const failed = Number(payload.failed) || 0;
+      const parts = [];
+      if (processed) parts.push(`${processed} ${t("bulkResultProcessed")}`);
+      if (skipped) parts.push(`${skipped} ${t("bulkResultSkipped")}`);
+      if (failed) parts.push(`${failed} ${t("bulkResultFailed")}`);
+      bulkActionResult.value =
+        t("bulkResultSummary") + " — " + (parts.join(", ") || t("bulkResultEmpty"));
     } catch (error) {
       operationError.value = isPermissionDeniedError(error)
         ? t("permissionDeniedAction")
@@ -209,6 +223,7 @@ export function useReconciliationWorkbenchActions({
     reconciling,
     operationError,
     bulkActionLoading,
+    bulkActionResult,
     showActionDialog,
     actionDialogMode,
     actionDialogRow,

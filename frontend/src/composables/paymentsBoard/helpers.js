@@ -137,10 +137,32 @@ export function buildPaymentListParams({ filters, officeBranch, pagination } = {
     limit_start: (page - 1) * pageLength,
     limit_page_length: pageLength,
   };
-  if (filters.direction) {
-    params.filters = { payment_direction: filters.direction };
+
+  // Server-side scope so the list, footer count, export and KPI summary all
+  // share the same filtered dataset (search is no longer page-scoped).
+  const serverFilters = {};
+  if (filters.direction) serverFilters.payment_direction = filters.direction;
+  if (filters.status) serverFilters.status = filters.status;
+  if (filters.payment_date) serverFilters.payment_date = filters.payment_date;
+  if (filters.currency) serverFilters.currency = filters.currency;
+  if (filters.customerQuery) serverFilters.customer = ["like", `%${filters.customerQuery}%`];
+  if (filters.policyQuery) serverFilters.policy = ["like", `%${filters.policyQuery}%`];
+  if (filters.purposeQuery) serverFilters.payment_purpose = ["like", `%${filters.purposeQuery}%`];
+
+  const orFilters = [];
+  const query = String(filters.query || "").trim();
+  if (query) {
+    const q = `%${query}%`;
+    orFilters.push(["AT Payment", "name", "like", q]);
+    orFilters.push(["AT Payment", "payment_no", "like", q]);
+    orFilters.push(["AT Payment", "customer", "like", q]);
+    orFilters.push(["AT Payment", "policy", "like", q]);
   }
-  return withOfficeBranchFilter(params, officeBranch);
+
+  const scopedParams = { ...params };
+  if (Object.keys(serverFilters).length) scopedParams.filters = serverFilters;
+  if (orFilters.length) scopedParams.or_filters = orFilters;
+  return withOfficeBranchFilter(scopedParams, officeBranch);
 }
 
 export function buildPaymentInstallmentListParams(officeBranch) {

@@ -73,6 +73,19 @@ export function usePolicyListTableData({
     })),
   );
   const policySummary = computed(() => {
+    // Prefer the full-dataset summary from the server (independent of the
+    // paginated list). Fall back to the current page rows for test mocks and
+    // legacy states where the summary resource did not return data.
+    const serverSummary = policyStore.state.summary;
+    if (serverSummary && Number.isFinite(Number(serverSummary.total))) {
+      return {
+        total: Number(serverSummary.total) || 0,
+        active: Number(serverSummary.active) || 0,
+        pending: Number(serverSummary.pending) || 0,
+        totalPremium: Number(serverSummary.total_premium_try) || 0,
+      };
+    }
+
     const rowsAll = policyListMappedRows.value;
     let active = 0;
     let pending = 0;

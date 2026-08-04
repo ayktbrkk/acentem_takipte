@@ -1,5 +1,8 @@
 <template>
-  <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+  <div v-if="loading" class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+    <SkeletonLoader v-for="i in 5" :key="i" variant="card" />
+  </div>
+  <div v-else class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
     <SaaSMetricCard :label="props.t('summaryTotal')" :value="props.formatCount(props.summary.total)" />
     <SaaSMetricCard :label="props.t('summaryMatched')" :value="props.formatCount(props.summary.matched)" value-class="text-at-green" />
     <SaaSMetricCard :label="props.t('summaryPending')" :value="props.formatCount(props.summary.pending)" value-class="text-brand-600" />
@@ -10,10 +13,12 @@
 
 <script setup>
 import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
+import SkeletonLoader from "../ui/SkeletonLoader.vue";
 const props = defineProps({
   t: { type: Function, required: true },
   summary: { type: Object, required: true },
   formatMoney: { type: Function, required: true },
   formatCount: { type: Function, required: true },
+  loading: { type: Boolean, default: false },
 });
 </script>

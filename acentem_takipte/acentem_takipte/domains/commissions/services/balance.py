@@ -23,6 +23,7 @@ def compute_commission_balances(
     from_date: str | None = None,
     to_date: str | None = None,
     insurance_company: str | None = None,
+    query: str | None = None,
 ) -> dict:
     """Compute accrued/paid/remaining commission per sales entity.
 
@@ -32,6 +33,10 @@ def compute_commission_balances(
 
     insurance_company filter matches either the doc name or display name
     of the insurance company linked to each policy.
+
+    query is a free-text filter applied to the entity display name or any
+    insurance company name the entity works with. It participates in the
+    summary so the KPI cards and the table always share the same scope.
     """
     today = getdate(nowdate())
     safe_limit = max(cint(limit), 1)
@@ -202,6 +207,7 @@ def compute_commission_balances(
         }
 
     entity_list: list[dict] = []
+    normalized_query = str(query or "").strip().lower()
     for name in sorted(all_names):
         if aging_bucket != "all":
             accrued = bucket_accrued_by_entity.get(name, 0)
@@ -217,6 +223,15 @@ def compute_commission_balances(
         aging = aging_by_entity.get(name, {})
         if aging_bucket != "all" and aging.get(aging_bucket, 0) <= 0:
             continue
+
+        if normalized_query:
+            display_hit = normalized_query in str(_display_name(name)).lower()
+            ic_hits = any(
+                normalized_query in str(ic_display_names.get(ic, ic)).lower()
+                for ic in entity_insurance_companies.get(name, set())
+            )
+            if not display_hit and not ic_hits:
+                continue
 
         pcount = bucket_policy_counts.get(name, 0) if aging_bucket != "all" else policy_counts.get(name, 0)
 

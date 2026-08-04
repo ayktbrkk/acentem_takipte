@@ -26,6 +26,7 @@ export function useReconciliationWorkbenchSummary({ t, localeCode, workbenchData
     };
   });
   const reconciliationListColumns = computed(() => [
+    { key: "_selected", label: "", type: "checkbox" },
     { key: "reconciliationNo", label: t("reconciliationNo"), type: "mono" },
     { key: "company", label: t("colCompany") },
     { key: "period", label: t("colPeriod") },

@@ -57,6 +57,7 @@ def get_commission_balances(
     from_date: str | None = None,
     to_date: str | None = None,
     insurance_company: str | None = None,
+    query: str | None = None,
 ) -> dict:
     assert_authenticated()
     assert_doctype_permission(
@@ -76,6 +77,7 @@ def get_commission_balances(
         from_date=from_date,
         to_date=to_date,
         insurance_company=insurance_company,
+        query=query,
     )
 
 

@@ -576,15 +576,30 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   const commissionDistribution = computed(() => {
     const raw = policy.value?.commission_distribution;
     if (!raw || raw === "[]") return [];
+    const paidLedger = policy.value?.commission_entity_paid_try || {};
     try {
       const entries = typeof raw === "string" ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
-      return entries.map((entry) => ({
-        ...entry,
-        entity_label: getLinkLabel(entry.entity) || entry.entity_name || entry.entity,
-        share_pct_display: entry.is_root ? t("remainder") : `%${entry.share_pct}`,
-        amount_formatted: formatCurrency(entry.amount, policy.value?.currency || "TRY"),
-        status_translated: entry.status === "Accrued" ? t("status_accrued") : (entry.status || "Accrued"),
-      }));
+      return entries.map((entry) => {
+        const accruedTry = Number(entry.amount_try ?? entry.amount ?? 0) || 0;
+        const paidTry = Number(paidLedger[entry.entity] || 0) || 0;
+        const remainingTry = Math.max(0, Math.round((accruedTry - paidTry) * 100) / 100);
+        return {
+          ...entry,
+          // Prefer the canonical display name stored in the distribution entry;
+          // only fall back to the async link-label cache (which may not have
+          // resolved yet on first render) and finally to a bilingual fallback.
+          entity_label:
+            entry.entity_name ||
+            getLinkLabel(entry.entity) ||
+            entry.entity ||
+            t("unknown_sales_entity"),
+          share_pct_display: entry.is_root ? t("remainder") : `%${entry.share_pct}`,
+          amount_formatted: formatCurrency(entry.amount, policy.value?.currency || "TRY"),
+          paid_formatted: formatCurrency(paidTry, "TRY"),
+          remaining_formatted: formatCurrency(remainingTry, "TRY"),
+          status_translated: entry.status === "Accrued" ? t("status_accrued") : (entry.status || "Accrued"),
+        };
+      });
     } catch {
       return [];
     }

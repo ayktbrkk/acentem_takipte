@@ -32,6 +32,11 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
     auto: false,
   });
 
+  const policySummaryResource = createResource({
+    url: "acentem_takipte.acentem_takipte.domains.policies.api.endpoints.get_policy_list_summary",
+    auto: false,
+  });
+
   const policyLoading = computed(() => Boolean(unref(policyResource.loading)));
   const policyListError = ref("");
   const totalPages = computed(() => policyStore.totalPages);
@@ -139,6 +144,21 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
     });
   }
 
+  function buildSummaryParams() {
+    const params = {
+      status: filters.status || undefined,
+      insurance_company: filters.insurance_company || undefined,
+      end_date: filters.end_date || undefined,
+      customer: filters.customer || undefined,
+      gross_min: filters.gross_min !== "" ? filters.gross_min : undefined,
+      gross_max: filters.gross_max !== "" ? filters.gross_max : undefined,
+      query: filters.query || undefined,
+    };
+    const officeBranch = branchStore.requestBranch || "";
+    if (officeBranch) params.office_branch = officeBranch;
+    return params;
+  }
+
   function downloadPolicyExport(format) {
     openListExport({
       screen: "policy_list",
@@ -155,12 +175,14 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
 
     policyResource.params = buildPolicyParams();
     policyCountResource.params = buildCountParams();
+    policySummaryResource.params = buildSummaryParams();
     policyStore.setLoading(true);
     policyStore.clearError();
 
-    const [recordsResult, countResult] = await Promise.allSettled([
+    const [recordsResult, countResult, summaryResult] = await Promise.allSettled([
       policyResource.reload(),
       policyCountResource.reload(),
+      policySummaryResource.reload(),
     ]);
 
     if (recordsResult.status === "fulfilled") {
@@ -170,7 +192,11 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
 
       if (countResult.status === "fulfilled") {
         const total = Number(countResult.value || 0);
-        policyStore.applyListPayload(records, Number.isFinite(total) ? total : 0);
+        const summary =
+          summaryResult.status === "fulfilled" && summaryResult.value
+            ? summaryResult.value
+            : null;
+        policyStore.applyListPayload(records, Number.isFinite(total) ? total : 0, summary);
       } else {
         policyStore.applyListPayload(records, records.length);
       }
@@ -205,6 +231,7 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
   return {
     policyResource,
     policyCountResource,
+    policySummaryResource,
     policyLoading,
     policyListError,
     totalPages,

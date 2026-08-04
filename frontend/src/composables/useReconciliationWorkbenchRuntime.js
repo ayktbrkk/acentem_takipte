@@ -1,4 +1,4 @@
-import { computed, unref } from "vue";
+import { computed, ref, unref } from "vue";
 import { createResource } from "frappe-ui";
 
 import { isPermissionDeniedError, formatMoney as formatMoneyForLocale } from "./reconciliationWorkbench/helpers";
@@ -15,7 +15,9 @@ export function useReconciliationWorkbenchRuntime({ t, route, router, authStore,
   const workbenchResource = createResource({
     url: "acentem_takipte.acentem_takipte.domains.accounting.api.endpoints.get_reconciliation_workbench",
     params: buildParams(),
-    auto: true,
+    // No `auto: true` here: the preset/filter state must be applied before the
+    // first fetch, and onMounted issues the explicit reload. An auto fetch
+    // fired a second (empty) request that raced with the filtered reload.
   });
   const syncResource = createResource({
     url: "acentem_takipte.acentem_takipte.domains.accounting.api.endpoints.run_sync",
@@ -43,7 +45,16 @@ export function useReconciliationWorkbenchRuntime({ t, route, router, authStore,
   const openRowCount = computed(() => rows.value.filter((row) => String(row?.status || "") === "Open").length);
   const workbenchData = computed(() => accountingStore.state.workbench || {});
   const metrics = computed(() => accountingStore.metrics);
-  const workbenchLoading = computed(() => Boolean(unref(workbenchResource.loading)));
+  // Loading must stay true while ANY workbench request is in flight (or before
+  // the first response lands) so the skeleton — never "0 kayıt" — is shown
+  // until the final response is committed. The resource's own `loading` ref
+  // flips false as soon as the first of several concurrent reloads settles,
+  // which flashes an empty state.
+  const workbenchPendingCount = ref(0);
+  const workbenchFetched = ref(false);
+  const workbenchLoading = computed(
+    () => workbenchPendingCount.value > 0 || !workbenchFetched.value,
+  );
   const workbenchErrorText = computed(() => {
     if (accountingStore.state.error) return accountingStore.state.error;
     const err = unref(workbenchResource.error);
@@ -62,7 +73,14 @@ export function useReconciliationWorkbenchRuntime({ t, route, router, authStore,
     };
   }
 
+  // Guards against out-of-order responses: only the latest reload may write to
+  // the store. Without this, a slow (empty) response could overwrite a newer
+  // populated one and leave the workbench flashing an empty state.
+  let workbenchRequestSeq = 0;
+
   function reloadWorkbench() {
+    const seq = ++workbenchRequestSeq;
+    workbenchPendingCount.value += 1;
     workbenchResource.params = buildParams();
     accountingStore.setLocaleCode(localeCode.value);
     accountingStore.setLoading(true);
@@ -70,11 +88,15 @@ export function useReconciliationWorkbenchRuntime({ t, route, router, authStore,
     return workbenchResource
       .reload()
       .then((result) => {
+        if (seq !== workbenchRequestSeq) return result;
+        workbenchFetched.value = true;
         accountingStore.setWorkbench(result || {});
         accountingStore.setLoading(false);
         return result;
       })
       .catch((error) => {
+        if (seq !== workbenchRequestSeq) return;
+        workbenchFetched.value = true;
         const message = isPermissionDeniedError(error)
           ? t("permissionDeniedRead")
           : error?.messages?.join(" ") || error?.message || t("loadError");
@@ -82,6 +104,9 @@ export function useReconciliationWorkbenchRuntime({ t, route, router, authStore,
         accountingStore.setError(message);
         accountingStore.setLoading(false);
         throw error;
+      })
+      .finally(() => {
+        workbenchPendingCount.value -= 1;
       });
   }
 

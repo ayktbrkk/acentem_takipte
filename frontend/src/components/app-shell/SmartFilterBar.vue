@@ -1,6 +1,6 @@
 <template>
-  <div class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm lg:flex-row lg:items-center">
-    <div class="relative flex-1">
+  <div class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm lg:flex-row lg:flex-wrap lg:items-center">
+    <div class="relative flex-1 min-w-[220px] lg:min-w-[280px] lg:max-w-[440px]">
       <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
         <FeatherIcon name="search" class="h-4 w-4 text-slate-400" />
       </div>
@@ -11,6 +11,7 @@
           :placeholder="placeholder || ''"
           data-search-input
           @input="$emit('update:modelValue', $event.target.value)"
+          @keydown.enter="$emit('enter')"
         />
     </div>
 
@@ -39,5 +40,5 @@ defineProps({
   advancedLabel: { type: String, default: "" },
 });
 
-defineEmits(["update:modelValue", "open-advanced"]);
+defineEmits(["update:modelValue", "open-advanced", "enter"]);
 </script>

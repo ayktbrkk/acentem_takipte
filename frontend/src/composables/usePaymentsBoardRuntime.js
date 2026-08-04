@@ -7,10 +7,11 @@ import { usePaymentsBoardQuickPayment } from "./usePaymentsBoardQuickPayment";
 import { usePaymentsBoardSummary } from "./usePaymentsBoardSummary";
 import { openTabularExport } from "../utils/listExport";
 import { PAYMENT_TRANSLATIONS } from "../config/payment_translations";
-import { 
-  buildPaymentListParams, 
-  buildPaymentInstallmentListParams, 
-  setPaymentFilterStateFromPayload, 
+import {
+  buildPaymentListParams,
+  buildPaymentInstallmentListParams,
+  buildPaymentSnapshot,
+  setPaymentFilterStateFromPayload,
   resetPaymentFilterState,
   currentPaymentPresetPayload as buildPresetPayload
 } from "./paymentsBoard/helpers";
@@ -58,10 +59,29 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
       officeBranch: branchStore.requestBranch,
       pagination: paymentListPagination,
     });
-    return {
+    const params = {
       doctype: "AT Payment",
       filters: listParams.filters || {},
     };
+    if (Array.isArray(listParams.or_filters) && listParams.or_filters.length) {
+      params.or_filters = listParams.or_filters;
+    }
+    return params;
+  }
+
+  function buildPaymentSummaryParams() {
+    const params = {
+      query: String(filters.query || "").trim() || undefined,
+      office_branch: branchStore.requestBranch || undefined,
+      status: filters.status || undefined,
+      direction: filters.direction || undefined,
+      currency: filters.currency || undefined,
+      policy: filters.policyQuery || undefined,
+      customer: filters.customerQuery || undefined,
+      purpose: filters.purposeQuery || undefined,
+      limit: 2000,
+    };
+    return params;
   }
 
   const paymentsResource = createResource({
@@ -71,6 +91,14 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
   });
   const paymentCountResource = createResource({
     url: "frappe.client.get_count",
+    auto: false,
+  });
+  const paymentSummaryResource = createResource({
+    url: "acentem_takipte.acentem_takipte.domains.payments.api.endpoints.get_payments_board_summary",
+    auto: false,
+  });
+  const paymentExportResource = createResource({
+    url: "frappe.client.get_list",
     auto: false,
   });
   const paymentsLoading = computed(() => Boolean(unref(paymentsResource.loading)));
@@ -166,6 +194,7 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
       pagination: paymentListPagination,
     });
     paymentInstallmentResource.params = buildPaymentInstallmentListParams(branchStore.requestBranch);
+    paymentSummaryResource.params = buildPaymentSummaryParams();
     paymentStore.setLocaleCode(localeCode.value);
     paymentStore.setLoading(true);
     paymentStore.clearError();
@@ -173,10 +202,11 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
       runResource(paymentsResource),
       runResource(paymentInstallmentResource),
       paymentCountResource.reload(buildPaymentCountParams()),
+      runResource(paymentSummaryResource),
     ])
-      .then(([result, , total]) => {
+      .then(([result, , total, summary]) => {
         paymentTotalCount.value = Number(total) || 0;
-        paymentStore.setItems(result || []);
+        paymentStore.applyBoardPayload(result || [], summary || null);
         paymentStore.setLoading(false);
         return result;
       })
@@ -189,22 +219,34 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
       });
   }
 
-  function downloadPaymentExport(format) {
+  async function downloadPaymentExport(format) {
+    // Export the full filtered scope, not just the current page rows, so the
+    // exported file, the list, the KPI cards and the footer all agree.
+    paymentExportResource.params = buildPaymentListParams({
+      filters,
+      officeBranch: branchStore.requestBranch,
+      pagination: { page: 1, pageLength: 2000 },
+    });
+    const fullRows = (await runResource(paymentExportResource)) || [];
+    const rowsForExport = fullRows.map((payment) => {
+      const snapshot = buildPaymentSnapshot(payment, installmentSummaryByPayment.value.get(payment?.name), localeCode.value);
+      return {
+        [t("payment_no")]: payment.payment_no || payment.name || fallbackLabel(),
+        [t("customer")]: snapshot.customer_full_name || snapshot.customer_name || payment.customer || fallbackLabel(),
+        [t("policy")]: payment.policy || fallbackLabel(),
+        [t("due_date")]: snapshot.due_date_label || fallbackLabel(),
+        [t("amount")]: snapshot.amount_label || summaryUi.formatCurrency(snapshot.totalAmount),
+        [t("collected")]: snapshot.collected_amount_label || summaryUi.formatCurrency(snapshot.collectedAmount),
+        [t("remaining")]: snapshot.remaining_amount_label || summaryUi.formatCurrency(snapshot.remainingAmount),
+        [t("status")]: t(snapshot.status) || fallbackLabel(),
+      };
+    });
     openTabularExport({
       permissionDoctypes: ["AT Payment"],
       exportKey: "payments_board",
       title: t("title"),
       columns: [t("payment_no"), t("customer"), t("policy"), t("due_date"), t("amount"), t("collected"), t("remaining"), t("status")],
-      rows: summaryUi.paymentSnapshots.value.map((payment) => ({
-        [t("payment_no")]: payment.payment_no || payment.name || fallbackLabel(),
-        [t("customer")]: payment.customer_label || payment.customer_full_name || payment.customer_name || payment.customer || fallbackLabel(),
-        [t("policy")]: payment.policy || fallbackLabel(),
-        [t("due_date")]: payment.due_date_label || fallbackLabel(),
-        [t("amount")]: payment.amount_label || summaryUi.formatCurrency(payment.totalAmount),
-        [t("collected")]: payment.collected_amount_label || summaryUi.formatCurrency(payment.collectedAmount),
-        [t("remaining")]: payment.remaining_amount_label || summaryUi.formatCurrency(payment.remainingAmount),
-        [t("status")]: payment.status || fallbackLabel(),
-      })),
+      rows: rowsForExport,
       filters: buildPresetPayload(filters),
       format,
     });
@@ -263,6 +305,27 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
     () => {
       if (!applyRouteFilters()) return;
       void reloadPayments();
+    }
+  );
+
+  // Debounced server-side search so the list, KPI summary, footer count and
+  // export all stay on the same filtered dataset while typing. Without this,
+  // the client-side row filter narrowed the table while the KPIs (server) kept
+  // reporting the unfiltered totals.
+  let searchDebounceTimer = null;
+  watch(
+    () => [
+      String(filters.query || ""),
+      String(filters.customerQuery || ""),
+      String(filters.policyQuery || ""),
+      String(filters.purposeQuery || ""),
+    ],
+    () => {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        paymentListPagination.page = 1;
+        void reloadPayments();
+      }, 400);
     }
   );
 

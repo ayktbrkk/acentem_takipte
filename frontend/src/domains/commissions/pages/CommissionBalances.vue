@@ -69,6 +69,7 @@
       v-model="searchQuery"
       class="mb-6"
       :placeholder="t('searchPlaceholder')"
+      @enter="onSearchEnter"
     >
       <template #primary-filters>
         <select v-model="period" class="input h-9 py-1 text-sm" @change="onPeriodChange">
@@ -140,7 +141,7 @@
     <template v-else>
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div
-          v-for="entity in filteredEntities"
+          v-for="entity in entities"
           :key="entity.entity_name"
           role="button"
           tabindex="0"
@@ -396,7 +397,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref, unref } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, unref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import { FeatherIcon } from "frappe-ui";
@@ -475,17 +476,8 @@ function onPeriodChange() {
 }
 const searchQuery = ref("");
 
-const filteredEntities = computed(() => {
-  if (!searchQuery.value) return entities.value;
-  const q = searchQuery.value.toLowerCase();
-  return entities.value.filter((e) => {
-    if (e.entity_name.toLowerCase().includes(q)) return true;
-    return (e.insurance_companies || []).some((ic) => ic.name.toLowerCase().includes(q));
-  });
-});
-
 const selectedSet = reactive(new Set());
-const selectedEntities = computed(() => filteredEntities.value.filter(e => selectedSet.has(e.entity_name)));
+const selectedEntities = computed(() => entities.value.filter(e => selectedSet.has(e.entity_name)));
 
 function toggleSelect(entityName) {
   if (selectedSet.has(entityName)) selectedSet.delete(entityName);
@@ -704,7 +696,7 @@ const tableColumns = computed(() => [
 ]);
 
 const tableRows = computed(() =>
-  filteredEntities.value.map((e) => ({
+  entities.value.map((e) => ({
       ...e,
       _selected: selectedSet.has(e.entity_name),
       pct: pct(e) + "%",
@@ -815,8 +807,23 @@ function quickAddPayment(companyName, amount) {
 }
 
 function handleExport() {
-  _doTabularExport(filteredEntities.value);
+  _doTabularExport(entities.value);
 }
+
+let searchDebounceTimer = null;
+function onSearchEnter() {
+  clearTimeout(searchDebounceTimer);
+  filters.query = String(searchQuery.value || "").trim();
+  reload();
+}
+watch(searchQuery, (value) => {
+  clearTimeout(searchDebounceTimer);
+  const q = String(value || "").trim();
+  searchDebounceTimer = setTimeout(() => {
+    filters.query = q;
+    reload();
+  }, 350);
+});
 
 function onKeydown(e) {
   if (e.key === "Escape" && detail.visible) detail.visible = false;

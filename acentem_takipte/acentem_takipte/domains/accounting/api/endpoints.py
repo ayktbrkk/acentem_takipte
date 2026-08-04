@@ -198,22 +198,33 @@ def bulk_resolve_items(item_names, resolution_action: str = "Matched", notes: st
     safe_names = [str(name or "").strip() for name in (names or []) if str(name or "").strip()]
     processed = 0
     skipped = 0
+    failed = 0
+    failed_items: list[str] = []
 
+    # Per-item error isolation: a permission or validation failure on one row
+    # must not roll back rows that already resolved, and must be reported to the
+    # user so they can retry the failed rows.
     for item_name in safe_names:
-        assert_doc_permission("AT Reconciliation Item", item_name, "write")
-        result = resolve_reconciliation_item(
-            item_name=item_name,
-            resolution_action=resolved_action,
-            notes=notes,
-        )
-        if result.get("status") == "Skipped":
-            skipped += 1
-        else:
-            processed += 1
+        try:
+            assert_doc_permission("AT Reconciliation Item", item_name, "write")
+            result = resolve_reconciliation_item(
+                item_name=item_name,
+                resolution_action=resolved_action,
+                notes=notes,
+            )
+            if result.get("status") == "Skipped":
+                skipped += 1
+            else:
+                processed += 1
+        except Exception:
+            failed += 1
+            failed_items.append(item_name)
 
     return {
         "processed": processed,
         "skipped": skipped,
+        "failed": failed,
+        "failed_items": failed_items,
         "resolution_action": resolved_action,
     }
 

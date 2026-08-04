@@ -13,10 +13,12 @@
         :reconciling="reconciling"
         :bulk-action-loading="bulkActionLoading"
         :open-row-count="openRowCount"
+        :selected-count="selectedCount"
+        :can-bulk-action="canBulkAction"
         :workbench-loading="workbenchLoading"
         @open-import="openImportDialog"
-        @bulk-resolve="runBulkResolution('Matched')"
-        @bulk-ignore="runBulkResolution('Ignored')"
+        @bulk-resolve="runBulkResolution('Matched', [...selectedNames])"
+        @bulk-ignore="runBulkResolution('Ignored', [...selectedNames])"
         @sync="runSync"
         @reconcile="runReconciliation"
         @refresh="reloadWorkbench"
@@ -26,13 +28,20 @@
     </template>
 
     <template #metrics>
-      <ReconciliationWorkbenchMetricsPanel :t="t" :summary="reconciliationSummary" :format-money="formatMoney" :format-count="formatCount" />
+      <ReconciliationWorkbenchMetricsPanel :t="t" :summary="reconciliationSummary" :format-money="formatMoney" :format-count="formatCount" :loading="workbenchLoading" />
     </template>
 
     <div v-if="operationError" class="qc-error-banner flex items-center justify-between gap-4" role="alert" aria-live="polite">
       <p class="qc-error-banner__text">{{ operationError }}</p>
       <ActionButton variant="secondary" size="sm" @click="reloadWorkbench">
         {{ t("retry") }}
+      </ActionButton>
+    </div>
+
+    <div v-if="bulkActionResult" class="mb-4 flex items-center justify-between gap-4 rounded-xl border border-at-green/20 bg-at-green/5 px-4 py-3 text-sm text-at-green" role="status" aria-live="polite">
+      <p>{{ bulkActionResult }}</p>
+      <ActionButton variant="ghost" size="xs" @click="bulkActionResult = ''">
+        {{ t("close") }}
       </ActionButton>
     </div>
 
@@ -94,10 +103,15 @@
       :total-count="reconciliationTotalCount"
       :has-next-page="reconciliationHasNextPage"
       :fetch-truncated="reconciliationFetchTruncated"
+      :selected-count="selectedCount"
+      :all-visible-selected="allVisibleSelected"
       @row-click="handleReconciliationRowClick"
       @retry="reloadWorkbench"
       @previous-page="listPagination.page -= 1"
       @next-page="listPagination.page += 1"
+      @toggle-row-select="toggleRowSelect"
+      @toggle-select-all="toggleSelectAll"
+      @clear-selection="clearSelection"
     />
 
     <ReconciliationWorkbenchActionDialog
@@ -182,6 +196,7 @@ const {
   reconciling,
   operationError,
   bulkActionLoading,
+  bulkActionResult,
   showImportDialog,
   importLoading,
   importError,
@@ -242,17 +257,55 @@ const {
 
 const listPagination = reactive({ page: 1, pageLength: 20 });
 
+// Row selection for bulk resolve/ignore. Selection is scoped to rows the user
+// can see and explicitly selects; unseen rows are never included.
+const selectedNames = reactive(new Set());
+const selectedCount = computed(() => selectedNames.size);
+const visibleRowNames = computed(() =>
+  pagedReconciliationListRows.value.map((row) => row?.name).filter(Boolean)
+);
+const allVisibleSelected = computed(
+  () =>
+    visibleRowNames.value.length > 0 &&
+    visibleRowNames.value.every((name) => selectedNames.has(name)),
+);
+
+function toggleRowSelect(name, checked) {
+  if (checked) selectedNames.add(name);
+  else selectedNames.delete(name);
+}
+function toggleSelectAll(checked) {
+  for (const name of visibleRowNames.value) {
+    if (checked) selectedNames.add(name);
+    else selectedNames.delete(name);
+  }
+}
+function clearSelection() {
+  selectedNames.clear();
+}
 watch(
   () => [filters.status, filters.mismatchType, filters.sourceQuery, filters.sourceDoctype, filters.limit],
   () => {
     listPagination.page = 1;
   },
 );
+watch(
+  () => [filters.status, filters.mismatchType, filters.sourceQuery, filters.sourceDoctype, filters.limit],
+  () => {
+    selectedNames.clear();
+  },
+);
+
+const canBulkAction = computed(() =>
+  Boolean(authStore.can?.(["doctypes", "AT Reconciliation Item", "write"], true)),
+);
 
 const reconciliationTotalCount = computed(() => reconciliationListRows.value.length);
 const pagedReconciliationListRows = computed(() => {
   const start = (listPagination.page - 1) * listPagination.pageLength;
-  return reconciliationListRows.value.slice(start, start + listPagination.pageLength);
+  return reconciliationListRows.value
+    .slice(start, start + listPagination.pageLength)
+    .map((row) => ({ ...row, _selected: selectedNames.has(row?.name) }));
 });
 const reconciliationShownCount = computed(() => pagedReconciliationListRows.value.length);
 const reconciliationHasNextPage = computed(

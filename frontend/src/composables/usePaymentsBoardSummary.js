@@ -37,6 +37,22 @@ export function usePaymentsBoardSummary({ t, localeCode, payments, installmentSu
   );
 
   const paymentSummary = computed(() => {
+    // Prefer the full-dataset summary from the server (independent of the
+    // paginated list and excluding Cancelled payments). Fall back to the
+    // current page rows for test mocks and legacy states.
+    const serverSummary = paymentStore.state.summary?.summary || paymentStore.state.summary;
+    if (serverSummary && Number.isFinite(Number(serverSummary.total))) {
+      return {
+        total: Number(serverSummary.total) || 0,
+        pending: Number(serverSummary.pending) || 0,
+        collected: Number(serverSummary.collected) || 0,
+        overdue: Number(serverSummary.overdue) || 0,
+        cancelled: Number(serverSummary.cancelled) || 0,
+        totalAmount: Number(serverSummary.total_amount_try) || 0,
+        currency: serverSummary.currency || "TRY",
+      };
+    }
+
     const rows = paymentSnapshots.value;
     const serverTotal = Number(unref(totalCount) || 0);
     return {
@@ -44,7 +60,9 @@ export function usePaymentsBoardSummary({ t, localeCode, payments, installmentSu
       pending: rows.filter((row) => row.isPending).length,
       collected: rows.filter((row) => row.isCollected).length,
       overdue: rows.filter((row) => row.isOverdue).length,
+      cancelled: rows.filter((row) => String(row.status) === "status_cancelled").length,
       totalAmount: rows.reduce((sum, row) => sum + Number(row.totalAmount || 0), 0),
+      currency: "TRY",
     };
   });
 

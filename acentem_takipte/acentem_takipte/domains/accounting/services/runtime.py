@@ -17,6 +17,12 @@ from acentem_takipte.acentem_takipte.utils.statuses import (
 
 COMMISSION_DUE_DAYS = 30
 
+# Defensive caps so no workbench query is truly unbounded. The branch entry
+# scope is expected to stay in the low thousands; the preview scans are capped
+# and flagged as truncated so the UI can warn instead of silently under-reporting.
+ENTRY_SCOPE_CAP = 50000
+PREVIEW_SCAN_CAP = 20000
+
 
 def build_reconciliation_workbench(
     *,
@@ -47,12 +53,12 @@ def build_reconciliation_workbench(
             "AT Accounting Entry",
             filters={"office_branch": normalized_office_branch},
             pluck="name",
-            limit_page_length=0,
+            limit_page_length=ENTRY_SCOPE_CAP + 1,
         )
         # No early return: commission/collection previews must still render even
         # when the branch has no accounting entries yet (rows stay empty via the
         # empty `accounting_entry in []` filter below).
-        filters["accounting_entry"] = ["in", list(set(permitted_entry_names))]
+        filters["accounting_entry"] = ["in", list(set(permitted_entry_names[:ENTRY_SCOPE_CAP]))]
 
     total_rows = frappe.db.count("AT Reconciliation Item", filters)
 
@@ -156,10 +162,11 @@ def build_reconciliation_workbench(
     metrics["commission_accrual_amount_try"] = sum(
         flt(row.get("commission_amount_try")) for row in commission_preview_rows
     )
-    commission_aging = _compute_commission_aging(normalized_office_branch)
+    commission_aging = _compute_commission_aging(normalized_office_branch, max_scan=PREVIEW_SCAN_CAP)
+    commission_by_entity = _compute_commission_by_entity(normalized_office_branch, max_scan=PREVIEW_SCAN_CAP)
     metrics["commission_aging"] = commission_aging
-    commission_by_entity = _compute_commission_by_entity(normalized_office_branch)
     metrics["commission_by_entity"] = commission_by_entity
+    commission_preview_truncated = bool(commission_aging.get("truncated"))
 
     return {
         "rows": rows,
@@ -180,6 +187,7 @@ def build_reconciliation_workbench(
             "page": commission_page,
             "aging": commission_aging,
             "by_entity": commission_by_entity,
+            "truncated": commission_preview_truncated,
         },
     }
 
@@ -219,7 +227,7 @@ def _get_overdue_collection_rows(office_branch: str | None, limit: int = 50, pag
     if installment_rows:
         for row in installment_rows:
             row["payment_no"] = (
-                f"{row.payment} / {row.installment_no}/{row.installment_count}"
+                f"{row['payment']} / {row['installment_no']}/{row['installment_count']}"
             )
         return installment_rows
 
@@ -287,7 +295,7 @@ def _get_commission_accrual_rows(office_branch: str | None, limit: int = 50, pag
     return rows
 
 
-def _compute_commission_aging(office_branch: str | None) -> dict:
+def _compute_commission_aging(office_branch: str | None, max_scan: int = 20000) -> dict:
     policy_filters: dict[str, Any] = {
         "status": ["in", list(ATPolicyStatus.COMMISSION_ACCRUAL)],
         "commission_amount": [">", 0],
@@ -299,8 +307,10 @@ def _compute_commission_aging(office_branch: str | None) -> dict:
         "AT Policy",
         filters=policy_filters,
         fields=["issue_date", "commission_amount"],
-        limit_page_length=0,
+        limit_page_length=max_scan + 1,
     )
+    truncated = len(all_policies) > max_scan
+    scoped_policies = all_policies[:max_scan]
 
     today = frappe.utils.getdate(nowdate())
 
@@ -308,7 +318,7 @@ def _compute_commission_aging(office_branch: str | None) -> dict:
     total_count = 0
     total_amount = 0.0
 
-    for p in all_policies:
+    for p in scoped_policies:
         issue_date = p.get("issue_date")
         comm = flt(p.get("commission_amount"))
         days_aging = 0
@@ -339,10 +349,11 @@ def _compute_commission_aging(office_branch: str | None) -> dict:
         "total_count": total_count,
         "total_amount": round(total_amount, 2),
         "buckets": {k: round(v, 2) for k, v in buckets.items()},
+        "truncated": truncated,
     }
 
 
-def _compute_commission_by_entity(office_branch: str | None) -> list[dict]:
+def _compute_commission_by_entity(office_branch: str | None, max_scan: int = 20000) -> list[dict]:
     policy_filters: dict[str, Any] = {
         "status": ["in", list(ATPolicyStatus.COMMISSION_ACCRUAL)],
         "commission_amount": [">", 0],
@@ -354,11 +365,14 @@ def _compute_commission_by_entity(office_branch: str | None) -> list[dict]:
         "AT Policy",
         filters=policy_filters,
         fields=["commission_distribution", "commission_amount", "sales_entity"],
-        limit_page_length=0,
+        limit_page_length=max_scan + 1,
     )
+    truncated = len(policies) > max_scan
+    scoped_policies = policies[:max_scan]
 
     entity_totals: dict[str, dict] = {}
-    for p in policies:
+    pending_name_lookups: set[str] = set()
+    for p in scoped_policies:
         dist_raw = p.get("commission_distribution") or "[]"
         try:
             distributions = json.loads(dist_raw) if isinstance(dist_raw, str) else dist_raw
@@ -366,12 +380,12 @@ def _compute_commission_by_entity(office_branch: str | None) -> list[dict]:
             continue
         if not distributions:
             entity = p.get("sales_entity")
-            entity_name = frappe.db.get_value("AT Sales Entity", entity, "full_name") or entity
             amount = flt(p.get("commission_amount", 0))
             if entity and amount > 0:
                 key = str(entity)
+                pending_name_lookups.add(key)
                 if key not in entity_totals:
-                    entity_totals[key] = {"entity": entity, "entity_name": entity_name, "total_amount": 0.0, "policy_count": 0}
+                    entity_totals[key] = {"entity": entity, "entity_name": "", "total_amount": 0.0, "policy_count": 0}
                 entity_totals[key]["total_amount"] += amount
                 entity_totals[key]["policy_count"] += 1
         else:
@@ -390,6 +404,21 @@ def _compute_commission_by_entity(office_branch: str | None) -> list[dict]:
                     }
                 entity_totals[key]["total_amount"] += amount
                 entity_totals[key]["policy_count"] += 1
+
+    # Batch-resolve sales entity display names to avoid N+1 lookups.
+    if pending_name_lookups:
+        name_map = {
+            row["name"]: (row.get("full_name") or row["name"])
+            for row in frappe.get_all(
+                "AT Sales Entity",
+                filters={"name": ["in", sorted(pending_name_lookups)]},
+                fields=["name", "full_name"],
+                limit_page_length=0,
+            )
+        }
+        for key in pending_name_lookups:
+            if key in entity_totals and not entity_totals[key]["entity_name"]:
+                entity_totals[key]["entity_name"] = name_map.get(key, key)
 
     result = sorted(entity_totals.values(), key=lambda x: x["total_amount"], reverse=True)
     for row in result:

@@ -264,9 +264,17 @@ def resolve_reconciliation_item(
 
     item = frappe.get_doc("AT Reconciliation Item", item_name)
     if resolution_action == ATReconciliationItemStatus.IGNORED:
-        item.status = ATReconciliationItemStatus.IGNORED
+        target_status = ATReconciliationItemStatus.IGNORED
     else:
-        item.status = ATReconciliationItemStatus.RESOLVED
+        target_status = ATReconciliationItemStatus.RESOLVED
+
+    # Idempotent: resolving/ignoring an item that is already in the target
+    # state is a no-op (counted as skipped), so re-running a bulk action never
+    # rewrites resolved_by/resolved_on or creates duplicate audit records.
+    if item.status == target_status:
+        return {"status": "Skipped", "reason": "already_resolved"}
+
+    item.status = target_status
     item.resolution_action = resolution_action or "Matched"
     normalized_notes = normalize_note_text(notes, max_length=500)
     if normalized_notes:

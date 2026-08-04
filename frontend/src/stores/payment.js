@@ -7,6 +7,7 @@ function createPaymentInitialState() {
     selected: null,
     loading: false,
     error: "",
+    summary: null,
     filters: {
       query: "",
       direction: "",
@@ -101,6 +102,15 @@ export const usePaymentStore = defineStore("payment", () => {
     lastLoadedAt.value = Date.now();
   }
 
+  function setSummary(value) {
+    state.summary = value && typeof value === "object" ? value : null;
+  }
+
+  function applyBoardPayload(items, summary = null) {
+    setItems(items);
+    if (summary !== null) setSummary(summary);
+  }
+
   function setSelected(selected) {
     state.selected = selected || null;
   }
@@ -135,6 +145,8 @@ export const usePaymentStore = defineStore("payment", () => {
     clearError,
     setItems,
     setSelected,
+    setSummary,
+    applyBoardPayload,
     setFilters,
     resetFilters,
     reset,
