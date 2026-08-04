@@ -118,17 +118,18 @@ class TestDashboardContractSmoke(unittest.TestCase):
             ]
 
         with patch.object(dashboard_api, "_get_request_cache_bucket", return_value={}):
-            with patch.object(dashboard_api.frappe.db, "sql", side_effect=fake_sql):
-                with patch.object(
-                    dashboard_api.frappe,
-                    "get_all",
-                    return_value=[{"outcome_status": "Renewed", "total": 2}, {"outcome_status": "Lost", "total": 1}],
-                ):
-                    payload = dashboard_api._renewal_status_and_buckets(
-                        branch=None,
-                        office_branch=None,
-                        allowed_customers=None,
-                    )
+            with patch.object(dashboard_api, "nowdate", return_value="2026-04-01"):
+                with patch.object(dashboard_api.frappe.db, "sql", side_effect=fake_sql):
+                    with patch.object(
+                        dashboard_api.frappe,
+                        "get_all",
+                        return_value=[{"outcome_status": "Renewed", "total": 2}, {"outcome_status": "Lost", "total": 1}],
+                    ):
+                        payload = dashboard_api._renewal_status_and_buckets(
+                            branch=None,
+                            office_branch=None,
+                            allowed_customers=None,
+                        )
 
         self.assertEqual(payload["status_rows"][0]["status"], "Open")
         self.assertGreaterEqual(payload["buckets"]["overdue"], 0)
