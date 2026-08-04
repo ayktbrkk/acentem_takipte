@@ -65,6 +65,8 @@ test-results/
 Thumbs.db
 
 .superpowers/
+.agents/
+skills-lock.json
 screenshots/
 scripts/check_*.py
 scripts/debug_*.py
