@@ -1492,4 +1492,70 @@ describe("AuxWorkbench remaining aux lists", () => {
     expect(wrapper.text()).toContain("Dosya bulunamadı");
     expect(wrapper.text()).toContain("yeni doküman yükleyin");
   });
+
+  it("computes file summary cards over the full filtered set, not the page", async () => {
+    // Page rows are only 20 (all PDF); the backend aggregate reports the full
+    // 262-row dataset (200 PDF + 62 images) with per-doctype link counts.
+    const pageRows = Array.from({ length: 20 }, (_, i) => ({ name: `F${i}`, file_type: "application/pdf", attached_to_doctype: "AT Customer" }));
+    const summaryPayload = {
+      total: 262,
+      group_by: {
+        file_type: { "application/pdf": 200, "image/png": 62 },
+        attached_to_doctype: { "AT Policy": 100, "AT Claim": 62, "AT Customer": 100 },
+      },
+      matches: { customer: 100, policy: 100, claim: 62 },
+      numeric: {},
+    };
+    resourceQueue.push(
+      {
+        data: pageRows,
+        reload: vi.fn(async function () {
+          this.data.value = pageRows;
+          return pageRows;
+        }),
+      },
+      {
+        data: 262,
+        reload: vi.fn(async function () {
+          this.data.value = 262;
+          return 262;
+        }),
+      },
+      { data: {} },
+      { data: {} },
+      { data: {} },
+      { data: {}, submit: vi.fn(async () => ({})) },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      {
+        data: summaryPayload,
+        reload: vi.fn(async function () {
+          this.data.value = summaryPayload;
+          return summaryPayload;
+        }),
+      },
+    );
+    routeState.path = "/files";
+    routeState.fullPath = "/files";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "files" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Toplam Dosya");
+    expect(wrapper.text()).toContain("PDF");
+    // Full-set totals from the aggregate, not the 20-row page
+    expect(wrapper.text()).toContain("262");
+    expect(wrapper.text()).toContain("200");
+    expect(wrapper.text()).toContain("62");
+  });
 });
