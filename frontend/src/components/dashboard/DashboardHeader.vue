@@ -17,7 +17,7 @@
         </div>
       </div>
 
-      <ActionToolbarGroup class="flex-nowrap">
+      <ActionToolbarGroup>
         <div class="flex items-center gap-1.5 rounded-xl bg-white/10 p-1 backdrop-blur-md border border-white/10">
           <button
             v-for="days in rangeOptions"
@@ -79,11 +79,12 @@
 </template>
 
 <script setup>
+import { nextTick, onMounted, watch } from "vue";
 import { FeatherIcon } from "frappe-ui";
 import ActionToolbarGroup from "../app-shell/ActionToolbarGroup.vue";
 import ActionButton from "../app-shell/ActionButton.vue";
 
-defineProps({
+const props = defineProps({
   activeDashboardTab: { type: String, required: true },
   dashboardTabs: { type: Array, required: true },
   heroSubtitle: { type: String, required: true },
@@ -100,4 +101,18 @@ defineProps({
 });
 
 defineEmits(["apply-range", "new-lead", "reload", "set-dashboard-tab"]);
+
+function scrollActiveTabIntoView() {
+  nextTick(() => {
+    const active = (props.dashboardTabs || []).find((tab) => tab.key === props.activeDashboardTab);
+    if (!active?.tabId) return;
+    const el = document.getElementById(active.tabId);
+    if (el && typeof el.scrollIntoView === "function") {
+      el.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+  });
+}
+
+onMounted(scrollActiveTabIntoView);
+watch(() => props.activeDashboardTab, scrollActiveTabIntoView);
 </script>

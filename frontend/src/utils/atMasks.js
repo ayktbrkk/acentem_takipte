@@ -12,6 +12,15 @@ export function maskPhone(value) {
   return `${raw.slice(0, 3)}${"*".repeat(raw.length - 5)}${raw.slice(-2)}`;
 }
 
+export function maskIdentifier(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (raw.length <= 4) return "*".repeat(raw.length);
+  // Keep a short prefix and suffix so operators can still correlate the record
+  // without exposing the full sensitive identifier (plates, TCKN, serials).
+  return `${raw.slice(0, 2)}${"*".repeat(raw.length - 4)}${raw.slice(-2)}`;
+}
+
 export function applyTCMask(value) {
   if (!value) return "";
   // TC ID is 11 digits

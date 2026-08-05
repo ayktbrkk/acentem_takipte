@@ -556,6 +556,14 @@ export const AUX_WORKBENCH_CONFIGS = {
     boolFields: ["is_private"],
     numberFields: ["file_size"],
     dateTimeFields: ["creation", "modified"],
+    summaryFullFetch: true,
+    summaryAggregate: true,
+    summaryGroupFields: ["file_type", "attached_to_doctype"],
+    summaryMatches: [
+      { key: "customer", conditions: [["attached_to_doctype", "=", "AT Customer"]] },
+      { key: "policy", conditions: [["attached_to_doctype", "=", "AT Policy"]] },
+      { key: "claim", conditions: [["attached_to_doctype", "=", "AT Claim"]] },
+    ],
     toolbarActions: [
       {
         key: "upload_document",
@@ -673,6 +681,14 @@ export const AUX_WORKBENCH_CONFIGS = {
     numberFields: ["score"],
     dateFields: ["snapshot_date"],
     dateTimeFields: ["modified"],
+    summaryFullFetch: true,
+    summaryAggregate: true,
+    summaryGroupFields: ["claim_risk", "value_band", "score"],
+    summaryMatches: [
+      { key: "high_risk", conditions: [["claim_risk", "=", "High"]] },
+      { key: "high_value", any_conditions: [["value_band", "=", "high"], ["value_band", "=", "premium"]] },
+    ],
+    summaryNumericFields: ["score"],
     panelRef: { mode: "fixed", doctype: "AT Customer", nameField: "customer" },
   },
   "access-logs": {
@@ -711,6 +727,15 @@ export const AUX_WORKBENCH_CONFIGS = {
     sortOptions: ["viewed_on desc", "modified desc", "reference_name asc"],
     defaultSort: "viewed_on desc",
     dateTimeFields: ["viewed_on"],
+    summaryFullFetch: true,
+    summaryAggregate: true,
+    summaryGroupFields: ["action"],
+    summaryMatches: [
+      { key: "create", conditions: [["action", "=", "create"]] },
+      { key: "edit", conditions: [["action", "=", "edit"]] },
+      { key: "delete", conditions: [["action", "=", "delete"]] },
+      { key: "run", conditions: [["action", "=", "run"]] },
+    ],
     panelRef: { doctypeField: "reference_doctype", nameField: "reference_name" },
   },
   "ownership-assignments": {
@@ -871,6 +896,14 @@ export const AUX_WORKBENCH_CONFIGS = {
     sortOptions: ["remind_at asc", "modified desc"],
     defaultSort: "remind_at asc",
     dateTimeFields: ["remind_at", "completed_on", "modified"],
+    summaryFullFetch: true,
+    summaryAggregate: true,
+    summaryGroupFields: ["status", "priority", "remind_at"],
+    summaryMatches: [
+      { key: "open", conditions: [["status", "=", "Open"]] },
+      { key: "high_open", conditions: [["status", "=", "Open"], ["priority", "=", "High"]] },
+      { key: "overdue_open", conditions: [["status", "=", "Open"], ["remind_at", "<", "{{now}}"]] },
+    ],
   },
 };
 

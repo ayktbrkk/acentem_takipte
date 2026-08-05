@@ -7,6 +7,7 @@ import { AUX_WORKBENCH_TRANSLATIONS } from "../config/aux_workbench_translations
 import { AUX_WORKBENCH_FIELD_LABELS } from "../config/aux_workbench_field_labels";
 import { translateText } from "@/platform/i18n";
 import { useLinkLabelCache } from "./useLinkLabelCache";
+import { maskIdentifier } from "../utils/atMasks";
 
 function humanizeField(field) {
   return String(field || "")
@@ -135,6 +136,7 @@ export function useAuxWorkbenchViewModel({
   accessLogRows,
   fileRows,
   reminderRows,
+  summary,
   authStore,
   branchStore,
   auxQuickCreate,
@@ -212,6 +214,12 @@ export function useAuxWorkbenchViewModel({
     if (value == null || value === "") return t("unspecified");
     if (["strengths_json", "risks_json", "score_reason_json"].includes(field)) {
       return formatSignalSummary(value, field);
+    }
+    // Sensitive insured-asset identifiers (plates, TCKN-based, serials) render
+    // masked by default in list, detail and export. Authorized operators still
+    // see the full value through the record itself; the UI never exposes raw.
+    if (field === "asset_identifier") {
+      return maskIdentifier(value);
     }
     const _locale = currentLocale(activeLocale);
     const lc = resolveLocaleCode(localeCode);
@@ -294,8 +302,28 @@ export function useAuxWorkbenchViewModel({
 
   const subtitleLabel = computed(() => localize(config?.subtitle));
 
+  const hasActiveScopeOrFilters = computed(() => {
+    // Explicit transient filters (free-text query + filter values that differ
+    // from the screen defaults) trigger the "no records match the filters"
+    // hint. The persistent office-branch scope and untouched default filters
+    // keep the per-screen empty title/description.
+    if (String(filters?.query || "").trim()) return true;
+    const defaults = config?.defaultFilters || {};
+    for (const fd of config?.filterDefs || []) {
+      const current = String(filters?.[fd.key] ?? "").trim();
+      const def = String(defaults[fd.key] ?? "").trim();
+      if (current !== "" && current !== def) return true;
+    }
+    return false;
+  });
+
   const emptyTitle = computed(() => localize(config?.empty?.title) || t("emptyTitle"));
-  const emptyDescription = computed(() => localize(config?.empty?.description) || t("emptyDescription"));
+  const emptyDescription = computed(() => {
+    if (hasActiveScopeOrFilters.value) {
+      return t("emptyFilteredDescription") || t("emptyDescription");
+    }
+    return localize(config?.empty?.description) || t("emptyDescription");
+  });
   const toolbarActions = computed(() => (Array.isArray(config?.toolbarActions) ? config.toolbarActions : []));
   const visibleToolbarActions = computed(() =>
     toolbarActions.value.filter((action) => {
@@ -350,13 +378,24 @@ export function useAuxWorkbenchViewModel({
 
   const snapshotSummaryCards = computed(() => {
     if (config?.key !== "customer-segment-snapshots") return [];
-    const total = snapshotRows.value.length;
-    const highRisk = snapshotRows.value.filter((row) => String(row?.claim_risk || "").toLowerCase() === "high").length;
-    const highValue = snapshotRows.value.filter((row) => {
+    const agg = unref(summary);
+    if (agg && Number.isFinite(Number(agg.total))) {
+      const numeric = agg.numeric?.score || {};
+      return [
+        { key: "total", label: t("totalSnapshots"), value: String(Number(agg.total) || 0), hint: t("snapshotWindowHint") },
+        { key: "high-risk", label: t("highRiskSnapshots"), value: String(Number(agg.matches?.high_risk) || 0), hint: t("highRiskHint") },
+        { key: "high-value", label: t("highValueSnapshots"), value: String(Number(agg.matches?.high_value) || 0), hint: t("highValueHint") },
+        { key: "avg-score", label: t("averageScore"), value: String(Number(numeric.count) ? Math.round(Number(numeric.sum) / Number(numeric.count)) : 0), hint: t("averageScoreHint") },
+      ];
+    }
+    const full = snapshotRows.value;
+    const total = full.length;
+    const highRisk = full.filter((row) => String(row?.claim_risk || "").toLowerCase() === "high").length;
+    const highValue = full.filter((row) => {
       const valueBand = String(row?.value_band || "").toLowerCase();
       return valueBand === "high" || valueBand === "premium";
     }).length;
-    const scored = snapshotRows.value.map((row) => Number(row?.score)).filter((value) => Number.isFinite(value));
+    const scored = full.map((row) => Number(row?.score)).filter((value) => Number.isFinite(value));
     const averageScore = scored.length ? Math.round(scored.reduce((sum, value) => sum + value, 0) / scored.length) : 0;
     return [
       { key: "total", label: t("totalSnapshots"), value: String(total), hint: t("snapshotWindowHint") },
@@ -367,8 +406,11 @@ export function useAuxWorkbenchViewModel({
   });
   const snapshotTrendRows = computed(() => {
     if (config?.key !== "customer-segment-snapshots") return [];
+    // The trend is a recent-dates visual over the visible rows; the summary
+    // cards use the full-set aggregate above.
+    const full = snapshotRows.value;
     const grouped = new Map();
-    for (const row of snapshotRows.value) {
+    for (const row of full) {
       const snapshotDate = String(row?.snapshot_date || "").trim();
       if (!snapshotDate) continue;
       if (!grouped.has(snapshotDate)) {
@@ -396,10 +438,22 @@ export function useAuxWorkbenchViewModel({
   });
   const accessLogSummaryCards = computed(() => {
     if (config?.key !== "access-logs") return [];
-    const actions = accessLogRows.value.map((row) => String(row?.action || "").trim().toLowerCase());
+    const agg = unref(summary);
+    if (agg && Number.isFinite(Number(agg.total))) {
+      const m = agg.matches || {};
+      return [
+        { key: "total-audit", label: t("totalAuditEvents"), value: String(Number(agg.total) || 0), hint: t("auditWindowHint") },
+        { key: "create-audit", label: t("createEvents"), value: String(Number(m.create) || 0), hint: t("createEventsHint") },
+        { key: "edit-audit", label: t("editEvents"), value: String(Number(m.edit) || 0), hint: t("editEventsHint") },
+        { key: "delete-audit", label: t("deleteEvents"), value: String(Number(m.delete) || 0), hint: t("deleteEventsHint") },
+        { key: "run-audit", label: t("runEvents"), value: String(Number(m.run) || 0), hint: t("runEventsHint") },
+      ];
+    }
+    const full = accessLogRows.value;
+    const actions = full.map((row) => String(row?.action || "").trim().toLowerCase());
     const countByAction = (action) => actions.filter((value) => value === action).length;
     return [
-      { key: "total-audit", label: t("totalAuditEvents"), value: String(accessLogRows.value.length), hint: t("auditWindowHint") },
+      { key: "total-audit", label: t("totalAuditEvents"), value: String(full.length), hint: t("auditWindowHint") },
       { key: "create-audit", label: t("createEvents"), value: String(countByAction("create")), hint: t("createEventsHint") },
       { key: "edit-audit", label: t("editEvents"), value: String(countByAction("edit")), hint: t("editEventsHint") },
       { key: "delete-audit", label: t("deleteEvents"), value: String(countByAction("delete")), hint: t("deleteEventsHint") },
@@ -408,7 +462,18 @@ export function useAuxWorkbenchViewModel({
   });
   const reminderSummaryCards = computed(() => {
     if (config?.key !== "reminders") return [];
-    const openRows = reminderRows.value.filter((row) => String(row?.status || "").trim() === "Open");
+    const agg = unref(summary);
+    if (agg && Number.isFinite(Number(agg.total))) {
+      const m = agg.matches || {};
+      return [
+        { key: "total-reminders", label: t("totalReminders"), value: String(Number(agg.total) || 0), hint: t("reminderWindowHint") },
+        { key: "open-reminders", label: t("openReminders"), value: String(Number(m.open) || 0), hint: t("openRemindersHint") },
+        { key: "overdue-reminders", label: t("overdueReminders"), value: String(Number(m.overdue_open) || 0), hint: t("overdueRemindersHint") },
+        { key: "high-reminders", label: t("highPriorityReminders"), value: String(Number(m.high_open) || 0), hint: t("highPriorityRemindersHint") },
+      ];
+    }
+    const full = reminderRows.value;
+    const openRows = full.filter((row) => String(row?.status || "").trim() === "Open");
     const now = Date.now();
     const overdueRows = openRows.filter((row) => {
       const remindAt = row?.remind_at;
@@ -418,7 +483,7 @@ export function useAuxWorkbenchViewModel({
     });
     const highPriorityRows = openRows.filter((row) => String(row?.priority || "").trim() === "High");
     return [
-      { key: "total-reminders", label: t("totalReminders"), value: String(reminderRows.value.length), hint: t("reminderWindowHint") },
+      { key: "total-reminders", label: t("totalReminders"), value: String(full.length), hint: t("reminderWindowHint") },
       { key: "open-reminders", label: t("openReminders"), value: String(openRows.length), hint: t("openRemindersHint") },
       { key: "overdue-reminders", label: t("overdueReminders"), value: String(overdueRows.length), hint: t("overdueRemindersHint") },
       { key: "high-reminders", label: t("highPriorityReminders"), value: String(highPriorityRows.length), hint: t("highPriorityRemindersHint") },
@@ -426,9 +491,31 @@ export function useAuxWorkbenchViewModel({
   });
   const fileSummaryCards = computed(() => {
     if (config?.key !== "files") return [];
-    const total = fileRows.value.length;
-    const byType = (matcher) => fileRows.value.filter((row) => matcher(String(row?.file_type || "").toLowerCase())).length;
-    const byDoctype = (doctype) => fileRows.value.filter((row) => String(row?.attached_to_doctype || "").trim() === doctype).length;
+    const agg = unref(summary);
+    if (agg && Number.isFinite(Number(agg.total))) {
+      const groupByType = agg.group_by?.file_type || {};
+      const sumType = (matcher) =>
+        Object.entries(groupByType)
+          .filter(([key]) => matcher(String(key).toLowerCase()))
+          .reduce((sum, [, count]) => sum + Number(count), 0);
+      const m = agg.matches || {};
+      return [
+        { key: "total-files", label: t("totalFiles"), value: String(Number(agg.total) || 0), hint: t("filesWindowHint") },
+        { key: "pdf-files", label: t("pdfFiles"), value: String(sumType((v) => v.includes("pdf"))), hint: t("pdfFilesHint") },
+        { key: "image-files", label: t("imageFiles"), value: String(sumType((v) => v.startsWith("image/") || ["jpg", "jpeg", "png", "webp", "gif"].some((token) => v.includes(token)))), hint: t("imageFilesHint") },
+        { key: "spreadsheet-files", label: t("spreadsheetFiles"), value: String(sumType((v) => ["sheet", "excel", "csv", "xls", "xlsx"].some((token) => v.includes(token)))), hint: t("spreadsheetFilesHint") },
+        { key: "customer-files", label: t("attachedCustomers"), value: String(Number(m.customer) || 0), hint: t("attachedCustomersHint") },
+        { key: "policy-files", label: t("attachedPolicies"), value: String(Number(m.policy) || 0), hint: t("attachedPoliciesHint") },
+        { key: "claim-files", label: t("attachedClaims"), value: String(Number(m.claim) || 0), hint: t("attachedClaimsHint") },
+      ];
+    }
+    // Fallback over the page rows for test mocks / legacy states.
+    const full = fileRows.value;
+    const total = Number.isFinite(Number(pagination?.total)) && Number(pagination.total) > 0
+      ? Number(pagination.total)
+      : full.length;
+    const byType = (matcher) => full.filter((row) => matcher(String(row?.file_type || "").toLowerCase())).length;
+    const byDoctype = (doctype) => full.filter((row) => String(row?.attached_to_doctype || "").trim() === doctype).length;
     return [
       { key: "total-files", label: t("totalFiles"), value: String(total), hint: t("filesWindowHint") },
       { key: "pdf-files", label: t("pdfFiles"), value: String(byType((v) => v.includes("pdf"))), hint: t("pdfFilesHint") },

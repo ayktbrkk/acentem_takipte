@@ -267,6 +267,7 @@ const {
   accessLogRows: runtime.accessLogRows,
   fileRows: runtime.fileRows,
   reminderRows: runtime.reminderRows,
+  summary: runtime.summary,
   authStore,
   branchStore,
   auxQuickCreate: runtime.auxQuickCreate,

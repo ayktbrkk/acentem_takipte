@@ -18,6 +18,7 @@ const OFFICE_BRANCH_FILTER_DOCTYPES = new Set([
   "AT Accounting Entry",
   "AT Notification Draft",
   "AT Notification Outbox",
+  "AT Sales Entity",
 ]);
 const OFFICE_BRANCH_LOOKUP_DOCTYPES = new Set(["AT Customer", "AT Policy", "AT Accounting Entry"]);
 
@@ -110,6 +111,11 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
     auto: false,
     params: { doctype: "AT Accounting Entry", fields: ["name", "source_doctype", "source_name", "status"], order_by: "modified desc", limit_page_length: 500 },
   });
+  const summaryResource = createResource({
+    url: "acentem_takipte.acentem_takipte.platform.api.aux_workbench_summary.get_aux_workbench_summary",
+    auto: false,
+  });
+  const summary = ref({});
 
   const PRESET_STORAGE_KEY = `at:aux:${config.key}:preset`;
   const auxQuickCreate = computed(() => config.quickCreate || null);
@@ -232,12 +238,47 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
     };
   }
 
+  function buildSummaryParams() {
+    const matches = (config.summaryMatches || []).map((spec) => {
+      const resolved = {
+        key: spec.key,
+        conditions: Array.isArray(spec.conditions) ? spec.conditions.map((c) => [...c]) : [],
+      };
+      if (Array.isArray(spec.any_conditions)) {
+        resolved.any_conditions = spec.any_conditions.map((c) => [...c]);
+      }
+      // Resolve {{now}} for dynamic date comparisons (e.g. overdue reminders)
+      const nowIso = new Date().toISOString().slice(0, 19).replace("T", " ");
+      const walk = (conds) =>
+        (conds || []).forEach((cond) => {
+          if (cond && cond.length >= 3 && typeof cond[2] === "string" && cond[2].includes("{{now}}")) {
+            cond[2] = cond[2].replace("{{now}}", nowIso);
+          }
+        });
+      walk(resolved.conditions);
+      walk(resolved.any_conditions);
+      return resolved;
+    });
+    return {
+      doctype: config.doctype,
+      filters: JSON.stringify(buildFilters()),
+      or_filters: JSON.stringify(buildOrFilters()) || "",
+      group_fields: JSON.stringify(config.summaryGroupFields || []),
+      matches: JSON.stringify(matches),
+      numeric_fields: JSON.stringify(config.summaryNumericFields || []),
+    };
+  }
+
   async function refreshList() {
     loadError.text = "";
-    const [rowsResult, countResult] = await Promise.allSettled([
+    const tasks = [
       listResource.reload(buildListParams()),
       countResource.reload(buildCountParams()),
-    ]);
+    ];
+    if (config.summaryFullFetch) {
+      tasks.push(summaryResource.reload(buildSummaryParams()));
+    }
+    const [rowsResult, countResult, summaryResult] = await Promise.allSettled(tasks);
     if (rowsResult.status === "fulfilled") {
       const payload = rowsResult.value?.message ?? rowsResult.value;
       listResource.setData(Array.isArray(payload) ? payload : []);
@@ -250,6 +291,12 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
       pagination.total = Number.isFinite(c) ? c : rows.value.length;
     } else {
       pagination.total = rows.value.length;
+    }
+    if (summaryResult?.status === "fulfilled") {
+      const payload = summaryResult.value?.message ?? summaryResult.value;
+      summary.value = payload && typeof payload === "object" ? payload : {};
+    } else if (config.summaryFullFetch) {
+      summary.value = {};
     }
   }
 
@@ -722,6 +769,7 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
     accessLogRows,
     fileRows,
     reminderRows,
+    summary,
     canExportSnapshotRows,
     isLoading,
     auxQuickCreate,
