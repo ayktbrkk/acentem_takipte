@@ -63,6 +63,7 @@ function buildStatusRows(totals, order, colorMap, labelFn, totalBase) {
 export function useDashboardFacts({
   acceptedOfferCount,
   buildQuickStatCard,
+  claimOpenCount,
   dashboardCards,
   dashboardTabSeries,
   dueTodayCollectionAmount,
@@ -84,14 +85,15 @@ export function useDashboardFacts({
   previousDashboardCards,
   readyOfferCount,
   renewalBucketCounts,
+  renewalDueSoonCount,
   renewalTasks,
   t,
   policyStatusRows,
   convertedOfferCount,
 }) {
-  function buildStaticQuickStatCard({ key, title, value, icon, hint = t("todaySnapshot") }) {
+  function buildStaticQuickStatCard({ key, title, value, icon, valueClass = "", hint = t("todaySnapshot"), trendText = "" }) {
     const card = buildQuickStatCard({ key, title, value, icon, trendHint: hint });
-    return { ...card, trendText: "" };
+    return { ...card, trendText, valueClass };
   }
 
   const quickStatCards = computed(() => [
@@ -148,12 +150,14 @@ export function useDashboardFacts({
       title: t("kpiCollectionOverdueCount"),
       value: formatNumber(overdueCollectionCount.value),
       icon: "alert-triangle",
+      valueClass: "text-at-red",
     }),
     buildStaticQuickStatCard({
       key: "quick-collect-overdue-amount",
       title: t("kpiCollectionOverdueAmount"),
       value: formatCurrency(overdueCollectionAmount.value),
       icon: "wallet",
+      valueClass: "text-at-red",
     }),
   ]);
 
@@ -170,12 +174,14 @@ export function useDashboardFacts({
       title: t("kpiRenewalOverdue"),
       value: formatNumber(renewalBucketCounts.value.overdue),
       icon: "alert-octagon",
+      valueClass: "text-at-red",
     }),
     buildStaticQuickStatCard({
       key: "quick-renewal-due7",
       title: t("kpiRenewalDue7"),
       value: formatNumber(renewalBucketCounts.value.due7),
       icon: "clock",
+      valueClass: "text-at-amber",
     }),
   ].filter(Boolean));
 
@@ -185,24 +191,30 @@ export function useDashboardFacts({
       title: t("kpiFollowUpOverdue"),
       value: formatNumber(followUpSummary.value.overdue),
       icon: "alert-triangle",
-    }),
-    buildStaticQuickStatCard({
-      key: "quick-follow-up-today",
-      title: t("kpiFollowUpToday"),
-      value: formatNumber(followUpSummary.value.due_today),
-      icon: "calendar-days",
+      valueClass: "text-at-red",
+      trendText: `${t("kpiTodayContext")}: ${formatNumber(followUpSummary.value.due_today)}`,
     }),
     buildStaticQuickStatCard({
       key: "quick-task-overdue",
       title: t("kpiTaskOverdue"),
       value: formatNumber(myTaskSummary.value.overdue),
       icon: "briefcase",
+      valueClass: "text-at-red",
+      trendText: `${t("kpiTodayContext")}: ${formatNumber(myTaskSummary.value.due_today)}`,
     }),
     buildStaticQuickStatCard({
-      key: "quick-task-today",
-      title: t("kpiTaskToday"),
-      value: formatNumber(myTaskSummary.value.due_today),
-      icon: "list-todo",
+      key: "quick-renewal-due-soon",
+      title: t("renewalAlertTitle"),
+      value: formatNumber(renewalDueSoonCount.value),
+      icon: "clock",
+      valueClass: "text-at-amber",
+    }),
+    buildStaticQuickStatCard({
+      key: "quick-claim-open",
+      title: t("openClaimsTitle"),
+      value: formatNumber(claimOpenCount.value),
+      icon: "file-text",
+      valueClass: "text-at-amber",
     }),
   ]);
 

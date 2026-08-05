@@ -1,18 +1,8 @@
 <template>
   <div v-if="isRenewalsTab" class="space-y-4 lg:space-y-5">
-    <div class="grid gap-3 md:gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <SaaSMetricCard
-        v-for="card in renewalSummaryCards"
-        :key="card.label"
-        :label="card.label"
-        :value="card.value"
-        :value-class="card.valueClass"
-      />
-    </div>
-
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
     <div class="grid gap-4 content-start">
-      <SectionPanel :title="t('offerWaitingRenewalsTitle')" :count="formatNumber(offerWaitingRenewals.length)" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel :title="t('offerWaitingRenewalsTitle')" :count="formatNumber(offerWaitingRenewals.length)" panel-class="surface-card h-full rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="offerWaitingRenewals.length === 0" :title="t('noOfferWaitingRenewals')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
@@ -51,7 +41,7 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)" panel-class="surface-card h-full rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="displayRenewalTasks.length === 0" :title="t('noRenewal')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
@@ -91,7 +81,7 @@
     </div>
 
     <div class="grid gap-4 content-start">
-      <SectionPanel :title="t('renewalStatusOverviewTitle')" :show-count="false" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel :title="t('renewalStatusOverviewTitle')" :show-count="false" :meta="retentionMeta" panel-class="surface-card h-full rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="renewalStatusSummary.length === 0" :title="t('noRenewalStatus')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-6 text-center" />
         <div v-else class="space-y-3">
@@ -106,7 +96,7 @@
         </div>
       </SectionPanel>
 
-      <SectionPanel :title="t('renewalOutcomeTitle')" :show-count="false" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel :title="t('renewalOutcomeTitle')" :show-count="false" panel-class="surface-card h-full rounded-xl p-4">
         <p class="mb-3 text-xs text-slate-500">{{ t("renewalOutcomeHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="renewalOutcomeSummary.length === 0" :title="t('noRenewalOutcome')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
@@ -126,7 +116,7 @@
         v-if="showLinkedPolicies"
         :title="t('linkedPoliciesTitle')"
         :count="formatNumber(renewalLinkedPolicies.length)"
-        panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4"
+        panel-class="surface-card h-full rounded-xl p-4"
       >
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="renewalLinkedPolicies.length === 0" :title="t('noLinkedPolicies')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
@@ -179,7 +169,6 @@ import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
 import ProgressMetricRow from "../app-shell/ProgressMetricRow.vue";
-import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 
@@ -208,14 +197,14 @@ const props = defineProps({
   t: { type: Function, required: true },
 });
 
-const renewalSummaryCards = computed(() => [
-  { label: props.t("renewalQueue"), value: props.formatNumber(props.displayRenewalTasks.length), valueClass: "text-brand-600" },
-  { label: props.t("offerWaitingRenewalsTitle"), value: props.formatNumber(props.offerWaitingRenewals.length), valueClass: "text-at-amber" },
-  { label: props.t("kpiRenewalRetention"), value: `${props.formatNumber(props.renewalRetentionRate)}%`, valueClass: "text-at-green" },
-  { label: props.t("linkedPoliciesTitle"), value: props.formatNumber(props.renewalLinkedPolicies.length), valueClass: "text-slate-900" },
-]);
-
 const showLinkedPolicies = computed(() => props.dashboardLoading || props.renewalLinkedPolicies.length > 0);
+
+const retentionMeta = computed(() => {
+  if (props.dashboardLoading) return "";
+  const rate = Number(props.renewalRetentionRate ?? 0);
+  if (!Number.isFinite(rate)) return "";
+  return `${props.t("kpiRenewalRetention")}: ${props.formatNumber(rate)}%`;
+});
 
 function normalizeText(value) {
   return String(value ?? "").trim();

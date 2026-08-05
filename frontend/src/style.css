@@ -337,7 +337,7 @@
   }
 
   .at-tab-chip {
-    @apply rounded-full border px-4 py-1.5 text-[11px] font-bold transition-all duration-200 tracking-wide cursor-pointer;
+    @apply inline-flex min-h-9 items-center rounded-full border px-4 text-[11px] font-bold transition-all duration-200 tracking-wide cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500;
   }
 
   .at-tab-chip-active {

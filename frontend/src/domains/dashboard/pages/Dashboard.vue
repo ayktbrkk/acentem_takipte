@@ -49,6 +49,9 @@
           :title="card.title"
           :value="card.value"
           :icon="card.icon"
+          :value-class="card.valueClass"
+          :trend-text="card.trendText"
+          :trend-class="card.trendClass"
           :t="t"
         />
       </div>
@@ -850,6 +853,7 @@ const {
 } = useDashboardFacts({
   acceptedOfferCount,
   buildQuickStatCard,
+  claimOpenCount: computed(() => (openClaimsPreviewRows.value || []).length),
   dashboardCards,
   dashboardTabSeries,
   dueTodayCollectionAmount,
@@ -871,6 +875,7 @@ const {
   previousDashboardCards,
   readyOfferCount,
   renewalBucketCounts,
+  renewalDueSoonCount: computed(() => (displayRenewalAlertItems.value || []).length),
   renewalTasks,
   t,
   policyStatusRows,

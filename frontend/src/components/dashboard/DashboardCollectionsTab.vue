@@ -1,18 +1,8 @@
 <template>
   <div v-if="isCollectionsTab" class="space-y-4 lg:space-y-5">
-    <div class="grid gap-3 md:gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <SaaSMetricCard
-        v-for="card in collectionsSummaryCards"
-        :key="card.label"
-        :label="card.label"
-        :value="card.value"
-        :value-class="card.valueClass"
-      />
-    </div>
-
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
       <div class="grid gap-4 content-start">
-      <SectionPanel :title="t('todayCollectionsTitle')" :count="formatNumber(dueTodayCollectionPayments.length)" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel :title="t('todayCollectionsTitle')" :count="formatNumber(dueTodayCollectionPayments.length)" panel-class="surface-card h-full rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="dueTodayCollectionPayments.length === 0" :title="t('noTodayCollections')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
@@ -53,7 +43,7 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('overdueCollectionsTitle')" :count="formatNumber(overdueCollectionPayments.length)" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel :title="t('overdueCollectionsTitle')" :count="formatNumber(overdueCollectionPayments.length)" panel-class="surface-card h-full rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="overdueCollectionPayments.length === 0" :title="t('noOverdueCollections')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
@@ -97,7 +87,7 @@
       </div>
 
       <div class="grid gap-4 content-start">
-      <SectionPanel v-if="showCollectionsPerformance" :title="t('collectionsPerformanceTitle')" :show-count="false" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel v-if="showCollectionsPerformance" :title="t('collectionsPerformanceTitle')" :show-count="false" panel-class="surface-card h-full rounded-xl p-4">
         <p class="mb-3 text-xs text-slate-500">{{ t("collectionsPerformanceHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <div v-else class="space-y-3">
@@ -134,7 +124,7 @@
         </div>
       </SectionPanel>
 
-      <SectionPanel :title="t('collectionsRiskTitle')" :count="formatNumber(collectionRiskRows.length)" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel :title="t('collectionsRiskTitle')" :count="formatNumber(collectionRiskRows.length)" panel-class="surface-card h-full rounded-xl p-4">
         <p class="mb-2 text-[11px] text-slate-500">{{ t("collectionsRiskHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="collectionRiskRows.length === 0" :title="t('noCollectionsRisk')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
@@ -175,7 +165,7 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('reconciliationPreview')" :count="formatNumber(reconciliationPreviewRows.length)" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel :title="t('reconciliationPreview')" :count="formatNumber(reconciliationPreviewRows.length)" :meta="reconciliationPreviewMeta" panel-class="surface-card h-full rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="reconciliationPreviewRows.length === 0" :title="t('noReconciliationPreview')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <div v-else class="space-y-2">
@@ -228,7 +218,6 @@ import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
 import ProgressMetricRow from "../app-shell/ProgressMetricRow.vue";
-import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 
@@ -261,16 +250,17 @@ const props = defineProps({
   t: { type: Function, required: true },
 });
 
-const collectionsSummaryCards = computed(() => [
-  { label: props.t("todayCollectionsTitle"), value: props.formatNumber(props.dueTodayCollectionPayments.length), valueClass: "text-brand-600" },
-  { label: props.t("overdueCollectionsTitle"), value: props.formatNumber(props.overdueCollectionPayments.length), valueClass: "text-at-amber" },
-  { label: props.t("reconciliationPreview"), value: props.formatNumber(props.reconciliationPreviewRows.length), valueClass: "text-slate-900" },
-  { label: props.t("openDifference"), value: props.formatCurrency(props.reconciliationPreviewOpenDifference), valueClass: "text-at-green" },
-]);
-
 const showCollectionsPerformance = computed(() => {
   if (props.dashboardLoading) return true;
   return props.collectionPaymentStatusSummary.length > 0 || props.collectionPaymentDirectionSummary.length > 0;
+});
+
+const reconciliationPreviewMeta = computed(() => {
+  if (props.dashboardLoading) return "";
+  const diff = Number(props.reconciliationPreviewOpenDifference ?? 0);
+  if (!Number.isFinite(diff)) return "";
+  const sign = diff > 0 ? "+" : "";
+  return `${props.t("openDifference")}: ${sign}${props.formatCurrency(diff)}`;
 });
 
 function normalizeText(value) {

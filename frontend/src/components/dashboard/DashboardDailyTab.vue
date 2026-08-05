@@ -1,21 +1,11 @@
 <template>
   <div v-if="isDailyTab" class="space-y-4 lg:space-y-5">
-    <div class="grid gap-3 md:gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <SaaSMetricCard
-        v-for="card in dailySummaryCards"
-        :key="card.label"
-        :label="card.label"
-        :value="card.value"
-        :value-class="card.valueClass"
-      />
-    </div>
-
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
       <div class="grid gap-4 content-start">
       <SectionPanel
         :title="t('followUpSlaTitle')"
         :count="formatNumber(prioritizedFollowUpItems.length)"
-        panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4"
+        panel-class="surface-card h-full rounded-xl p-4"
       >
         <p class="mb-2 text-[11px] text-slate-500">{{ t("followUpSlaHint") }}</p>
         <p v-if="followUpSettingsHint" class="mb-2 text-[11px] font-medium text-slate-600">{{ followUpSettingsHint }}</p>
@@ -63,7 +53,7 @@
       <SectionPanel
         :title="t('renewalAlertTitle')"
         :count="displayRenewalAlertItems.length"
-        panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4"
+        panel-class="surface-card h-full rounded-xl p-4"
       >
         <p class="mb-2 text-[11px] text-slate-500">{{ t("renewalAlertHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -110,7 +100,7 @@
         <SectionPanel
           :title="t('todayTasksTitle')"
           :count="formatNumber(priorityTaskItems.length)"
-          panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4"
+          panel-class="surface-card h-full rounded-xl p-4"
         >
           <p class="mb-2 text-[11px] text-slate-500">{{ t("myTasksHint") }}</p>
           <div v-if="myTasksLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -157,7 +147,7 @@
       <SectionPanel
         :title="t('recentActivitiesTitle')"
         :count="formatNumber(recentActivityItems.length)"
-        panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4"
+        panel-class="surface-card h-full rounded-xl p-4"
       >
         <div v-if="myActivitiesLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="recentActivityItems.length === 0" :title="t('recentActivitiesEmpty')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
@@ -200,7 +190,7 @@
       <SectionPanel
         :title="t('openClaimsTitle')"
         :count="formatNumber(openClaimsPreviewRows.length)"
-        panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4"
+        panel-class="surface-card h-full rounded-xl p-4"
       >
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="openClaimsPreviewRows.length === 0" :title="t('noOpenClaims')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
@@ -254,7 +244,6 @@ import DashboardTypeBadge from "./DashboardTypeBadge.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
-import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 
@@ -301,13 +290,6 @@ const props = defineProps({
   t: { type: Function, required: true },
   locale: { type: String, default: "en" },
 });
-
-const dailySummaryCards = computed(() => [
-  { label: props.t("followUpSlaTitle"), value: props.formatNumber(props.prioritizedFollowUpItems.length), valueClass: "text-brand-600" },
-  { label: props.t("todayTasksTitle"), value: props.formatNumber(props.priorityTaskItems.length), valueClass: "text-slate-900" },
-  { label: props.t("renewalAlertTitle"), value: props.formatNumber(props.displayRenewalAlertItems.length), valueClass: "text-at-amber" },
-  { label: props.t("openClaimsTitle"), value: props.formatNumber(props.openClaimsPreviewRows.length), valueClass: "text-at-green" },
-]);
 
 const followUpSettingsHint = computed(() => {
   const settings = props.followUpMeta?.settings || {};

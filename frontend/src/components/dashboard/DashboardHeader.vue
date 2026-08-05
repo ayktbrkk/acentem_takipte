@@ -1,17 +1,13 @@
 <template>
-  <div class="dashboard-hero flex flex-col rounded-3xl px-8 py-10 text-white shadow-lg overflow-hidden relative mb-6">
-    <!-- Decorative background elements -->
-    <div class="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-brand-400/10 blur-3xl"></div>
-    <div class="absolute bottom-0 left-0 -ml-20 -mb-20 h-64 w-64 rounded-full bg-brand-200/10 blur-3xl"></div>
-
-    <div class="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+  <div class="dashboard-hero flex flex-col rounded-2xl px-6 py-5 text-white shadow-md relative mb-4 sm:px-8 sm:py-6">
+    <div class="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div class="min-w-0">
-        <p class="at-hero-tag mb-2">{{ heroTag }}</p>
+        <p class="at-hero-tag mb-1.5">{{ heroTag }}</p>
         <h1 class="at-hero-title tracking-tight">{{ heroTitle }}</h1>
-        <p class="at-hero-subtitle mt-2 opacity-90 font-medium">{{ heroSubtitle }}</p>
-        <div class="mt-6 flex items-center gap-3">
-          <div class="flex h-6 items-center gap-2 rounded-full bg-white/10 px-3 text-[10px] font-bold uppercase tracking-widest text-white/90 backdrop-blur-md border border-white/10">
-            <span class="inline-block h-1.5 w-1.5 rounded-full bg-at-green animate-pulse"></span>
+        <p class="at-hero-subtitle mt-1.5 opacity-90 font-medium">{{ heroSubtitle }}</p>
+        <div class="mt-3 flex items-center gap-3">
+          <div class="flex h-6 items-center gap-2 rounded-full bg-white/10 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/90 backdrop-blur-md border border-white/10">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-at-green"></span>
             {{ rangeLabelText }}: {{ visibleRange }}
           </div>
         </div>
@@ -22,7 +18,7 @@
           <button
             v-for="days in rangeOptions"
             :key="days"
-            class="rounded-lg px-4 py-1.5 text-xs font-bold transition-all"
+            class="rounded-lg px-4 py-2 text-xs font-bold transition-all"
             :class="selectedRange === days ? 'bg-white text-brand-900 shadow-sm' : 'text-white hover:bg-white/10'"
             :aria-pressed="selectedRange === days"
             :aria-label="`${rangeLabelText} ${rangeLabel(days)}`"
@@ -38,11 +34,12 @@
             size="sm"
             class="!flex !h-9 !w-9 !items-center !justify-center !rounded-xl !border-white/10 !bg-white/10 !px-0 !text-white hover:!bg-white/20"
             :aria-label="refreshLabel"
+            :title="refreshLabel"
             @click="$emit('reload')"
           >
             <FeatherIcon name="refresh-cw" class="h-4 w-4" />
           </ActionButton>
-          
+
           <ActionButton
             v-if="showNewLeadAction"
             variant="primary"
@@ -58,8 +55,8 @@
     </div>
   </div>
 
-  <div class="surface-card rounded-2xl p-2">
-    <div class="flex gap-2 overflow-x-auto whitespace-nowrap px-1 py-1" role="tablist" :aria-label="heroTitle">
+  <div class="surface-card rounded-xl p-1.5 md:w-fit">
+    <div class="flex gap-1 overflow-x-auto whitespace-nowrap px-1 py-0.5 md:overflow-visible" role="tablist" :aria-label="heroTitle">
       <button
         v-for="tab in dashboardTabs"
         :key="tab.key"

@@ -1,18 +1,8 @@
 <template>
   <div v-if="isSalesTab" class="space-y-4 lg:space-y-5">
-    <div class="grid gap-3 md:gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <SaaSMetricCard
-        v-for="card in salesSummaryCards"
-        :key="card.label"
-        :label="card.label"
-        :value="card.value"
-        :value-class="card.valueClass"
-      />
-    </div>
-
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
       <div class="grid gap-4 content-start">
-      <SectionPanel :title="t('offerPipeline')" :count="formatNumber(salesPipelineOffers.length)" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel :title="t('offerPipeline')" :count="formatNumber(salesPipelineOffers.length)" panel-class="surface-card h-full rounded-xl p-4">
         <p class="mb-2 text-[11px] text-slate-500">{{ t("salesPipelineHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="salesPipelineOffers.length === 0" :title="t('noOffer')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
@@ -54,7 +44,7 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('convertedOffersTitle')" :count="formatNumber(convertedSalesOffers.length)" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel :title="t('convertedOffersTitle')" :count="formatNumber(convertedSalesOffers.length)" panel-class="surface-card h-full rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="convertedSalesOffers.length === 0" :title="t('noConvertedOffers')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
@@ -97,7 +87,7 @@
       </div>
 
       <div class="grid gap-4 content-start">
-      <SectionPanel :title="t('recentLeads')" :count="formatNumber(displayRecentLeads.length)" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel :title="t('recentLeads')" :count="formatNumber(displayRecentLeads.length)" panel-class="surface-card h-full rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="displayRecentLeads.length === 0" :title="t('noLead')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
@@ -137,7 +127,7 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('salesCandidateActionTitle')" :count="formatNumber(salesCandidateActions.length)" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4">
+      <SectionPanel :title="t('salesCandidateActionTitle')" :count="formatNumber(salesCandidateActions.length)" panel-class="surface-card h-full rounded-xl p-4">
         <p class="mb-2 text-[11px] text-slate-500">{{ t("salesCandidateActionHint") }}</p>
         <div v-if="myTasksLoading || myRemindersLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="salesCandidateActions.length === 0" :title="t('noSalesCandidateAction')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
@@ -188,7 +178,6 @@ import DashboardTypeBadge from "./DashboardTypeBadge.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
-import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 
@@ -225,13 +214,6 @@ const props = defineProps({
   shouldShowViewAll: { type: Function, required: true },
   t: { type: Function, required: true },
 });
-
-const salesSummaryCards = computed(() => [
-  { label: props.t("offerPipeline"), value: props.formatNumber(props.salesPipelineOffers.length), valueClass: "text-brand-600" },
-  { label: props.t("convertedOffersTitle"), value: props.formatNumber(props.convertedSalesOffers.length), valueClass: "text-at-green" },
-  { label: props.t("recentLeads"), value: props.formatNumber(props.displayRecentLeads.length), valueClass: "text-slate-900" },
-  { label: props.t("salesCandidateActionTitle"), value: props.formatNumber(props.salesCandidateActions.length), valueClass: "text-at-amber" },
-]);
 
 function normalizeText(value) {
   return String(value ?? "").trim();

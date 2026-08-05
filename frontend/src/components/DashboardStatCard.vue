@@ -1,26 +1,21 @@
 <template>
-  <article class="at-metric-card group relative overflow-hidden bg-white rounded-3xl border border-slate-100 p-6 shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/10 hover:border-brand-200 active:scale-[0.98]">
-    <!-- Background Glow -->
-    <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand-500/5 blur-3xl transition-all group-hover:bg-brand-500/10"></div>
-    
-    <div class="relative flex items-start justify-between">
-      <div>
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">{{ title }}</p>
-        <p class="text-3xl font-black text-slate-900 tracking-tight">{{ value }}</p>
+  <article class="at-metric-card group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <p class="mb-1.5 truncate text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{{ title }}</p>
+        <p :class="['at-metric-value tabular-nums text-2xl font-bold tracking-tight', valueClass || 'text-slate-900']">
+          {{ value }}
+        </p>
+        <p v-if="trendText" :class="['mt-1 truncate text-xs font-medium', trendClass || 'text-slate-500']">
+          {{ trendText }}
+        </p>
       </div>
-      <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 text-brand-600 shadow-sm border border-brand-200/50 transition-transform group-hover:scale-110 group-hover:rotate-3">
-        <FeatherIcon :name="icon || 'bar-chart-2'" class="h-6 w-6" />
+      <div
+        v-if="icon"
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"
+      >
+        <FeatherIcon :name="icon || 'bar-chart-2'" class="h-5 w-5" />
       </div>
-    </div>
-
-    <div class="relative mt-8 flex items-center justify-between border-t border-slate-50 pt-4">
-      <div class="flex items-center gap-1.5">
-        <span class="h-1.5 w-1.5 rounded-full bg-at-green"></span>
-        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-          {{ t("quickStatStatusLabel") }}
-        </span>
-      </div>
-      <FeatherIcon name="chevron-right" class="h-3 w-3 text-slate-300 transition-transform group-hover:translate-x-1" />
     </div>
   </article>
 </template>
@@ -34,7 +29,7 @@ defineProps({
     default: "",
   },
   value: {
-    type: String,
+    type: [String, Number],
     default: "",
   },
   t: {
@@ -44,6 +39,18 @@ defineProps({
   icon: {
     type: String,
     default: "bar-chart-2",
+  },
+  valueClass: {
+    type: String,
+    default: "",
+  },
+  trendText: {
+    type: String,
+    default: "",
+  },
+  trendClass: {
+    type: String,
+    default: "",
   },
 });
 </script>
