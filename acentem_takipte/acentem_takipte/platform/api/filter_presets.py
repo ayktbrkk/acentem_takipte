@@ -42,6 +42,7 @@ ALLOWED_SCREENS = {
     "access_logs",
     "ownership_assignments",
     "activities",
+    "reminders",
 }
 DEFAULT_STATE = {"selected_key": "default", "custom_presets": []}
 

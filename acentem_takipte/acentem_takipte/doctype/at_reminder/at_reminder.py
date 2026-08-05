@@ -14,6 +14,13 @@ class ATReminder(Document):
         if self.remind_at:
             self.remind_at = get_datetime(self.remind_at)
 
+        previous_status = None
+        if self.get_doc_before_save():
+            previous_status = self.get_doc_before_save().get("status")
+
+        if previous_status in {"Done", "Cancelled"} and self.status == "Open":
+            frappe.throw(_("A completed reminder cannot be reopened"))
+
         if self.status in {"Done", "Cancelled"} and not self.completed_on:
             self.completed_on = now_datetime()
         elif self.status == "Open":
