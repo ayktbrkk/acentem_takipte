@@ -48,7 +48,7 @@ async function callImportMethod(page, method, params = {}) {
     if (value == null) continue;
     form[key] = typeof value === "string" ? value : JSON.stringify(value);
   }
-  return pageRequest(page, "POST", `/api/method/acentem_takipte.acentem_takipte.api.data_import.${method}`, {
+  return pageRequest(page, "POST", `/api/method/acentem_takipte.acentem_takipte.platform.api.data_import.${method}`, {
     form,
   });
 }
@@ -113,9 +113,41 @@ test.describe("Import and export flows", () => {
     const exportApi = await pageRequest(
       page,
       "GET",
-      "/api/method/acentem_takipte.acentem_takipte.api.list_exports.download_export?screen=customer_list&export_format=xlsx&limit=5&filename=e2e_export",
+      "/api/method/acentem_takipte.acentem_takipte.platform.api.list_exports.download_export?screen=customer_list&export_format=xlsx&limit=5&filename=e2e_export",
     );
     expect(exportApi.ok, exportApi.text).toBeTruthy();
     expect(exportApi.text?.length || 0).toBeGreaterThan(100);
+  });
+
+  test("API: export job artifact is downloadable through the secure endpoint", async ({ page }) => {
+    test.setTimeout(90000);
+    await ensureAuthenticated(page);
+
+    const exportApi = await pageRequest(
+      page,
+      "GET",
+      "/api/method/acentem_takipte.acentem_takipte.platform.api.list_exports.download_export?screen=policy_list&export_format=xlsx&limit=3&filename=e2e_secure_export",
+    );
+    expect(exportApi.ok, exportApi.text).toBeTruthy();
+
+    const jobs = await pageRequest(
+      page,
+      "POST",
+      "/api/method/acentem_takipte.acentem_takipte.platform.api.list_exports.list_export_jobs",
+      { form: { limit: "5" } },
+    );
+    expect(jobs.ok, jobs.text).toBeTruthy();
+    const rows = jobs.json?.message || [];
+    const matching = rows.find((row) => String(row.filename || "").includes("e2e_secure_export"));
+    expect(matching, JSON.stringify(rows)).toBeTruthy();
+    expect(matching.export_job_name).toBeTruthy();
+
+    const download = await pageRequest(
+      page,
+      "GET",
+      `/api/method/acentem_takipte.acentem_takipte.platform.api.list_exports.download_export_file?export_job_name=${encodeURIComponent(matching.export_job_name)}`,
+    );
+    expect(download.ok, download.text).toBeTruthy();
+    expect(download.text?.length || 0).toBeGreaterThan(100);
   });
 });

@@ -56,11 +56,16 @@ def coerce_query_payload(query: Any) -> dict[str, Any]:
             parsed = frappe.parse_json(query) or {}
         except Exception:
             return {}
-        return parsed if isinstance(parsed, dict) else {}
+        return coerce_query_payload(parsed if isinstance(parsed, dict) else {})
     if isinstance(query, dict):
-        return dict(query)
+        normalized = dict(query)
+        if "filters" in normalized:
+            normalized["filters"] = coerce_filters(normalized.get("filters"))
+        if "or_filters" in normalized:
+            normalized["or_filters"] = coerce_or_filters(normalized.get("or_filters"))
+        return normalized
     if hasattr(query, "items"):
-        return {key: value for key, value in query.items()}
+        return coerce_query_payload({key: value for key, value in query.items()})
     return {}
 
 

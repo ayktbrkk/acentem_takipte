@@ -101,6 +101,7 @@ class TestDocumentsApi(IntegrationTestCase):
             patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_doc", side_effect=fake_get_doc),
             patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.exists", return_value=True),
             patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.get_value", return_value="/private/files/FILE-001.pdf"),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.count", return_value=0),
             patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.set_value", side_effect=fake_set_value),
             patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.delete_doc", side_effect=fake_delete_doc),
             patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_roles", return_value=["System Manager"]),
@@ -122,6 +123,41 @@ class TestDocumentsApi(IntegrationTestCase):
         ):
             with self.assertRaises(Exception):
                 permanent_delete_document("AT-DOC-001")
+
+    def test_permanent_delete_keeps_file_when_other_documents_reference_it(self):
+        document_doc = FakeDoc("AT-DOC-001", "Active", "FILE-001")
+        file_doc = FakeDoc("FILE-001", "Active")
+
+        delete_calls = []
+
+        def fake_delete_doc(doctype, name, ignore_permissions=False, force=False):
+            delete_calls.append((doctype, name, ignore_permissions, force))
+
+        def fake_get_doc(doctype, name):
+            if doctype == "AT Document":
+                return document_doc
+            if doctype == "File":
+                return file_doc
+            raise AssertionError(f"Unexpected get_doc call: {doctype} {name}")
+
+        with (
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_doc", side_effect=fake_get_doc),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.exists", return_value=True),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.get_value", return_value="/private/files/FILE-001.pdf"),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.count", return_value=1),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.set_value"),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.delete_doc", side_effect=fake_delete_doc),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_roles", return_value=["System Manager"]),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.has_permission", return_value=True),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.log_decision_event"),
+        ):
+            result = permanent_delete_document("AT-DOC-001")
+
+        # AT Document is deleted, but the shared File is kept.
+        self.assertEqual(delete_calls[0], ("AT Document", "AT-DOC-001", True, False))
+        self.assertEqual(len(delete_calls), 1)
+        self.assertEqual(result["deleted_file"], "")
+        self.assertEqual(result["deleted_file_url"], "")
 
     def test_track_document_view_logs_access(self):
         calls = []

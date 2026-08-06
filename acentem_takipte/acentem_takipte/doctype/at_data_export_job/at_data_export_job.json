@@ -1,0 +1,144 @@
+{
+ "actions": [],
+ "autoname": "AT-EXP-.YYYY.-.######",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "screen",
+  "dataset_label",
+  "status",
+  "export_format",
+  "office_branch",
+  "filters_json",
+  "row_count",
+  "filename",
+  "file_url",
+  "expiry_at",
+  "requested_by",
+  "exported_at",
+  "downloaded_at",
+  "error_message"
+ ],
+ "fields": [
+  {
+   "fieldname": "screen",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Screen",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dataset_label",
+   "fieldtype": "Data",
+   "label": "Dataset Label",
+   "in_list_view": 1
+  },
+  {
+   "default": "Completed",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Completed\nFailed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "export_format",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Format",
+   "options": "xlsx\npdf\ncsv",
+   "reqd": 1
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
+  },
+  {
+   "fieldname": "filters_json",
+   "fieldtype": "Long Text",
+   "label": "Filters JSON"
+  },
+  {
+   "fieldname": "row_count",
+   "fieldtype": "Int",
+   "label": "Row Count"
+  },
+  {
+   "fieldname": "filename",
+   "fieldtype": "Data",
+   "label": "Filename"
+  },
+  {
+   "fieldname": "file_url",
+   "fieldtype": "Attach",
+   "label": "File"
+  },
+  {
+   "fieldname": "expiry_at",
+   "fieldtype": "Datetime",
+   "label": "Expiry At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "label": "Requested By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "exported_at",
+   "fieldtype": "Datetime",
+   "label": "Exported At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "downloaded_at",
+   "fieldtype": "Datetime",
+   "label": "Downloaded At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Small Text",
+   "label": "Error Message"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Data Export Job",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AT System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

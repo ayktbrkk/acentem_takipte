@@ -9,8 +9,16 @@ from frappe.utils import cint, now_datetime
 
 from acentem_takipte.acentem_takipte.platform.api.documents import _resolve_uploaded_file_name
 from acentem_takipte.acentem_takipte.platform.api.mutation_access import assert_role_based_write_access
-from acentem_takipte.acentem_takipte.platform.api.security import assert_authenticated, assert_doc_permission, assert_doctype_permission
-from acentem_takipte.acentem_takipte.services.data_import.preview import build_data_import_preview
+from acentem_takipte.acentem_takipte.platform.api.security import (
+    assert_authenticated,
+    assert_doc_permission,
+    assert_doctype_permission,
+    audit_admin_action,
+)
+from acentem_takipte.acentem_takipte.services.data_import.preview import (
+    _compute_file_sha256,
+    build_data_import_preview,
+)
 from acentem_takipte.acentem_takipte.services.data_import.registry import (
     DATASET_TARGET_DOCTYPE,
     SUPPORTED_PREVIEW_DATASETS,
@@ -139,12 +147,24 @@ def enqueue_data_import(job_name: str) -> dict[str, Any]:
     if job.status != "Previewed":
         frappe.throw(_("Import job must be previewed before enqueueing."))
 
+    _verify_preview_integrity(job)
+
     summary = _parse_json_dict(job.preview_summary)
     if int(summary.get("ready") or 0) <= 0:
         frappe.throw(_("There are no importable rows in the preview."))
 
     job.status = "Queued"
     job.save(ignore_permissions=True)
+
+    audit_admin_action(
+        "api.data_import.enqueue_data_import",
+        details={
+            "job_name": safe_job_name,
+            "dataset": dataset,
+            "ready_rows": summary.get("ready"),
+            "total_rows": summary.get("total_rows"),
+        },
+    )
 
     from acentem_takipte.acentem_takipte.tasks import enqueue_data_import_job
 
@@ -242,6 +262,22 @@ def _dataset_for_job(job_name: str) -> str:
     if not dataset:
         frappe.throw(_("Import job not found."))
     return str(dataset)
+
+
+def _verify_preview_integrity(job) -> None:
+    preview_summary = _parse_json_dict(job.preview_summary)
+    stored_hash = str(preview_summary.get("file_sha256") or "").strip()
+    if not stored_hash:
+        return
+
+    current_hash = _compute_file_sha256(job.source_file)
+    if current_hash != stored_hash:
+        frappe.throw(
+            _(
+                "The import file has been modified since the preview was generated. "
+                "Please re-run the preview before importing."
+            )
+        )
 
 
 def _serialize_job(job) -> dict[str, Any]:

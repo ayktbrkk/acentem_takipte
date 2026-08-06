@@ -362,8 +362,14 @@ def permanent_delete_document(docname: str) -> dict:
     at_document_name = doc.name
     frappe.delete_doc("AT Document", at_document_name, ignore_permissions=True)
 
+    # Shared-file protection: only delete the physical File when no other AT
+    # Document (or other metadata) still references it.
     if linked_file_name and frappe.db.exists("File", linked_file_name):
-        frappe.delete_doc("File", linked_file_name, ignore_permissions=True, force=True)
+        still_referenced = frappe.db.count(
+            "AT Document", {"file": linked_file_name, "name": ["!=", at_document_name]}
+        )
+        if not still_referenced:
+            frappe.delete_doc("File", linked_file_name, ignore_permissions=True, force=True)
 
     _log_document_decision(
         doc,
@@ -378,8 +384,8 @@ def permanent_delete_document(docname: str) -> dict:
     return {
         "status": "success",
         "message": _("Document permanently deleted."),
-        "deleted_file": linked_file_name,
-        "deleted_file_url": linked_file_url,
+        "deleted_file": linked_file_name if not still_referenced else "",
+        "deleted_file_url": linked_file_url if not still_referenced else "",
     }
 
 
@@ -448,11 +454,28 @@ def upload_document(
         frappe.throw(_("File not found: {0}").format(file_name), frappe.DoesNotExistError)
 
     file_doc = frappe.get_doc("File", resolved_file_name)
-    if attached_to_doctype and not bool(getattr(file_doc, "is_private", 0)):
+
+    # Retry safety: never create a second AT Document for the same physical File.
+    existing_at_document = frappe.db.get_value(
+        "AT Document", {"file": resolved_file_name}, "name"
+    )
+    if existing_at_document:
+        return {"at_document": existing_at_document}
+
+    # Sensitive documents must always be private, whether or not they are
+    # attached to a reference record (KVKK rule).
+    if is_sensitive and not bool(getattr(file_doc, "is_private", 0)):
         frappe.throw(
             _("Sensitive documents must be uploaded as private files."),
             frappe.ValidationError,
         )
+    if is_sensitive:
+        file_url_path = urlparse(str(getattr(file_doc, "file_url", "") or "")).path
+        if not file_url_path.startswith("/private/files/"):
+            frappe.throw(
+                _("Sensitive documents must be stored in the private files area."),
+                frappe.ValidationError,
+            )
     file_url_path = urlparse(str(getattr(file_doc, "file_url", "") or "")).path
     if attached_to_doctype and not file_url_path.startswith("/private/files/"):
         frappe.throw(
@@ -540,8 +563,17 @@ def upload_document(
             frappe.PermissionError,
         )
 
-    at_doc = frappe.get_doc(doc_data)
-    at_doc.insert(ignore_permissions=allow_via_reference_write)
+    try:
+        at_doc = frappe.get_doc(doc_data)
+        at_doc.insert(ignore_permissions=allow_via_reference_write)
+    except Exception:
+        # Metadata creation failed. The physical File was uploaded moments ago for
+        # this exact purpose; delete it so no orphan File record is left behind.
+        try:
+            frappe.delete_doc("File", resolved_file_name, ignore_permissions=True, force=True)
+        except Exception:
+            pass
+        raise
 
     # Rename the physical file and update File record (file_name + file_url).
     new_display_name = naming_identity["display_name"]

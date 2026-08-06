@@ -71,6 +71,26 @@ describe("Import and export pages", () => {
       if (payload?.column_mapping) {
         return { rows: [{ raw: { "Ad Soyad": "Ali Veli" }, row_status: "ready" }], summary: { ready: 1 } };
       }
+      if (payload?.doctype && payload?.fields) {
+        if (String(payload.fields[0] || "").includes("total_count")) {
+          return [{ total_count: 1 }];
+        }
+        return [
+          {
+            name: "CLM-001",
+            claim_no: "CLM-001",
+            claim_status: "Open",
+            claim_type: "Material",
+            policy: "POL-001",
+            policy_no: "POL-001",
+            customer: "CUST-001",
+            customer_full_name: "Ali Veli",
+            incident_date: "2026-03-05",
+            estimated_amount: 1000,
+            paid_amount: 0,
+          },
+        ];
+      }
       return {};
     });
     vi.stubGlobal(
@@ -142,11 +162,18 @@ describe("Import and export pages", () => {
     await dateInputs[0].setValue("2026-03-01");
     await dateInputs[1].setValue("2026-03-31");
     await selects[2].setValue("Open");
+    await flushPromises();
 
     const buttons = wrapper.findAll("button");
-    const exportButton = buttons.find((button) => button.text() === "Dışa Aktar");
-    const resetButton = buttons.find((button) => button.text() === "Sıfırla");
-    const cancelButton = buttons.find((button) => button.text() === "İptal");
+    const confirmButton = buttons.find((button) => button.text().includes("Onayla"));
+    expect(confirmButton).toBeTruthy();
+    await confirmButton.trigger("click");
+    await flushPromises();
+
+    const confirmButtons = wrapper.findAll("button");
+    const exportButton = confirmButtons.find((button) => button.text() === "Dışa Aktar");
+    const resetButton = confirmButtons.find((button) => button.text() === "Sıfırla");
+    const cancelButton = confirmButtons.find((button) => button.text() === "İptal");
 
     await exportButton.trigger("click");
 

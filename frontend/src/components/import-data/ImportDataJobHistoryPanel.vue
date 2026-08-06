@@ -41,7 +41,14 @@ const props = defineProps({
 const emit = defineEmits(["cancel-job"]);
 
 const tableColumns = computed(() => [
-  { key: "job_name", label: props.t("jobIdLabel") },
+  {
+    key: "job_name",
+    label: props.t("jobIdLabel"),
+    format: (value) => {
+      const match = String(value || "").match(/(\d{6})$/);
+      return match ? `#${match[1]}` : String(value || "-");
+    },
+  },
   { key: "dataset", label: props.t("datasetLabel") },
   { key: "status", label: props.t("status"), type: "status", domain: "import_job" },
   { key: "created_count", label: props.t("createdLabel") },

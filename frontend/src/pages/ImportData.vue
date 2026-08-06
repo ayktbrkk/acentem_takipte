@@ -88,6 +88,8 @@
           v-model:selected-sheet="selectedSheet"
           :localized-datasets="localizedDatasets"
           :file-name="fileName"
+          :file-size="selectedFile?.size || 0"
+          :file-row-count="previewSummary?.total_rows || 0"
           :sheet-names="sheetNames"
           :is-spreadsheet-file="isSpreadsheetFile"
           :headers-loading="headersLoading"
@@ -98,6 +100,7 @@
           :columns="columns"
           :column-mapping="columnMapping"
           :selected-field-options="selectedFieldOptions"
+          :required-fields="requiredFields"
           :t="t"
         />
       </div>
@@ -169,6 +172,7 @@ const {
   errorMessage,
   columnMapping,
   selectedFieldOptions,
+  requiredFields,
   canPreview,
   canImport,
   canCancelImport,
@@ -186,6 +190,7 @@ const {
   workbenchPreviewRows,
   useWorkbenchTable,
   handleFileSelect,
+  selectedFile,
   previewData,
   importData,
   cancelImportJob,

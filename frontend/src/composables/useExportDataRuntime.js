@@ -33,6 +33,20 @@ const LIST_PREVIEW_SCREENS = new Set([
   "renewals_board",
 ]);
 
+const EXPORT_SOFT_LIMIT = 5000;
+const EXPORT_MAX_LIMIT = 50000;
+
+const PII_FIELD_SETS = {
+  customer_list: ["full_name", "phone", "email", "tax_id"],
+  offer_list: ["customer_full_name", "customer_masked_tax_id"],
+  claims_board: ["customer_full_name", "customer_masked_tax_id"],
+  payments_board: ["customer_full_name", "customer_masked_tax_id"],
+  renewals_board: ["customer_full_name", "customer_masked_tax_id"],
+  policy_list: ["customer_full_name", "customer_masked_tax_id"],
+  dashboard: ["customer_full_name", "customer_masked_tax_id"],
+  lead_list: ["display_name", "email", "phone"],
+};
+
 const PREVIEW_FIELD_SETS = {
   offer_list: [
     "name",
@@ -41,7 +55,9 @@ const PREVIEW_FIELD_SETS = {
     "customer.customer_type as customer_customer_type",
     "customer.masked_tax_id as customer_masked_tax_id",
     "insurance_company",
+    "insurance_company.company_name as insurance_company_name",
     "branch",
+    "branch.branch_name as branch_name",
     "status",
     "currency",
     "offer_date",
@@ -59,6 +75,7 @@ const PREVIEW_FIELD_SETS = {
     "claim_status",
     "claim_type",
     "policy.branch as branch",
+    "policy.branch.branch_name as branch_name",
     "incident_date",
     "estimated_amount",
     "paid_amount",
@@ -77,6 +94,8 @@ const PREVIEW_FIELD_SETS = {
     "customer.masked_tax_id as customer_masked_tax_id",
     "policy",
     "policy.policy_no as policy_no",
+    "policy.branch.branch_name as branch_name",
+    "policy.insurance_company.company_name as insurance_company_name",
   ],
   renewals_board: [
     "name",
@@ -91,7 +110,6 @@ const PREVIEW_FIELD_SETS = {
 };
 
 const POLICY_PREVIEW_FIELDS = [
-  "name as record_name",
   "name",
   "policy_no",
   "customer",
@@ -99,7 +117,9 @@ const POLICY_PREVIEW_FIELDS = [
   "customer.customer_type as customer_customer_type",
   "customer.masked_tax_id as customer_masked_tax_id",
   "insurance_company",
+  "insurance_company.company_name as insurance_company_name",
   "branch",
+  "branch.branch_name as branch_name",
   "status",
   "currency",
   "issue_date",
@@ -165,6 +185,8 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
   const listPreviewLoading = ref(false);
   const listPreviewError = ref("");
   const listPreviewRows = ref([]);
+  const listPreviewTotal = ref(0);
+  const previewConfirmed = ref(false);
 
   const listPreviewResource = createResource({
     url: "frappe.client.get_list",
@@ -176,11 +198,38 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
     auto: false,
   });
 
+  const listExportJobsResource = createResource({
+    url: "acentem_takipte.acentem_takipte.platform.api.list_exports.list_export_jobs",
+    auto: false,
+  });
+
   const { formatDate, formatCurrency } = useAtFormatting(
     computed(() => (String(unref(activeLocale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en")),
   );
 
   const showListPreview = computed(() => LIST_PREVIEW_SCREENS.has(form.screen));
+
+  const canExport = computed(() => {
+    if (exportLoading.value) return false;
+    if (listPreviewLoading.value) return false;
+    if (exceedsHardLimit.value) return false;
+    if (!showListPreview.value) return true;
+    return previewConfirmed.value && listPreviewTableRows.value.length > 0;
+  });
+
+  const exportRowCount = computed(() => {
+    if (listPreviewTotal.value > 0) return listPreviewTotal.value;
+    return listPreviewRows.value.length;
+  });
+
+  const exceedsSoftLimit = computed(() => exportRowCount.value > EXPORT_SOFT_LIMIT);
+
+  const exceedsHardLimit = computed(() => exportRowCount.value > EXPORT_MAX_LIMIT);
+
+  const containsPii = computed(() => {
+    const piiFields = PII_FIELD_SETS[form.screen] || [];
+    return piiFields.length > 0;
+  });
 
   const listPreviewColumns = computed(() => {
     if (form.screen === "customer_list") return buildCustomerListTableColumns(t);
@@ -272,6 +321,7 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
   async function refreshListPreview() {
     if (!showListPreview.value) {
       listPreviewRows.value = [];
+      listPreviewTotal.value = 0;
       return;
     }
 
@@ -288,6 +338,7 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
           page_length: 10,
         });
         listPreviewRows.value = payload?.rows || [];
+        listPreviewTotal.value = Number(payload?.total || payload?.rows?.length || 0);
         return;
       }
 
@@ -298,17 +349,31 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
           ? "`tabAT Renewal Task`.due_date asc, `tabAT Renewal Task`.modified desc"
           : `\`tab${doctype}\`.modified desc`;
 
-      const rows = await listPreviewResource.submit({
-        doctype,
-        fields,
-        filters: buildListPreviewFilters(),
-        order_by: orderBy,
-        limit_start: 0,
-        limit_page_length: 10,
-      });
-      listPreviewRows.value = Array.isArray(rows) ? rows : [];
+      const filters = buildListPreviewFilters();
+
+      const [previewRows, countResult] = await Promise.all([
+        listPreviewResource.submit({
+          doctype,
+          fields,
+          filters,
+          order_by: orderBy,
+          limit_start: 0,
+          limit_page_length: 10,
+        }),
+        listPreviewResource.submit({
+          doctype,
+          fields: ["count(`name`) as total_count"],
+          filters,
+          limit_page_length: 1,
+        }),
+      ]);
+
+      listPreviewRows.value = Array.isArray(previewRows) ? previewRows : [];
+      const countRow = Array.isArray(countResult) ? countResult[0] : null;
+      listPreviewTotal.value = Number(countRow?.total_count || 0);
     } catch (error) {
       listPreviewRows.value = [];
+      listPreviewTotal.value = 0;
       listPreviewError.value =
         error?.messages?.join(" ") || error?.message || t("previewLoadError");
     } finally {
@@ -319,6 +384,7 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
   watch(
     () => [form.screen, form.startDate, form.endDate, form.status, branchStore?.requestBranch],
     () => {
+      previewConfirmed.value = false;
       void refreshListPreview();
     },
     { immediate: true },
@@ -330,13 +396,16 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
       export_format: ["pdf", "csv"].includes(String(form.format || "xlsx").trim().toLowerCase())
         ? String(form.format).trim().toLowerCase()
         : "xlsx",
-      limit: "5000",
+      limit: String(Math.max(exportRowCount.value, 1)),
     });
 
     if (form.filename) params.set("filename", form.filename);
     if (form.startDate) params.set("start_date", form.startDate);
     if (form.endDate) params.set("end_date", form.endDate);
     if (form.status) params.set("status", form.status);
+
+    const officeBranch = branchStore?.requestBranch || "";
+    if (officeBranch) params.set("office_branch", officeBranch);
 
     return `/api/method/acentem_takipte.acentem_takipte.platform.api.list_exports.download_export?${params.toString()}`;
   }
@@ -354,9 +423,37 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
         screenLabel,
         format: form.format,
         filename,
+        rowCount: exportRowCount.value,
+        status: "Completed",
       },
       ...historyRows.value,
     ].slice(0, 8);
+  }
+
+  async function loadExportJobs() {
+    try {
+      const rows = await listExportJobsResource.submit({ limit: 8 });
+      if (Array.isArray(rows) && rows.length > 0) {
+        const screenLabels = new Map(
+          localizedScreenOptions.value.map((option) => [option.value, option.label]),
+        );
+        historyRows.value = rows.map((row) => ({
+          id: row.export_job_name,
+          date: new Intl.DateTimeFormat(activeLocale.value === "tr" ? "tr-TR" : "en-US", {
+            dateStyle: "short",
+            timeStyle: "short",
+          }).format(new Date(row.exported_at || Date.now())),
+          screenLabel: row.dataset_label || screenLabels.get(row.screen) || row.screen || t("screenNoLabel"),
+          format: row.export_format || "xlsx",
+          filename: row.filename || row.export_job_name || "",
+          rowCount: Number(row.row_count || 0),
+          status: row.status || "Completed",
+          fileUrl: row.file_url || "",
+        }));
+      }
+    } catch {
+      // Backend history may be unavailable (pre-migration); keep session-local rows.
+    }
   }
 
   function downloadExport() {
@@ -366,9 +463,10 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
     window.open(url, "_blank", "noopener,noreferrer");
     addHistory();
     message.value = t("exportStarted");
-    window.setTimeout(() => {
+    window.setTimeout(async () => {
       exportLoading.value = false;
-    }, 800);
+      await loadExportJobs();
+    }, 1500);
   }
 
   function resetForm() {
@@ -397,9 +495,17 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
     listPreviewTableRows,
     listPreviewLoading,
     listPreviewError,
+    listPreviewTotal,
+    exportRowCount,
+    exceedsSoftLimit,
+    exceedsHardLimit,
+    containsPii,
+    canExport,
+    previewConfirmed,
     exportLoading,
     buildExportUrl,
     addHistory,
+    loadExportJobs,
     downloadExport,
     resetForm,
     cancel,

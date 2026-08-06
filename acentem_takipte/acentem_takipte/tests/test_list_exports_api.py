@@ -21,6 +21,32 @@ def _ensure_test_flags():
             frappe.local.flags = previous_flags
 
 
+@pytest.fixture(autouse=True)
+def _mock_export_job_record(monkeypatch):
+    """Prevent export_screen_list/download_export from writing real AT Data Export Job rows.
+
+    The screen-export tests stub the download/query builders; recording an export
+    job would touch the real doctype and leave test data behind. Stub the payload
+    builder and the job recorder so those tests stay deterministic.
+    """
+    monkeypatch.setattr(list_exports, "_record_export_job", lambda **kwargs: None)
+    monkeypatch.setattr(
+        list_exports,
+        "build_screen_export_payload",
+        lambda screen, query=None, limit=1000: {
+            "screen": screen,
+            "title": "Report",
+            "rows": [],
+            "columns": [],
+            "filters": query or {},
+            "applied_filters": {},
+            "total_count": 0,
+            "filtered_count": 0,
+            "scope_label": "",
+        },
+    )
+
+
 def test_get_screen_export_payload_enforces_auth_and_permission(monkeypatch):
     calls = []
 

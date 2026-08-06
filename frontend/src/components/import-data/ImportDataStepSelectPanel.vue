@@ -25,6 +25,7 @@
           <span class="file-trigger__hint">{{ t("chooseFileHint") }}</span>
         </button>
         <p v-if="fileName" class="mt-2 text-xs font-medium text-slate-600">{{ t("selectedFile") }}: {{ fileName }}</p>
+        <p v-if="fileName" class="mt-1 text-xs text-slate-500">{{ fileMetaLabel }}</p>
       </div>
 
       <div v-if="isSpreadsheetFile && sheetNames.length" class="form-field md:col-span-2">
@@ -63,6 +64,10 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  fileSize: {
+    type: Number,
+    default: 0,
+  },
   sheetNames: {
     type: Array,
     default: () => [],
@@ -75,6 +80,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  fileRowCount: {
+    type: Number,
+    default: 0,
+  },
   t: {
     type: Function,
     required: true,
@@ -85,6 +94,18 @@ const emit = defineEmits(["update:modelValue", "update:selectedSheet", "file-sel
 const fileInput = ref(null);
 const datasetId = useId();
 const sheetId = useId();
+
+const fileMetaLabel = computed(() => {
+  const parts = [];
+  if (props.fileSize > 0) {
+    const kb = props.fileSize / 1024;
+    parts.push(kb >= 1024 ? `${(kb / 1024).toFixed(2)} MB` : `${kb.toFixed(1)} KB`);
+  }
+  if (props.fileRowCount > 0) {
+    parts.push(`${props.fileRowCount} ${props.t("rowsPrefix")}`);
+  }
+  return parts.join(" · ");
+});
 
 const selectedDatasetModel = computed({
   get: () => props.modelValue,

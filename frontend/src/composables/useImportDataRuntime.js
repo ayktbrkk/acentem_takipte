@@ -19,6 +19,7 @@ const datasets = [
     key: "customers",
     labelKey: "customerLabel",
     supported: true,
+    required: ["full_name", "tax_id"],
     fields: [
       { value: "full_name", labelKey: "fullName" },
       { value: "tax_id", labelKey: "taxId" },
@@ -31,6 +32,7 @@ const datasets = [
     key: "offers",
     labelKey: "offerLabel",
     supported: true,
+    required: ["customer", "sales_entity", "insurance_company", "branch", "offer_date", "gross_premium"],
     fields: [
       { value: "customer", labelKey: "customer" },
       { value: "insurance_company", labelKey: "insuranceCompany" },
@@ -49,6 +51,7 @@ const datasets = [
     key: "policies",
     labelKey: "policyLabel",
     supported: true,
+    required: ["customer", "sales_entity", "insurance_company", "branch", "policy_no", "issue_date", "start_date", "gross_premium"],
     fields: [
       { value: "policy_no", labelKey: "policyNo" },
       { value: "customer", labelKey: "customer" },
@@ -190,10 +193,23 @@ export function useImportDataRuntime({ t, router, authStore, branchStore }) {
 
   const selectedFieldOptions = computed(() => {
     const dataset = datasets.find((item) => item.key === selectedDataset.value);
+    const requiredSet = new Set(dataset?.required || []);
     return (dataset?.fields || []).map((field) => ({
       value: field.value,
       label: label(t, field.labelKey),
+      required: requiredSet.has(field.value),
     }));
+  });
+
+  const requiredFields = computed(() => {
+    const dataset = datasets.find((item) => item.key === selectedDataset.value);
+    const requiredSet = new Set(dataset?.required || []);
+    return (dataset?.fields || [])
+      .filter((field) => requiredSet.has(field.value))
+      .map((field) => ({
+        value: field.value,
+        label: label(t, field.labelKey),
+      }));
   });
 
   const mappedColumnCount = computed(() => {
@@ -636,6 +652,7 @@ export function useImportDataRuntime({ t, router, authStore, branchStore }) {
     errorMessage,
     columnMapping,
     selectedFieldOptions,
+    requiredFields,
     mappedColumnCount,
     canPreview,
     canImport,
@@ -655,6 +672,7 @@ export function useImportDataRuntime({ t, router, authStore, branchStore }) {
     jobHistory,
     resetAll,
     handleFileSelect,
+    selectedFile,
     previewData,
     importData,
     cancelImportJob,

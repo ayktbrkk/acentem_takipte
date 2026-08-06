@@ -9,7 +9,6 @@ import frappe
 from frappe import _
 from frappe.utils import cint, flt, format_datetime, formatdate
 
-import acentem_takipte.acentem_takipte.domains.reports.api.dashboard as dashboard_api
 from acentem_takipte.acentem_takipte.platform.services.export_payload_utils import (
     coerce_columns,
     coerce_filters,
@@ -22,6 +21,16 @@ from acentem_takipte.acentem_takipte.platform.services.export_payload_utils impo
 )
 from acentem_takipte.acentem_takipte.domains.reports.services.runtime import build_tabular_download_response
 from acentem_takipte.acentem_takipte.utils.i18n import translate_text
+
+
+def _dashboard_api():
+    # Lazy import breaks a circular dependency chain:
+    # services.list_exports -> domains.reports.api.dashboard -> api.v2 -> platform.api.list_exports
+    # -> services.list_exports. The dashboard module is only needed by the
+    # custom-screen fetchers below, so it is loaded on first use.
+    import acentem_takipte.acentem_takipte.domains.reports.api.dashboard as dashboard_api
+
+    return dashboard_api
 
 
 def _t(en: str) -> str:
@@ -368,6 +377,7 @@ def build_workbench_export_query(
     start_date: str = "",
     end_date: str = "",
     status: str = "",
+    office_branch: str = "",
 ) -> dict[str, Any]:
     resolved_screen = SCREEN_ALIASES.get(str(screen or "").strip(), str(screen or "").strip())
     field_map = SCREEN_FILTER_FIELDS.get(
@@ -392,6 +402,13 @@ def build_workbench_export_query(
         filters[date_field] = [">=", f"{safe_start} 00:00:00" if date_field == "modified" else safe_start]
     elif safe_end:
         filters[date_field] = ["<=", f"{safe_end} 23:59:59" if date_field == "modified" else safe_end]
+
+    safe_branch = str(office_branch or "").strip()
+    if safe_branch:
+        from acentem_takipte.acentem_takipte.platform.permissions.branches import assert_office_branch_access
+
+        verified_branch = assert_office_branch_access(safe_branch)
+        filters["office_branch"] = verified_branch
 
     order_by = "modified desc"
     definition = SCREEN_EXPORTS.get(resolved_screen)
@@ -445,20 +462,41 @@ def get_screen_export_definition(screen: str) -> dict[str, Any]:
     return definition
 
 
+EXPORT_MAX_LIMIT = 50000
+
+
 def build_screen_export_payload(screen: str, query: dict | str | None = None, limit: int = 1000) -> dict[str, Any]:
     definition = get_screen_export_definition(screen)
     normalized_query = _coerce_query_payload(query)
-    normalized_limit = max(min(cint(limit), 5000), 1)
+    requested_limit = max(cint(limit), 1)
+    if requested_limit > EXPORT_MAX_LIMIT:
+        frappe.throw(
+            _(
+                "Export size exceeds the supported maximum of {0} rows. "
+                "Narrow your filters or split the export into smaller batches."
+            ).format(EXPORT_MAX_LIMIT)
+        )
+    normalized_limit = requested_limit
     locale = _active_locale()
 
     if definition["type"] == "custom":
         fetcher = globals()[definition["fetcher"]]
         raw_rows = fetcher(normalized_query, normalized_limit)
+        count_name = str(definition.get("fetcher") or "").replace("_fetch_", "_count_")
+        count_fn = globals().get(count_name)
+        filtered_count = count_fn(normalized_query) if callable(count_fn) else len(raw_rows)
     else:
         raw_rows = _fetch_doctype_rows(definition, normalized_query, normalized_limit)
+        filtered_count = count_doctype_export_rows(definition, normalized_query)
 
     column_labels = [_localize(defn["label"], locale) for defn in definition["columns"]]
     rows = [_format_export_row(row, definition["columns"], locale) for row in raw_rows]
+
+    scope_label = ""
+    office_branch = (normalized_query.get("filters") or {}).get("office_branch")
+    if office_branch:
+        branch_name = frappe.db.get_value("AT Office Branch", office_branch, "office_branch_name")
+        scope_label = str(branch_name or office_branch)
 
     return {
         "screen": screen,
@@ -467,6 +505,10 @@ def build_screen_export_payload(screen: str, query: dict | str | None = None, li
         "columns": column_labels,
         "rows": rows,
         "filters": normalized_query,
+        "total_count": len(rows),
+        "filtered_count": filtered_count,
+        "scope_label": scope_label,
+        "applied_filters": {k: v for k, v in (normalized_query.get("filters") or {}).items()},
     }
 
 
@@ -521,6 +563,7 @@ def build_tabular_payload_export_response(
 
 
 def _fetch_lead_rows(query: dict[str, Any], limit: int) -> list[dict[str, Any]]:
+    dashboard_api = _dashboard_api()
     return _collect_dashboard_rows(
         dashboard_api.get_lead_workbench_rows,
         filters=(query or {}).get("filters") or {},
@@ -528,7 +571,22 @@ def _fetch_lead_rows(query: dict[str, Any], limit: int) -> list[dict[str, Any]]:
     )
 
 
+def _count_lead_rows(query: dict[str, Any]) -> int:
+    return _count_dashboard_rows(
+        _dashboard_api().get_lead_workbench_rows,
+        filters=(query or {}).get("filters") or {},
+    )
+
+
+def _count_customer_rows(query: dict[str, Any]) -> int:
+    return _count_dashboard_rows(
+        _dashboard_api().get_customer_workbench_rows,
+        filters=(query or {}).get("filters") or {},
+    )
+
+
 def _fetch_customer_rows(query: dict[str, Any], limit: int) -> list[dict[str, Any]]:
+    dashboard_api = _dashboard_api()
     return _collect_dashboard_rows(
         dashboard_api.get_customer_workbench_rows,
         filters=(query or {}).get("filters") or {},
@@ -557,6 +615,13 @@ def _collect_dashboard_rows(fetcher: Callable[..., dict[str, Any]], *, filters: 
     return rows[:limit]
 
 
+def _count_dashboard_rows(fetcher: Callable[..., dict[str, Any]], *, filters: dict[str, Any]) -> int:
+    payload = fetcher(filters=filters, page=1, page_length=1) or {}
+    if not isinstance(payload, dict):
+        return 0
+    return max(cint(payload.get("total") or 0), 0)
+
+
 def _fetch_doctype_rows(definition: dict[str, Any], query: dict[str, Any], limit: int) -> list[dict[str, Any]]:
     filters = _coerce_filters((query or {}).get("filters"))
     or_filters = _coerce_or_filters((query or {}).get("or_filters"))
@@ -571,6 +636,25 @@ def _fetch_doctype_rows(definition: dict[str, Any], query: dict[str, Any], limit
         limit_start=0,
         limit_page_length=limit,
     )
+
+
+def count_doctype_export_rows(definition: dict[str, Any], query: dict[str, Any]) -> int:
+    filters = _coerce_filters((query or {}).get("filters"))
+    or_filters = _coerce_or_filters((query or {}).get("or_filters"))
+    if or_filters:
+        return _count_doctype_with_or(definition["doctype"], filters=filters, or_filters=or_filters)
+    return cint(frappe.db.count(definition["doctype"], filters=filters))
+
+
+def _count_doctype_with_or(doctype: str, *, filters: dict, or_filters: Any) -> int:
+    rows = frappe.get_all(
+        doctype,
+        filters=filters,
+        or_filters=or_filters,
+        fields=["name"],
+        limit_page_length=0,
+    )
+    return len(rows)
 
 
 def _format_export_row(row: dict[str, Any], columns: list[dict[str, Any]], locale: str) -> dict[str, Any]:

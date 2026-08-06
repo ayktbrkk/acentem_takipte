@@ -11,6 +11,27 @@ from acentem_takipte.acentem_takipte.platform.services import list_exports
 from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 
+@pytest.fixture(autouse=True)
+def _mock_count(monkeypatch):
+    """Isolate doctype count lookups.
+
+    build_screen_export_payload computes filtered_count via count_doctype_export_rows
+    which touches frappe.db.count (and frappe.get_all for or_filters). Several
+    tests stub frappe.local with a bare SimpleNamespace (no .flags), which breaks
+    the real query builder. Stub the count helpers so those tests keep running
+    deterministically.
+    """
+
+    def fake_count(doctype, filters=None):
+        return 0
+
+    def fake_count_with_or(doctype, *, filters, or_filters):
+        return 0
+
+    monkeypatch.setattr(list_exports.frappe, "db", SimpleNamespace(count=fake_count))
+    monkeypatch.setattr(list_exports, "_count_doctype_with_or", fake_count_with_or)
+
+
 def test_collect_dashboard_rows_paginates_until_total():
     pages = {
         1: {"rows": [{"name": "ROW-1"}, {"name": "ROW-2"}], "total": 3},
@@ -485,3 +506,79 @@ def test_build_tabular_payload_export_response_accepts_mapping_rows(monkeypatch)
     assert calls[0]["columns"] == ["Task", "Due"]
     assert calls[0]["rows"] == [{"Task": "RT-0001", "Due": "2026-03-11"}]
 
+
+def test_build_workbench_export_query_applies_office_branch_scope(monkeypatch):
+    def fake_assert(branch, user=None):
+        return "BR-001"
+
+    monkeypatch.setattr(
+        "acentem_takipte.acentem_takipte.platform.permissions.branches.assert_office_branch_access",
+        fake_assert,
+    )
+
+    query = list_exports.build_workbench_export_query(
+        "policy_list",
+        start_date="2026-01-01",
+        end_date="2026-01-31",
+        status="Active",
+        office_branch="BR-001",
+    )
+
+    assert query["filters"]["office_branch"] == "BR-001"
+    assert query["filters"]["status"] == "Active"
+    assert query["filters"]["end_date"] == ["between", ["2026-01-01", "2026-01-31"]]
+
+
+def test_build_workbench_export_query_without_branch_has_no_branch_filter(monkeypatch):
+    monkeypatch.setattr(
+        "acentem_takipte.acentem_takipte.platform.permissions.branches.assert_office_branch_access",
+        lambda branch, user=None: branch,
+    )
+
+    query = list_exports.build_workbench_export_query("policy_list")
+
+    assert "office_branch" not in query["filters"]
+
+def test_build_screen_export_payload_rejects_limit_over_max(monkeypatch):
+    monkeypatch.setattr(list_exports, "_", lambda value: value, raising=False)
+    monkeypatch.setattr(list_exports.frappe, "local", SimpleNamespace(lang="tr"))
+    monkeypatch.setattr(list_exports.frappe, "get_list", lambda *args, **kwargs: [])
+    monkeypatch.setattr(
+        list_exports.frappe,
+        "throw",
+        lambda message: (_ for _ in ()).throw(Exception(str(message))),
+    )
+
+    with pytest.raises(Exception) as excinfo:
+        list_exports.build_screen_export_payload("policy_list", query={}, limit=list_exports.EXPORT_MAX_LIMIT + 1)
+    assert "maximum" in str(excinfo.value).lower()
+
+
+def test_build_screen_export_payload_accepts_exactly_max_limit(monkeypatch):
+    monkeypatch.setattr(list_exports.frappe, "local", SimpleNamespace(lang="tr"))
+    monkeypatch.setattr(list_exports.frappe, "get_list", lambda *args, **kwargs: [])
+
+    payload = list_exports.build_screen_export_payload(
+        "policy_list",
+        query={},
+        limit=list_exports.EXPORT_MAX_LIMIT,
+    )
+    assert payload["rows"] == []
+
+
+def test_count_doctype_export_rows_uses_db_count(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        list_exports.frappe,
+        "db",
+        SimpleNamespace(
+            count=lambda doctype, filters=None: calls.append((doctype, filters)) or 42
+        ),
+    )
+    result = list_exports.count_doctype_export_rows(
+        {"doctype": "AT Policy"},
+        {"filters": {"status": "Active"}},
+    )
+    assert result == 42
+    assert calls[0][0] == "AT Policy"
+    assert calls[0][1] == {"status": "Active"}

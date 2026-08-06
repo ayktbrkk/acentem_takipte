@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from typing import Any
 
@@ -8,7 +9,7 @@ from frappe import _
 from frappe.utils import getdate
 
 from acentem_takipte.acentem_takipte.platform.permissions.branches import assert_office_branch_access
-from acentem_takipte.acentem_takipte.services.data_import.file_loader import parse_job_file
+from acentem_takipte.acentem_takipte.services.data_import.file_loader import load_attached_file_bytes, parse_job_file
 from acentem_takipte.acentem_takipte.services.data_import.normalizers import (
     apply_column_mapping,
     normalize_customer_row,
@@ -63,12 +64,17 @@ def build_data_import_preview(
     )
     summary = _summarize_rows(rows)
 
+    file_hash = _compute_file_sha256(job.source_file)
+
     job.column_mapping = json.dumps(mapping, ensure_ascii=False)
     job.import_options = json.dumps(
         {**(options or {}), "office_branch": office_branch, "sheet_name": parsed.active_sheet or sheet_name},
         ensure_ascii=False,
     )
-    job.preview_summary = json.dumps(summary, ensure_ascii=False)
+    job.preview_summary = json.dumps(
+        {**summary, "file_sha256": file_hash, "mapping_keys": sorted(mapping.keys())},
+        ensure_ascii=False,
+    )
     job.preview_rows_json = json.dumps(rows[:PREVIEW_ROW_LIMIT], ensure_ascii=False)
     job.status = "Previewed"
     job.save(ignore_permissions=True)
@@ -271,3 +277,8 @@ def _load_json(raw: Any) -> dict[str, Any]:
     except json.JSONDecodeError:
         return {}
     return loaded if isinstance(loaded, dict) else {}
+
+
+def _compute_file_sha256(file_url: str) -> str:
+    content = load_attached_file_bytes(file_url)
+    return hashlib.sha256(content).hexdigest()
