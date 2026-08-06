@@ -119,6 +119,11 @@ jobs:
       - name: Install app and run tests
         working-directory: ${{ env.BENCH_DIR }}
         run: |
+          # bench run-tests imports every test_*.py module during collection,
+          # including the pytest function-test modules that `import pytest` at
+          # module level. The bench venv has no pytest (it is not an app
+          # dependency), so it must be installed here or collection aborts.
+          bench pip install pytest
           bench --site "$SITE_NAME" install-app acentem_takipte
           bench --site "$SITE_NAME" run-tests --app acentem_takipte
 
