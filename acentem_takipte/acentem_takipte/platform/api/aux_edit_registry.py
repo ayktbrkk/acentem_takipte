@@ -289,6 +289,7 @@ FIELD_REGISTRY: dict[tuple[str, str], tuple] = {
     (_ANY, "external_amount"): ("float",),
     (_ANY, "external_amount_try"): ("float",),
     (_ANY, "currency"): ("currency",),
+    ("AT Sales Entity", "commission_share_pct"): ("float",),
 }
 
 

@@ -77,12 +77,20 @@ def create_quick_customer(
         ),
         "occupation": (occupation or "").strip() or None,
         "consent_status": _normalize_option(
-            consent_status, {"Unknown", "Granted", "Revoked"}, default="Unknown"
+            consent_status, {"Unknown", "Granted", "Revoked"}, default=_default_kvkk_consent()
         ),
         "assigned_agent": (assigned_agent or "").strip() or None,
     }
 
     return create_customer_service(payload)
+
+
+def _default_kvkk_consent() -> str:
+    from acentem_takipte.acentem_takipte.domains.admin.services.general_settings import get_insurance_defaults
+
+    defaults = get_insurance_defaults()
+    value = str(defaults.get("kvkk_consent_default") or "Unknown").strip()
+    return value if value in {"Unknown", "Granted", "Revoked"} else "Unknown"
 
 
 @frappe.whitelist()

@@ -236,6 +236,7 @@ def send_draft_now(draft_name: str) -> dict:
         permission_targets=COMMUNICATION_MUTATION_DOCTYPES["send_draft_now"],
     )
     assert_doc_permission("AT Notification Draft", draft_name, "write")
+    _assert_draft_branch_access(draft_name)
     return communication_logic.send_notification_draft_now(draft_name)
 
 @frappe.whitelist()
@@ -247,6 +248,7 @@ def retry_outbox_item(outbox_name: str) -> dict:
         permission_targets=COMMUNICATION_MUTATION_DOCTYPES["retry_outbox_item"],
     )
     assert_doc_permission("AT Notification Outbox", outbox_name, "write")
+    _assert_outbox_branch_access(outbox_name)
     return communication_logic.retry_notification_outbox(outbox_name)
 
 
@@ -259,6 +261,7 @@ def requeue_outbox_item(outbox_name: str) -> dict:
         permission_targets=COMMUNICATION_MUTATION_DOCTYPES["requeue_outbox_item"],
     )
     assert_doc_permission("AT Notification Outbox", outbox_name, "write")
+    _assert_outbox_branch_access(outbox_name)
     return communication_logic.requeue_notification_outbox(outbox_name)
 
 
@@ -314,4 +317,16 @@ def _resolve_notification_office_branch(
             return assert_office_branch_access(str(reference_branch).strip() or None)
 
     return get_default_office_branch()
+
+
+def _assert_draft_branch_access(draft_name: str) -> None:
+    branch = frappe.db.get_value("AT Notification Draft", draft_name, "office_branch")
+    if branch:
+        assert_office_branch_access(str(branch).strip())
+
+
+def _assert_outbox_branch_access(outbox_name: str) -> None:
+    branch = frappe.db.get_value("AT Notification Outbox", outbox_name, "office_branch")
+    if branch:
+        assert_office_branch_access(str(branch).strip())
 

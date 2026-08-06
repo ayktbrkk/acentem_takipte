@@ -1,6 +1,6 @@
 {
  "actions": [],
- "autoname": "format:AT-CAMP-.YYYY.-.#####",
+ "autoname": "AT-CAMP-.YYYY.-.#####",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [

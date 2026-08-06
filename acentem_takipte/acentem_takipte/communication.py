@@ -271,10 +271,15 @@ def dispatch_notification_outbox(
     if outbox.status == ATNotificationOutboxStatus.DEAD and not force:
         return {"status": "Skipped", "reason": "dead_letter"}
 
+    if not force and not _claim_outbox_for_processing(outbox_name):
+        # Another worker already picked this item up (atomic claim).
+        return {"status": "Skipped", "reason": "already_processing"}
+
     if not outbox.recipient:
         _mark_delivery_failure(outbox, draft, "Recipient is missing on outbox item.")
         return {"status": outbox.status, "reason": "missing_recipient"}
 
+    outbox.reload()
     outbox.status = ATNotificationOutboxStatus.PROCESSING
     outbox.attempt_count = cint(outbox.attempt_count) + 1
     outbox.last_attempt_on = now_datetime()
@@ -352,6 +357,46 @@ def send_notification_draft_now(draft_name: str) -> dict[str, str]:
     if not frappe.flags.in_test:
         frappe.db.commit()
     return result
+
+
+def _claim_outbox_for_processing(outbox_name: str) -> bool:
+    """Atomically claim an outbox row so two workers cannot dispatch the same item."""
+    cursor = getattr(frappe.db, "_cursor", None)
+    if cursor is not None:
+        frappe.db.sql(
+            """
+            update `tabAT Notification Outbox`
+            set status = %(processing)s
+            where name = %(name)s
+              and status in (%(queued)s, %(failed)s)
+            """,
+            {
+                "processing": ATNotificationOutboxStatus.PROCESSING,
+                "queued": ATNotificationOutboxStatus.QUEUED,
+                "failed": ATNotificationOutboxStatus.FAILED,
+                "name": outbox_name,
+            },
+        )
+        return bool(getattr(cursor, "rowcount", 0))
+
+    current = frappe.db.get_value("AT Notification Outbox", outbox_name, "status")
+    if current == ATNotificationOutboxStatus.PROCESSING:
+        return False
+    frappe.db.sql(
+        """
+        update `tabAT Notification Outbox`
+        set status = %(processing)s
+        where name = %(name)s
+          and status in (%(queued)s, %(failed)s)
+        """,
+        {
+            "processing": ATNotificationOutboxStatus.PROCESSING,
+            "queued": ATNotificationOutboxStatus.QUEUED,
+            "failed": ATNotificationOutboxStatus.FAILED,
+            "name": outbox_name,
+        },
+    )
+    return True
 
 
 def _mark_delivery_failure(outbox, draft, error_message: str) -> None:

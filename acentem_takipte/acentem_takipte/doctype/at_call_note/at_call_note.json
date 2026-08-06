@@ -1,6 +1,6 @@
 {
  "actions": [],
- "autoname": "format:AT-CALL-.YYYY.-.#####",
+ "autoname": "AT-CALL-.YYYY.-.#####",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [

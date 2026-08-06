@@ -94,6 +94,8 @@ export const ADMIN_GENERAL_SETTINGS_TRANSLATIONS = {
     alertSaveError: "Uyarı kanal ayarları kaydedilemedi.",
     alertTestError: "Test uyarısı gönderilemedi.",
     alertSaveSuccess: "Uyarı kanal ayarları kaydedildi.",
+    resetConfirm: "Tüm ayarları varsayılan değerlere döndürmek istediğinizden emin misiniz?",
+    unsavedChangesConfirm: "Kaydedilmemiş değişiklikleriniz var. Sekmeyi değiştirmek kaydedilmemiş değişikliklerinizi kaybettirebilir. Devam etmek istiyor musunuz?",
   },
   en: {
     breadcrumb: "Control Center → Admin Settings",
@@ -190,5 +192,7 @@ export const ADMIN_GENERAL_SETTINGS_TRANSLATIONS = {
     alertSaveError: "Failed to save alert channel settings.",
     alertTestError: "Failed to send alert channel test.",
     alertSaveSuccess: "Alert channel settings saved.",
+    resetConfirm: "Are you sure you want to reset all settings to their defaults?",
+    unsavedChangesConfirm: "You have unsaved changes. Switching tabs will lose unsaved changes. Continue?",
   },
 };

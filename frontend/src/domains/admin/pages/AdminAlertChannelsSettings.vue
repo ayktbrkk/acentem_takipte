@@ -96,7 +96,7 @@ const alertChannelsTesting = ref(false);
 const error = ref("");
 const toast = reactive({ show: false, message: "", type: "success" });
 
-const canManageAlertChannels = computed(() => Boolean(authStore.isDeskUser));
+const canManageAlertChannels = computed(() => authStore.hasAnyRole("System Manager", "Administrator"));
 const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 
 function t(key) {
@@ -182,11 +182,15 @@ async function testAlertChannels(config) {
   alertChannelsTesting.value = true;
   error.value = "";
   try {
-    await frappeRequest({
+    const payload = await frappeRequest({
       url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.send_ops_alert_channel_test_api",
       method: "POST",
       params: { config },
     });
+    const channels = (payload?.message || payload || {}).channels || [];
+    if (channels.length) {
+      showToast(t("testSuccess"), "success");
+    }
   } catch (err) {
     error.value = String(err?.message || err || t("testError"));
   } finally {

@@ -29,10 +29,10 @@
     </template>
 
     <div class="nav-tabs-bar mb-6">
-      <button :class="['nav-tab', activeTab === 'settings' && 'is-active']" @click="activeTab = 'settings'">
+      <button :class="['nav-tab', activeTab === 'settings' && 'is-active']" @click="switchTab('settings')">
         {{ t('tabSettings') }}
       </button>
-      <button :class="['nav-tab', activeTab === 'alerts' && 'is-active']" @click="activeTab = 'alerts'">
+      <button :class="['nav-tab', activeTab === 'alerts' && 'is-active']" @click="switchTab('alerts')">
         {{ t('tabAlertChannels') }}
       </button>
     </div>
@@ -317,7 +317,7 @@ const insuranceDefaultsLabel = computed(() => `${settings.value.default_currency
 const activeLocaleDisplay = computed(() => (settings.value.active_locale === "tr" ? t("languageOptionTr") : t("languageOptionEn")));
 const siteName = computed(() => settings.value.site_name);
 const environment = computed(() => settings.value.environment);
-const canManageAlertChannels = computed(() => Boolean(authStore.isDeskUser));
+const canManageAlertChannels = computed(() => authStore.hasAnyRole("System Manager", "Administrator"));
 const configuredChannelCount = computed(() => (alertChannelConfig.value.slack_configured ? 1 : 0) + (alertChannelConfig.value.telegram_configured ? 1 : 0));
 const slackStatusValue = computed(() => alertChannelConfig.value.slack_configured ? alertT("connected") : alertT("notConfigured"));
 const telegramStatusValue = computed(() => alertChannelConfig.value.telegram_configured ? alertT("connected") : alertT("notConfigured"));
@@ -326,13 +326,34 @@ const telegramStatusClass = computed(() => alertChannelConfig.value.telegram_con
 
 function markDirty() { isDirty.value = true; }
 function showToast(message, type = "success") { toast.message = message; toast.type = type; toast.show = true; setTimeout(() => { toast.show = false; }, 4000); }
-function resetToDefaults() { settings.value = { ...settings.value, ...DEFAULTS }; isDirty.value = true; }
+function resetToDefaults() { if (!window.confirm(t("resetConfirm"))) return; settings.value = { ...settings.value, ...DEFAULTS }; isDirty.value = true; }
+function switchTab(tab) {
+  if (tab !== activeTab.value && isDirty.value && !window.confirm(t("unsavedChangesConfirm"))) return;
+  activeTab.value = tab;
+}
 
 function buildSavePayload() { return { default_locale: settings.value.default_locale, default_date_format: settings.value.default_date_format, follow_up_due_soon_days: settings.value.follow_up_due_soon_days, follow_up_preview_limit: settings.value.follow_up_preview_limit, default_policy_term_days: settings.value.default_policy_term_days, default_commission_rate: settings.value.default_commission_rate, default_currency: settings.value.default_currency, renewal_reminder_lead_days: settings.value.renewal_reminder_lead_days, kvkk_consent_default: settings.value.kvkk_consent_default, dashboard_refresh_seconds: settings.value.dashboard_refresh_seconds, default_page_size: settings.value.default_page_size }; }
 
 function applyLoadedSettings(message) {
-  const loaded = { default_locale: String(message.default_locale || "tr").toLowerCase().startsWith("en") ? "en" : "tr", default_date_format: String(message.default_date_format || "DD.MM.YYYY"), follow_up_due_soon_days: Number(message.follow_up_due_soon_days || 7), follow_up_preview_limit: Number(message.follow_up_preview_limit || 8), default_policy_term_days: Number(message.default_policy_term_days || 365), default_commission_rate: Number(message.default_commission_rate || 10), default_currency: String(message.default_currency || "TRY").toUpperCase(), renewal_reminder_lead_days: Number(message.renewal_reminder_lead_days || 30), kvkk_consent_default: String(message.kvkk_consent_default || "Unknown"), dashboard_refresh_seconds: Number(message.dashboard_refresh_seconds || 0), default_page_size: Number(message.default_page_size || 20), site_name: String(message.site_name || "at.localhost"), environment: String(message.environment || "staging"), active_locale: String(message.active_locale || "tr").toLowerCase().startsWith("en") ? "en" : "tr" };
-  settings.value = { ...loaded }; originalSettings.value = { ...loaded }; isDirty.value = false;
+  const loaded = {
+    default_locale: String(message?.default_locale ?? "tr").toLowerCase().startsWith("en") ? "en" : "tr",
+    default_date_format: String(message?.default_date_format ?? "DD.MM.YYYY"),
+    follow_up_due_soon_days: message?.follow_up_due_soon_days == null ? 7 : Number(message.follow_up_due_soon_days),
+    follow_up_preview_limit: message?.follow_up_preview_limit == null ? 8 : Number(message.follow_up_preview_limit),
+    default_policy_term_days: message?.default_policy_term_days == null ? 365 : Number(message.default_policy_term_days),
+    default_commission_rate: message?.default_commission_rate == null ? 10 : Number(message.default_commission_rate),
+    default_currency: String(message?.default_currency ?? "TRY").toUpperCase(),
+    renewal_reminder_lead_days: message?.renewal_reminder_lead_days == null ? 30 : Number(message.renewal_reminder_lead_days),
+    kvkk_consent_default: String(message?.kvkk_consent_default ?? "Unknown"),
+    dashboard_refresh_seconds: message?.dashboard_refresh_seconds == null ? 0 : Number(message.dashboard_refresh_seconds),
+    default_page_size: message?.default_page_size == null ? 20 : Number(message.default_page_size),
+    site_name: String(message?.site_name ?? "at.localhost"),
+    environment: String(message?.environment ?? "staging"),
+    active_locale: String(message?.active_locale ?? "tr").toLowerCase().startsWith("en") ? "en" : "tr",
+  };
+  settings.value = { ...loaded };
+  originalSettings.value = { ...loaded };
+  isDirty.value = false;
 }
 
 async function loadSettings() { loading.value = true; error.value = ""; try { const payload = await frappeRequest({ url: "/api/method/acentem_takipte.acentem_takipte.domains.admin.api.settings.get_admin_general_settings", method: "GET" }); applyLoadedSettings(payload?.message || payload || {}); } catch (err) { error.value = String(err?.message || err || t("loadingError")); } finally { loading.value = false; } }
@@ -343,7 +364,7 @@ async function loadAlertChannels() { if (!canManageAlertChannels.value) return; 
 
 async function saveAlertChannels(config) { alertChannelsSaving.value = true; alertError.value = ""; try { const payload = await frappeRequest({ url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.save_ops_alert_channel_settings_api", method: "POST", params: { config } }); const m = payload?.message || payload || {}; alertChannelConfig.value = { slack_webhook_url: "", telegram_bot_token: "", telegram_chat_id: String(m.telegram_chat_id || ""), slack_configured: Boolean(m.slack_configured), telegram_configured: Boolean(m.telegram_configured), slack_webhook_mask: String(m.slack_webhook_mask || ""), telegram_bot_token_mask: String(m.telegram_bot_token_mask || "") }; showToast(alertT("saveSuccess"), "success"); } catch (err) { alertError.value = String(err?.message || err || alertT("saveError")); } finally { alertChannelsSaving.value = false; } }
 
-async function testAlertChannels(config) { alertChannelsTesting.value = true; alertError.value = ""; try { await frappeRequest({ url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.send_ops_alert_channel_test_api", method: "POST", params: { config } }); } catch (err) { alertError.value = String(err?.message || err || alertT("testError")); } finally { alertChannelsTesting.value = false; } }
+async function testAlertChannels(config) { alertChannelsTesting.value = true; alertError.value = ""; try { const payload = await frappeRequest({ url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.send_ops_alert_channel_test_api", method: "POST", params: { config } }); const channels = (payload?.message || payload || {}).channels || []; if (channels.length) { showToast(alertT("testSuccess"), "success"); } } catch (err) { alertError.value = String(err?.message || err || alertT("testError")); } finally { alertChannelsTesting.value = false; } }
 
 onMounted(() => { void loadSettings(); void loadAlertChannels(); });
 </script>

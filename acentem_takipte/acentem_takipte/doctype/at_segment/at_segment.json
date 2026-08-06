@@ -1,6 +1,6 @@
 {
  "actions": [],
- "autoname": "format:AT-SEG-.YYYY.-.#####",
+ "autoname": "AT-SEG-.YYYY.-.#####",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [

@@ -32,8 +32,34 @@ class ATOwnershipAssignment(Document):
             self.add_comment("Comment", "Assignment due date is in the past.")
 
         self._backfill_from_source()
+        self._assert_no_active_overlap()
         if not self.customer and not self.policy and not self.source_name:
             frappe.throw(_("Assignment must be linked to a source, customer or policy"))
+
+    def _assert_no_active_overlap(self):
+        if not self.source_doctype or not self.source_name or not self.assignment_role:
+            return
+        if self.status not in {"Open", "In Progress"}:
+            return
+
+        filters = {
+            "source_doctype": self.source_doctype,
+            "source_name": self.source_name,
+            "assignment_role": self.assignment_role,
+            "status": ["in", ["Open", "In Progress"]],
+            "name": ["!=", self.name or ""],
+        }
+        existing = frappe.db.get_value(
+            "AT Ownership Assignment",
+            filters,
+            "name",
+        )
+        if existing:
+            frappe.throw(
+                _(
+                    "There is already an active {0} assignment ({1}) for {2} {3}. Close or complete it before creating a new one."
+                ).format(self.assignment_role, existing, self.source_doctype, self.source_name)
+            )
 
     def _backfill_from_source(self):
         if self.source_doctype and self.source_name and not frappe.db.exists(self.source_doctype, self.source_name):
@@ -59,3 +85,9 @@ class ATOwnershipAssignment(Document):
             self.office_branch = frappe.db.get_value("AT Policy", self.policy, "office_branch")
         if not self.office_branch and self.customer:
             self.office_branch = frappe.db.get_value("AT Customer", self.customer, "office_branch")
+
+        if not self.origin_office_branch:
+            self.origin_office_branch = self.office_branch
+
+        if not self.current_office_branch:
+            self.current_office_branch = self.office_branch

@@ -16,7 +16,107 @@ RENDER_TEMPLATE_RATE_LIMIT_MAX_REQUESTS = 60
 
 
 class ATNotificationTemplate(Document):
-    pass
+    def validate(self):
+        self.template_key = (self.template_key or "").strip()
+        self.event_key = (self.event_key or "").strip()
+        self.language = (self.language or "en").strip()
+        self.channel = (self.channel or "").strip()
+
+        if not self.template_key:
+            frappe.throw(_("Template Key is required."))
+        if not self.event_key:
+            frappe.throw(_("Event Key is required."))
+        if not self.channel:
+            frappe.throw(_("Channel is required."))
+        if self.language not in {"en", "tr"}:
+            frappe.throw(_("Language must be 'en' or 'tr'."))
+        if self.channel not in {"SMS", "Email", "WHATSAPP", "Both"}:
+            frappe.throw(_("Channel must be 'SMS', 'Email', 'WHATSAPP', or 'Both'."))
+
+        self._validate_unique_combo()
+        self._validate_variables_schema()
+
+    def _validate_unique_combo(self) -> None:
+        duplicate = frappe.db.exists(
+            "AT Notification Template",
+            {
+                "template_key": self.template_key,
+                "event_key": self.event_key,
+                "channel": self.channel,
+                "language": self.language,
+                "name": ["!=", self.name],
+            },
+        )
+        if duplicate:
+            frappe.throw(
+                _("A template with the same template key, event key, channel, and language already exists: {0}")
+                .format(duplicate)
+            )
+
+    def _validate_variables_schema(self) -> None:
+        schema_raw = (self.variables_schema_json or "").strip()
+        if not schema_raw:
+            return
+
+        try:
+            parsed = json.loads(schema_raw)
+        except json.JSONDecodeError as exc:
+            frappe.throw(
+                _("Variables Schema JSON is not valid JSON: {0}").format(str(exc))
+            )
+
+        if not isinstance(parsed, list):
+            frappe.throw(_("Variables Schema JSON must be a list."))
+
+        for idx, item in enumerate(parsed):
+            if not isinstance(item, dict):
+                frappe.throw(
+                    _("Variables Schema JSON item {0} must be an object, got {1}.")
+                    .format(idx, type(item).__name__)
+                )
+            var_name = item.get("name") or item.get("key") or item.get("variable")
+            if not var_name:
+                frappe.throw(
+                    _("Variables Schema JSON item {0} is missing a 'name' field.").format(idx)
+                )
+
+    def on_update(self):
+        if self.has_value_changed("is_active") and not self.is_active:
+            self._validate_deactivation()
+
+    def _validate_deactivation(self) -> None:
+        active_campaigns = frappe.db.get_value(
+            "AT Campaign",
+            {"template": self.name, "status": "Active"},
+            "name",
+        )
+        if active_campaigns:
+            frappe.throw(
+                _("Cannot deactivate template '{0}' because it is used by active campaign {1}.")
+                .format(self.template_key, active_campaigns)
+            )
+
+    def on_trash(self):
+        if self.docstatus == 2:
+            return
+
+        references = []
+        pairs = [
+            ("AT Campaign", "template"),
+            ("AT Notification Draft", "template"),
+            ("AT Notification Outbox", "template"),
+        ]
+        for dt, field in pairs:
+            if frappe.db.has_column(dt, field):
+                ref = frappe.db.get_value(dt, {field: self.name}, "name")
+                if ref:
+                    references.append(f"{dt} {ref}")
+
+        if references:
+            frappe.throw(
+                _("Cannot delete template '{0}' because it is referenced by: {1}")
+                .format(self.template_key, ", ".join(references))
+            )
 
 
 def _render_rate_limit_key(user: str) -> str:

@@ -171,3 +171,34 @@ def test_render_tabular_csv_uses_utf8_bom_for_turkish_characters():
     assert "Müşteri" in text
     assert "İstanbul" in text
 
+
+def test_render_tabular_csv_sanitizes_formula_injection():
+    payload = report_exports.render_tabular_csv(
+        title="Sample",
+        columns=["name", "note"],
+        rows=[
+            {"name": "=SUM(A1:A9)", "note": "hello"},
+            {"name": "+cmd|'/C calc'!A0", "note": "-2+3"},
+            {"name": "@import", "note": "x@example.com"},
+        ],
+        filters={},
+    )
+    text = payload.decode("utf-8-sig")
+    assert "'=SUM(A1:A9)" in text
+    assert "'+cmd|'/C calc'!A0" in text
+    assert "'@import" in text
+    assert "'-2+3" in text
+    assert "x@example.com" in text
+    assert not text.split("\n")[1].startswith("=SUM")
+
+
+def test_render_tabular_xlsx_sanitizes_formula_injection():
+    payload = report_exports.render_tabular_xlsx(
+        title="Sample",
+        columns=["name"],
+        rows=[{"name": "=1+1"}],
+        filters={},
+    )
+    workbook = load_workbook(BytesIO(payload))
+    sheet = workbook.active
+    assert sheet["A6"].value == "'=1+1"

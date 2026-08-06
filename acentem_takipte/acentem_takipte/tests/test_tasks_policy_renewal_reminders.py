@@ -17,10 +17,11 @@ class TestPolicyRenewalReminderTasks(IntegrationTestCase):
         )
 
         with patch.object(task_jobs, "nowdate", return_value="2026-03-06"):
-            with patch.object(task_jobs.frappe, "get_list", side_effect=[[policy], [], []]):
-                with patch.object(task_jobs.frappe, "get_all", return_value=[]):
-                    with patch.object(task_jobs, "create_notification_drafts") as create_drafts:
-                        summary = task_jobs._run_policy_renewal_reminder_logic(limit=10)
+            with patch.object(task_jobs, "_resolve_renewal_reminder_windows", return_value=(30, 15, 7)):
+                with patch.object(task_jobs.frappe, "get_list", side_effect=[[policy], [], []]):
+                    with patch.object(task_jobs.frappe, "get_all", return_value=[]):
+                        with patch.object(task_jobs, "create_notification_drafts") as create_drafts:
+                            summary = task_jobs._run_policy_renewal_reminder_logic(limit=10)
 
         self.assertEqual(summary["created"], 1)
         kwargs = create_drafts.call_args.kwargs
@@ -37,11 +38,24 @@ class TestPolicyRenewalReminderTasks(IntegrationTestCase):
         existing_draft = types.SimpleNamespace(name="DRF-1")
 
         with patch.object(task_jobs, "nowdate", return_value="2026-03-06"):
-            with patch.object(task_jobs.frappe, "get_list", side_effect=[[], [policy], []]):
-                with patch.object(task_jobs.frappe, "get_all", return_value=[existing_draft]):
+            with patch.object(task_jobs, "_resolve_renewal_reminder_windows", return_value=(30, 15, 7)):
+                with patch.object(task_jobs.frappe, "get_list", side_effect=[[], [policy], []]):
+                    with patch.object(task_jobs.frappe, "get_all", return_value=[existing_draft]):
+                        with patch.object(task_jobs, "create_notification_drafts") as create_drafts:
+                            summary = task_jobs._run_policy_renewal_reminder_logic(limit=10)
+
+        self.assertEqual(summary["created"], 0)
+        self.assertEqual(summary["skipped_duplicate"], 1)
+        create_drafts.assert_not_called()
+
+    def test_run_policy_renewal_logic_disabled_when_lead_days_zero(self):
+        with patch.object(task_jobs, "nowdate", return_value="2026-03-06"):
+            with patch.object(task_jobs, "_resolve_renewal_reminder_windows", return_value=()):
+                with patch.object(task_jobs.frappe, "get_list") as get_list:
                     with patch.object(task_jobs, "create_notification_drafts") as create_drafts:
                         summary = task_jobs._run_policy_renewal_reminder_logic(limit=10)
 
         self.assertEqual(summary["created"], 0)
-        self.assertEqual(summary["skipped_duplicate"], 1)
+        self.assertEqual(summary["scanned"], 0)
+        get_list.assert_not_called()
         create_drafts.assert_not_called()

@@ -20,11 +20,15 @@ def execute_campaign(campaign_name: str, *, limit: int = 200) -> dict[str, objec
         frappe.throw(_("Campaign is required."))
 
     campaign = frappe.get_doc("AT Campaign", campaign_name)
+    if campaign.status in {"Completed", "Cancelled"}:
+        frappe.throw(_("A completed or cancelled campaign cannot be re-run."))
     if not campaign.template:
         frappe.throw(_("Campaign template is required."))
 
     template = frappe.get_doc("AT Notification Template", campaign.template)
     preview = build_segment_membership_preview(campaign.segment, limit=limit)
+
+    existing_recipient_set = _load_existing_recipient_set(campaign.name)
 
     created = 0
     skipped = 0
@@ -37,6 +41,15 @@ def execute_campaign(campaign_name: str, *, limit: int = 200) -> dict[str, objec
     for customer_row in preview.get("customers") or []:
         customer_name = str(customer_row.get("name") or "").strip()
         if not customer_name:
+            skipped += 1
+            continue
+
+        consent_status = str(customer_row.get("consent_status") or "").strip()
+        if consent_status != "Granted":
+            skipped += 1
+            continue
+
+        if customer_name in existing_recipient_set:
             skipped += 1
             continue
 
@@ -166,3 +179,21 @@ def _resolve_campaign_recipient(
     if normalized_channel == "EMAIL":
         return str(customer.get("email") or "").strip() or None
     return None
+
+
+def _load_existing_recipient_set(campaign_name: str) -> set[str]:
+    """Load customers that already have a draft for this campaign to keep re-runs idempotent."""
+    rows = frappe.get_all(
+        "AT Notification Draft",
+        filters={
+            "reference_doctype": "AT Campaign",
+            "reference_name": campaign_name,
+        },
+        fields=["customer"],
+        limit_page_length=10000,
+    )
+    return {
+        str(row.get("customer") or "").strip()
+        for row in rows or []
+        if row.get("customer")
+    }

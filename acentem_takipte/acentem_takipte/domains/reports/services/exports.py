@@ -170,11 +170,26 @@ def render_tabular_xlsx(
             value = row.get(column)
             if value is None:
                 value = ""
-            sheet.cell(row=row_index, column=column_index, value=value)
+            sheet.cell(row=row_index, column=column_index, value=_sanitize_csv_cell(value))
 
     buffer = BytesIO()
     workbook.save(buffer)
     return buffer.getvalue()
+
+
+_CSV_INJECTION_PREFIXES = frozenset({"=", "+", "-", "@"})
+
+
+def _sanitize_csv_cell(value: Any) -> Any:
+    # Preserve non-string scalar types (int, float, bool, Decimal) so XLSX
+    # export keeps numeric cells numeric. Only strings need formula-injection
+    # guarding; CSV writers stringify whatever they receive anyway.
+    if not isinstance(value, str):
+        return value
+    stripped = value.lstrip()
+    if stripped and stripped[0] in _CSV_INJECTION_PREFIXES:
+        return f"'{value}"
+    return value
 
 
 def render_tabular_csv(
@@ -184,7 +199,6 @@ def render_tabular_csv(
     rows: list[dict[str, Any]],
     filters: dict[str, Any],
 ) -> bytes:
-    locale = coerce_locale(getattr(frappe.local, "lang", "en"), "en")
     safe_columns = _coerce_columns(columns)
     safe_rows = _coerce_rows(rows)
 
@@ -192,7 +206,7 @@ def render_tabular_csv(
     writer = csv.DictWriter(buffer, fieldnames=safe_columns, lineterminator="\n")
     writer.writeheader()
     for row in safe_rows:
-        writer.writerow({column: row.get(column, "") for column in safe_columns})
+        writer.writerow({column: _sanitize_csv_cell(row.get(column, "")) for column in safe_columns})
 
     # Excel on Windows expects UTF-8 with BOM for Turkish characters.
     return buffer.getvalue().encode("utf-8-sig")

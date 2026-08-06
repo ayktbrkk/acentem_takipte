@@ -35,10 +35,32 @@ class ATTask(Document):
         if self.due_date and self.reminder_at and get_datetime(self.reminder_at).date() > getdate(self.due_date):
             frappe.throw(_("Reminder time must be on or before due date"))
 
+        previous_status = None
+        if self.get_doc_before_save():
+            previous_status = self.get_doc_before_save().get("status")
+        if previous_status in {"Done", "Cancelled"} and self.status not in {"Done", "Cancelled"}:
+            frappe.throw(_("A completed task cannot be reopened"))
+
         self._backfill_from_source()
         self._sync_completion_timestamp()
+        self._autoset_office_branch()
         if not self.customer and not self.policy and not self.claim and not self.source_name:
             frappe.throw(_("Task must be linked to a source, customer, policy or claim"))
+
+    def _autoset_office_branch(self):
+        if not self.office_branch:
+            if self.claim:
+                self.office_branch = frappe.db.get_value("AT Claim", self.claim, "office_branch")
+            if not self.office_branch and self.policy:
+                self.office_branch = frappe.db.get_value("AT Policy", self.policy, "office_branch")
+            if not self.office_branch and self.customer:
+                self.office_branch = frappe.db.get_value("AT Customer", self.customer, "office_branch")
+
+        if not self.origin_office_branch:
+            self.origin_office_branch = self.office_branch
+
+        if not self.current_office_branch:
+            self.current_office_branch = self.office_branch
 
     def _backfill_from_source(self):
         if self.source_doctype and self.source_name and not frappe.db.exists(self.source_doctype, self.source_name):

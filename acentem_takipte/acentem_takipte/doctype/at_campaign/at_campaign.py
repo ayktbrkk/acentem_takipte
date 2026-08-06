@@ -11,6 +11,12 @@ class ATCampaign(Document):
         self.campaign_name = (self.campaign_name or "").strip()
         self.notes = (self.notes or "").strip() or None
 
+        previous_status = None
+        if self.get_doc_before_save():
+            previous_status = self.get_doc_before_save().get("status")
+        if previous_status in {"Completed", "Cancelled"} and self.status not in {"Completed", "Cancelled"}:
+            frappe.throw(_("A completed or cancelled campaign cannot be reopened"))
+
         if self.status in {"Planned", "Running"} and not self.scheduled_for:
             frappe.throw(_("Scheduled For is required for planned or running campaigns."))
 

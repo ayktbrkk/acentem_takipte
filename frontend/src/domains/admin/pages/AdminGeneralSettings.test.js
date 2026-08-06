@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 
@@ -64,6 +64,7 @@ describe("AdminGeneralSettings", () => {
     pushMock.mockReset();
     frappeRequestMock.mockReset();
     setActivePinia(createPinia());
+    vi.stubGlobal("confirm", vi.fn(() => true));
     const authStore = useAuthStore();
     authStore.applyContext({
       user: "admin@example.com",
@@ -75,6 +76,11 @@ describe("AdminGeneralSettings", () => {
       locale: "tr",
       capabilities: {},
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   it("renders all settings sections and loads data", async () => {

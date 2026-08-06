@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import frappe
@@ -211,9 +212,10 @@ def save_ops_alert_channel_settings_api(config: dict | str | None = None) -> dic
 
 @frappe.whitelist()
 def send_ops_alert_channel_test_api(config: dict | str | None = None) -> dict[str, Any]:
-    assert_authenticated()
+    user = assert_authenticated()
     assert_post_request("Only POST requests are allowed for alert channel tests.")
     assert_roles("System Manager", "Administrator", message="You do not have permission to test alert channels.")
+    _assert_alert_test_rate_limit(user)
     return _coerce_alert_test_payload(send_ops_alert_channel_test(config=config))
 
 
@@ -338,8 +340,8 @@ def _coerce_alert_channel_payload(value: Any) -> dict[str, Any]:
         "telegram_chat_id": telegram_chat_id,
         "slack_configured": bool(payload.get("slack_configured") or slack_webhook_url),
         "telegram_configured": bool(payload.get("telegram_configured") or (telegram_bot_token and telegram_chat_id)),
-        "slack_webhook_mask": _mask_secret(slack_webhook_url),
-        "telegram_bot_token_mask": _mask_secret(telegram_bot_token),
+        "slack_webhook_mask": str(payload.get("slack_webhook_mask") or "").strip() or _mask_secret(slack_webhook_url),
+        "telegram_bot_token_mask": str(payload.get("telegram_bot_token_mask") or "").strip() or _mask_secret(telegram_bot_token),
     }
 
 
@@ -348,6 +350,48 @@ def _mask_secret(value: Any) -> str:
     if not secret:
         return ""
     return f"****{secret[-4:]}"
+
+
+ALERT_TEST_RATE_LIMIT_WINDOW_SECONDS = 60
+ALERT_TEST_RATE_LIMIT_MAX_REQUESTS = 5
+
+
+def _alert_test_rate_limit_key(user: str) -> str:
+    safe_user = str(user or "").strip().replace("/", ":")
+    return f"at:alert-channels:test-rate:{safe_user}"
+
+
+def _assert_alert_test_rate_limit(user: str) -> None:
+    if not user or user in {"Guest", "Administrator"}:
+        return
+
+    cache = frappe.cache()
+    key = _alert_test_rate_limit_key(user)
+    now_ts = int(time.time())
+
+    try:
+        state = cache.get_value(key) or {}
+        if isinstance(state, str):
+            state = frappe.parse_json(state) or {}
+        if not isinstance(state, dict):
+            state = {}
+    except Exception:
+        state = {}
+
+    window_start = cint(state.get("window_start")) or now_ts
+    count = cint(state.get("count")) or 0
+    if now_ts - window_start >= ALERT_TEST_RATE_LIMIT_WINDOW_SECONDS:
+        window_start = now_ts
+        count = 0
+
+    if count >= ALERT_TEST_RATE_LIMIT_MAX_REQUESTS:
+        frappe.throw("Too many alert channel test requests. Please retry shortly.")
+
+    try:
+        cache.set_value(key, {"window_start": window_start, "count": count + 1})
+    except Exception:
+        # Best-effort abuse guard: do not block valid operations if cache is unavailable.
+        pass
 
 
 def _coerce_alert_test_payload(value: Any) -> dict[str, Any]:

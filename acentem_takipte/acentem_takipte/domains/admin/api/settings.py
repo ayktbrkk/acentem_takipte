@@ -69,9 +69,11 @@ def _coerce_general_settings_payload(value: Any) -> dict[str, Any]:
     if default_policy_term_days not in {180, 365}:
         default_policy_term_days = 365
 
-    commission_rate_str = str(payload.get("default_commission_rate") or "10.0").strip()
+    commission_rate_raw = payload.get("default_commission_rate")
+    if commission_rate_raw is None:
+        commission_rate_raw = 10.0
     try:
-        default_commission_rate = float(commission_rate_str)
+        default_commission_rate = float(str(commission_rate_raw).strip())
     except (TypeError, ValueError):
         default_commission_rate = 10.0
     if default_commission_rate < 0 or default_commission_rate > 100:
@@ -81,19 +83,25 @@ def _coerce_general_settings_payload(value: Any) -> dict[str, Any]:
     if default_currency not in {"TRY", "EUR", "USD"}:
         default_currency = "TRY"
 
+    renewal_lead_raw = payload.get("renewal_reminder_lead_days")
+    if renewal_lead_raw is None:
+        renewal_lead_raw = 30
     try:
-        renewal_reminder_lead_days = int(payload.get("renewal_reminder_lead_days") or 30)
+        renewal_reminder_lead_days = int(renewal_lead_raw)
     except (TypeError, ValueError):
         renewal_reminder_lead_days = 30
     if renewal_reminder_lead_days not in {0, 15, 30, 45, 60}:
         renewal_reminder_lead_days = 30
 
     kvkk_consent_default = str(payload.get("kvkk_consent_default") or "Unknown").strip()
-    if kvkk_consent_default not in {"Granted", "Unknown"}:
+    if kvkk_consent_default not in {"Granted", "Unknown", "Revoked"}:
         kvkk_consent_default = "Unknown"
 
+    dashboard_refresh_raw = payload.get("dashboard_refresh_seconds")
+    if dashboard_refresh_raw is None:
+        dashboard_refresh_raw = 0
     try:
-        dashboard_refresh_seconds = int(payload.get("dashboard_refresh_seconds") or 0)
+        dashboard_refresh_seconds = int(dashboard_refresh_raw)
     except (TypeError, ValueError):
         dashboard_refresh_seconds = 0
     if dashboard_refresh_seconds not in {0, 60, 300, 600}:

@@ -85,8 +85,17 @@ def resolve_or_create_quick_customer(
             "gender": str(gender or "").strip() or None,
             "marital_status": str(marital_status or "").strip() or None,
             "occupation": str(occupation or "").strip() or None,
+            "consent_status": _default_kvkk_consent(),
         }
     )
     customer_doc.insert()
     return customer_doc.name, True
+
+
+def _default_kvkk_consent() -> str:
+    from acentem_takipte.acentem_takipte.domains.admin.services.general_settings import get_insurance_defaults
+
+    defaults = get_insurance_defaults()
+    value = str(defaults.get("kvkk_consent_default") or "Unknown").strip()
+    return value if value in {"Unknown", "Granted", "Revoked"} else "Unknown"
 

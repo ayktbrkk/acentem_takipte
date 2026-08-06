@@ -309,6 +309,64 @@ def test_alert_channel_sanitizer_preserves_existing_secrets_when_form_is_blank()
     }
 
 
+def test_alert_channel_settings_payload_never_exposes_plaintext_secrets():
+    payload = ops_alert_settings._build_settings_payload(
+        {
+            "at_ops_alert_slack_webhook_url": "https://hooks.slack.com/services/T00000000/B00000000/verysecrettoken",
+            "at_ops_alert_telegram_bot_token": "1234567890:AAverysecrettokenvalue",
+            "at_ops_alert_telegram_chat_id": "-1001234567890",
+        }
+    )
+
+    assert payload["slack_webhook_url"] == ""
+    assert payload["telegram_bot_token"] == ""
+    assert payload["slack_configured"] is True
+    assert payload["telegram_configured"] is True
+    assert payload["slack_webhook_mask"] == "****oken"
+    assert payload["telegram_bot_token_mask"] == "****alue"
+    assert "verysecrettoken" not in str(payload)
+    assert "AAverysecrettokenvalue" not in str(payload)
+
+
+def test_alert_channel_sanitizer_rejects_invalid_new_slack_webhook(monkeypatch):
+    from frappe.exceptions import ValidationError
+
+    with pytest.raises(ValidationError):
+        ops_alert_settings._sanitize_settings_payload(
+            {"slack_webhook_url": "https://example.com/not-a-slack-webhook"},
+            current_config={},
+        )
+
+
+def test_alert_channel_sanitizer_rejects_invalid_new_telegram_token(monkeypatch):
+    from frappe.exceptions import ValidationError
+
+    with pytest.raises(ValidationError):
+        ops_alert_settings._sanitize_settings_payload(
+            {"telegram_bot_token": "not-a-valid-bot-token"},
+            current_config={},
+        )
+
+
+def test_alert_channel_sanitizer_rejects_invalid_new_telegram_chat_id(monkeypatch):
+    from frappe.exceptions import ValidationError
+
+    with pytest.raises(ValidationError):
+        ops_alert_settings._sanitize_settings_payload(
+            {"telegram_chat_id": "abc-123"},
+            current_config={},
+        )
+
+
+def test_alert_channel_sanitizer_accepts_valid_new_telegram_token():
+    payload = ops_alert_settings._sanitize_settings_payload(
+        {"telegram_bot_token": "1234567890:AAverylongsecrettokenvalue"},
+        current_config={},
+    )
+
+    assert payload["at_ops_alert_telegram_bot_token"] == "1234567890:AAverylongsecrettokenvalue"
+
+
 def test_send_ops_alert_channel_test_api_coerces_channels(monkeypatch):
     monkeypatch.setattr(reports, "assert_authenticated", lambda: "Administrator")
     monkeypatch.setattr(reports, "assert_post_request", lambda *args, **kwargs: None)

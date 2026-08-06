@@ -10,14 +10,15 @@ from acentem_takipte.acentem_takipte.domains.admin.services.alert_settings impor
 from acentem_takipte.acentem_takipte.domains.admin.services.alerts import _resolve_environment, _resolve_site_name
 
 
-def _log_settings_changed(user: str, changed_keys: list[str]) -> None:
+def _log_settings_changed(user: str, changes: list[tuple[str, Any, Any]]) -> None:
     try:
         from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
+        details = "; ".join(f"{key}: {old!r} -> {new!r}" for key, old, new in changes)
         log_decision_event(
             "General Settings",
             "site_config",
             action="Save",
-            action_summary=f"Settings updated by {user}: {', '.join(changed_keys)}",
+            action_summary=f"Settings updated by {user}: {details}",
         )
     except Exception:
         pass
@@ -44,7 +45,7 @@ SUPPORTED_FOLLOW_UP_PREVIEW_LIMITS = {5, 8, 12, 20}
 SUPPORTED_POLICY_TERMS = {180, 365}
 SUPPORTED_CURRENCIES = {"TRY", "EUR", "USD"}
 SUPPORTED_RENEWAL_REMINDER_LEAD_DAYS = {0, 15, 30, 45, 60}
-SUPPORTED_KVKK_CONSENT_DEFAULTS = {"Granted", "Unknown"}
+SUPPORTED_KVKK_CONSENT_DEFAULTS = {"Granted", "Unknown", "Revoked"}
 SUPPORTED_DASHBOARD_REFRESH_SECONDS = {0, 60, 300, 600}
 SUPPORTED_PAGE_SIZES = {10, 20, 50}
 
@@ -68,21 +69,28 @@ def save_admin_general_settings(config: dict[str, Any] | str | None = None) -> d
     sanitized = _sanitize_settings_payload(config)
     site_config = _read_site_config()
 
-    changed_keys = []
+    changes: list[tuple[str, Any, Any]] = []
     for config_key in GENERAL_SETTINGS_KEYS:
-        old_value = str(site_config.get(config_key, ""))
-        new_value = str(sanitized[config_key])
+        old_value = site_config.get(config_key)
+        new_value = sanitized[config_key]
         if old_value != new_value:
-            changed_keys.append(config_key)
+            changes.append((config_key, old_value, new_value))
         site_config[config_key] = sanitized[config_key]
         setattr(frappe.conf, config_key, sanitized[config_key])
 
     _write_json_atomically(site_config)
 
-    if changed_keys:
-        _log_settings_changed(frappe.session.user, changed_keys)
+    if changes:
+        _log_settings_changed(frappe.session.user, changes)
 
     return _build_settings_payload(site_config)
+
+
+def _first_present(config: dict[str, Any], *keys: str, default: Any = None) -> Any:
+    for key in keys:
+        if key in config and config[key] is not None:
+            return config[key]
+    return default
 
 
 def _sanitize_settings_payload(config: dict[str, Any] | str | None) -> dict[str, str]:
@@ -96,67 +104,67 @@ def _sanitize_settings_payload(config: dict[str, Any] | str | None) -> dict[str,
     if not isinstance(config, dict):
         frappe.throw(_("General settings payload must be a JSON object."))
 
-    default_locale = str(config.get("default_locale") or config.get("at_default_locale") or "tr").strip().lower()
+    default_locale = str(_first_present(config, "default_locale", "at_default_locale", default="tr")).strip().lower()
     if default_locale not in SUPPORTED_LOCALES:
         frappe.throw(_("Default locale must be either 'tr' or 'en'."))
 
-    default_date_format = str(config.get("default_date_format") or config.get("at_default_date_format") or "DD.MM.YYYY").strip()
+    default_date_format = str(_first_present(config, "default_date_format", "at_default_date_format", default="DD.MM.YYYY")).strip()
     if default_date_format not in SUPPORTED_DATE_FORMATS:
         frappe.throw(_("Default date format is not supported."))
 
     follow_up_due_soon_days = _coerce_int_setting(
-        config.get("follow_up_due_soon_days") or config.get("at_follow_up_due_soon_days"),
+        _first_present(config, "follow_up_due_soon_days", "at_follow_up_due_soon_days", default=DEFAULT_FOLLOW_UP_DUE_SOON_DAYS),
         default=DEFAULT_FOLLOW_UP_DUE_SOON_DAYS,
     )
     if follow_up_due_soon_days not in SUPPORTED_FOLLOW_UP_DUE_SOON_DAYS:
         frappe.throw(_("Follow-up due soon window is not supported."))
 
     follow_up_preview_limit = _coerce_int_setting(
-        config.get("follow_up_preview_limit") or config.get("at_follow_up_preview_limit"),
+        _first_present(config, "follow_up_preview_limit", "at_follow_up_preview_limit", default=DEFAULT_FOLLOW_UP_PREVIEW_LIMIT),
         default=DEFAULT_FOLLOW_UP_PREVIEW_LIMIT,
     )
     if follow_up_preview_limit not in SUPPORTED_FOLLOW_UP_PREVIEW_LIMITS:
         frappe.throw(_("Follow-up preview limit is not supported."))
 
     policy_term_days = _coerce_int_setting(
-        config.get("default_policy_term_days") or config.get("at_default_policy_term_days"),
+        _first_present(config, "default_policy_term_days", "at_default_policy_term_days", default=DEFAULT_POLICY_TERM_DAYS),
         default=DEFAULT_POLICY_TERM_DAYS,
     )
     if policy_term_days not in SUPPORTED_POLICY_TERMS:
         frappe.throw(_("Default policy term is not supported."))
 
-    commission_rate_str = str(config.get("default_commission_rate") or config.get("at_default_commission_rate") or "15.0").strip()
+    commission_rate_raw = _first_present(config, "default_commission_rate", "at_default_commission_rate", default=DEFAULT_COMMISSION_RATE)
     try:
-        commission_rate = float(commission_rate_str)
+        commission_rate = float(str(commission_rate_raw).strip())
     except (TypeError, ValueError):
         commission_rate = DEFAULT_COMMISSION_RATE
     if commission_rate < 0 or commission_rate > 100:
         frappe.throw(_("Commission rate must be between 0 and 100."))
 
-    default_currency = str(config.get("default_currency") or config.get("at_default_currency") or DEFAULT_CURRENCY).strip().upper()
+    default_currency = str(_first_present(config, "default_currency", "at_default_currency", default=DEFAULT_CURRENCY)).strip().upper()
     if default_currency not in SUPPORTED_CURRENCIES:
         frappe.throw(_("Default currency is not supported."))
 
     renewal_reminder_lead_days = _coerce_int_setting(
-        config.get("renewal_reminder_lead_days") or config.get("at_renewal_reminder_lead_days"),
+        _first_present(config, "renewal_reminder_lead_days", "at_renewal_reminder_lead_days", default=DEFAULT_RENEWAL_REMINDER_LEAD_DAYS),
         default=DEFAULT_RENEWAL_REMINDER_LEAD_DAYS,
     )
     if renewal_reminder_lead_days not in SUPPORTED_RENEWAL_REMINDER_LEAD_DAYS:
         frappe.throw(_("Renewal reminder lead days is not supported."))
 
-    kvkk_consent_default = str(config.get("kvkk_consent_default") or config.get("at_kvkk_consent_default") or DEFAULT_KVKK_CONSENT).strip()
+    kvkk_consent_default = str(_first_present(config, "kvkk_consent_default", "at_kvkk_consent_default", default=DEFAULT_KVKK_CONSENT)).strip()
     if kvkk_consent_default not in SUPPORTED_KVKK_CONSENT_DEFAULTS:
         frappe.throw(_("KVKK consent default is not supported."))
 
     dashboard_refresh_seconds = _coerce_int_setting(
-        config.get("dashboard_refresh_seconds") or config.get("at_dashboard_refresh_seconds"),
+        _first_present(config, "dashboard_refresh_seconds", "at_dashboard_refresh_seconds", default=DEFAULT_DASHBOARD_REFRESH_SECONDS),
         default=DEFAULT_DASHBOARD_REFRESH_SECONDS,
     )
     if dashboard_refresh_seconds not in SUPPORTED_DASHBOARD_REFRESH_SECONDS:
         frappe.throw(_("Dashboard refresh interval is not supported."))
 
     default_page_size = _coerce_int_setting(
-        config.get("default_page_size") or config.get("at_default_page_size"),
+        _first_present(config, "default_page_size", "at_default_page_size", default=DEFAULT_PAGE_SIZE),
         default=DEFAULT_PAGE_SIZE,
     )
     if default_page_size not in SUPPORTED_PAGE_SIZES:
