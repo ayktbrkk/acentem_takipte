@@ -104,7 +104,6 @@
                   @mousedown.prevent="selectLinkResult(r)"
                 >
                   <span class="link-result-name">{{ r.label || r.name }}</span>
-                  <span v-if="r.taxId" class="link-result-tax">{{ r.taxId }}</span>
                   <span class="link-result-id">{{ r.name }}</span>
                 </li>
               </ul>
@@ -293,7 +292,7 @@ onMounted(() => {
 });
 
 const LINK_CFG = {
-  "AT Customer": { searchField: "full_name", labelField: "full_name", fields: ["name", "full_name", "tax_id"] },
+  "AT Customer": { searchField: "full_name", labelField: "full_name", fields: ["name", "full_name"] },
   "AT Policy":   { searchField: "name",       labelField: "name",       fields: ["name"] },
   "AT Claim":    { searchField: "name",       labelField: "name",       fields: ["name"] },
 };
@@ -336,7 +335,6 @@ async function fetchLinkResults() {
       linkResults.value = (data?.message || []).map(r => ({
         name: r.name,
         label: cfg.labelField !== "name" ? (r[cfg.labelField] || "") : "",
-        taxId: r.tax_id || "",
       }));
     }
   } catch {
@@ -693,12 +691,6 @@ async function submit() {
 .link-result-id {
   color: #94a3b8;
   font-size: 0.75rem;
-}
-
-.link-result-tax {
-  color: #3B82F6;
-  font-size: 0.75rem;
-  font-weight: 600;
 }
 
 .link-searching {

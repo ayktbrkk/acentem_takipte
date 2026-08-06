@@ -33,17 +33,17 @@ describe("ui/StatusBadge", () => {
     expect(granted.find("span").classes()).toContain("status-active");
 
     const replied = mountBadge({ domain: "lead", status: "Replied" });
-    expect(replied.text()).toBe(translateText("Replied", "tr"));
+    expect(replied.text()).toBe(translateText("replied", "tr"));
     expect(replied.find("span").classes()).toContain("status-active");
   });
 
   it("supports offer, claim, and stale lead badges", () => {
     const offer = mountBadge({ domain: "offer", status: "Accepted" });
-    expect(offer.text()).toBe(translateText("Accepted", "tr"));
+    expect(offer.text()).toBe(translateText("statusAccepted", "tr"));
     expect(offer.find("span").classes()).toContain("status-open");
 
     const claim = mountBadge({ domain: "claim", status: "Under Review" });
-    expect(claim.text()).toBe(translateText("Under Review", "tr"));
+    expect(claim.text()).toBe(translateText("statusUnderReview", "tr"));
     expect(claim.find("span").classes()).toContain("status-waiting");
 
     const followUp = mountBadge({ domain: "lead_stale", status: "FollowUp" });
@@ -61,7 +61,7 @@ describe("ui/StatusBadge", () => {
     expect(partiallyPaid.find("span").classes()).toContain("status-waiting");
 
     const reminder = mountBadge({ domain: "reminder", status: "Snoozed" });
-    expect(reminder.text()).toBe(translateText("Snoozed", "tr"));
+    expect(reminder.text()).toBe(translateText("statusWaiting", "tr"));
     expect(reminder.find("span").classes()).toContain("status-waiting");
 
     const notification = mountBadge({ domain: "notification_status", status: "Dead" });

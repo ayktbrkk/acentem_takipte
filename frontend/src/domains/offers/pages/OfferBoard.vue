@@ -262,12 +262,12 @@ const branchResource = createResource({
 const insuranceCompanyResource = createResource({
   url: "frappe.client.get_list",
   auto: true,
-  params: { doctype: "AT Insurance Company", fields: ["name", "company_name"], order_by: "company_name asc" },
+  params: { doctype: "AT Insurance Company", fields: ["name", "company_name"], filters: { is_active: 1 }, order_by: "company_name asc" },
 });
 const salesEntityResource = createResource({
   url: "frappe.client.get_list",
   auto: true,
-  params: { doctype: "AT Sales Entity", fields: ["name", "full_name"], order_by: "full_name asc" },
+  params: { doctype: "AT Sales Entity", fields: ["name", "full_name"], filters: { is_active: 1 }, order_by: "full_name asc" },
 });
 const customerSearchResource = createResource({ url: "frappe.client.get_list", auto: false });
 const createQuickOfferResource = createResource({ url: "acentem_takipte.acentem_takipte.domains.offers.api.endpoints.quick_create_offer", auto: false });

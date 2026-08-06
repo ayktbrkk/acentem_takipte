@@ -1,9 +1,17 @@
 <template>
   <div v-if="isRenewalsTab" class="space-y-4 lg:space-y-5">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
-    <div class="grid gap-4 content-start">
-      <SectionPanel :title="t('offerWaitingRenewalsTitle')" :count="formatNumber(offerWaitingRenewals.length)" panel-class="surface-card h-full rounded-xl p-4">
+    <div class="grid grid-cols-1 gap-4 content-start">
+      <SectionPanel :title="t('recentOfferWaitingRenewalsTitle')" panel-class="surface-card h-full rounded-xl p-4">
+        <template #trailing>
+          <DashboardPanelTrailing :count="previewCountBadge(offerWaitingRenewalCount)" :meta="previewScopeMeta(offerWaitingRenewals.length, offerWaitingRenewalCount, t)" />
+        </template>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <div v-else-if="offerWaitingRenewals.length === 0 && offerWaitingRenewalCount > 0" class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 px-4 py-4 text-center">
+          <p class="text-sm font-medium text-slate-500">{{ t("previewEmptyTitle") }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ t("totalLabel") }}: {{ formatNumber(offerWaitingRenewalCount) }}</p>
+          <ActionButton variant="secondary" size="sm" class="mt-3" @click="openPreviewList('renewals')">{{ t("viewAllItems") }}</ActionButton>
+        </div>
         <EmptyState v-else-if="offerWaitingRenewals.length === 0" :title="t('noOfferWaitingRenewals')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
           <MetaListCard
@@ -41,7 +49,10 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)" panel-class="surface-card h-full rounded-xl p-4">
+      <SectionPanel :title="t('recentRenewalQueueTitle')" panel-class="surface-card h-full rounded-xl p-4">
+        <template #trailing>
+          <DashboardPanelTrailing :count="formatNumber(displayRenewalTasks.length)" :meta="previewScopeMeta(displayRenewalTasks.length, null, t)" />
+        </template>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="displayRenewalTasks.length === 0" :title="t('noRenewal')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
@@ -80,8 +91,8 @@
       </SectionPanel>
     </div>
 
-    <div class="grid gap-4 content-start">
-      <SectionPanel :title="t('renewalStatusOverviewTitle')" :show-count="false" :meta="retentionMeta" panel-class="surface-card h-full rounded-xl p-4">
+    <div class="grid grid-cols-1 gap-4 content-start">
+      <SectionPanel :title="t('renewalStatusOverviewTitle')" :show-count="false" panel-class="surface-card h-full rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="renewalStatusSummary.length === 0" :title="t('noRenewalStatus')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-6 text-center" />
         <div v-else class="space-y-3">
@@ -114,10 +125,12 @@
 
       <SectionPanel
         v-if="showLinkedPolicies"
-        :title="t('linkedPoliciesTitle')"
-        :count="formatNumber(renewalLinkedPolicies.length)"
+        :title="t('recentLinkedPoliciesTitle')"
         panel-class="surface-card h-full rounded-xl p-4"
       >
+        <template #trailing>
+          <DashboardPanelTrailing :count="formatNumber(renewalLinkedPolicies.length)" :meta="previewScopeMeta(renewalLinkedPolicies.length, null, t)" />
+        </template>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="renewalLinkedPolicies.length === 0" :title="t('noLinkedPolicies')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
@@ -164,6 +177,7 @@
 <script setup>
 import { computed } from "vue";
 import EmptyState from "../app-shell/EmptyState.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 import DashboardTypeBadge from "./DashboardTypeBadge.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
@@ -171,6 +185,8 @@ import PreviewPager from "../app-shell/PreviewPager.vue";
 import ProgressMetricRow from "../app-shell/ProgressMetricRow.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
+import DashboardPanelTrailing from "./DashboardPanelTrailing.vue";
+import { previewCountBadge, previewScopeMeta } from "../../utils/dashboardPreviewScope";
 
 const props = defineProps({
   dashboardLoading: { type: Boolean, required: true },
@@ -179,6 +195,7 @@ const props = defineProps({
   formatNumber: { type: Function, required: true },
   isRenewalsTab: { type: Boolean, required: true },
   locale: { type: String, default: "en" },
+  offerWaitingRenewalCount: { type: Number, required: true },
   openPolicyItem: { type: Function, required: true },
   openPreviewList: { type: Function, required: true },
   openRenewalTaskItem: { type: Function, required: true },
@@ -198,13 +215,6 @@ const props = defineProps({
 });
 
 const showLinkedPolicies = computed(() => props.dashboardLoading || props.renewalLinkedPolicies.length > 0);
-
-const retentionMeta = computed(() => {
-  if (props.dashboardLoading) return "";
-  const rate = Number(props.renewalRetentionRate ?? 0);
-  if (!Number.isFinite(rate)) return "";
-  return `${props.t("kpiRenewalRetention")}: ${props.formatNumber(rate)}%`;
-});
 
 function normalizeText(value) {
   return String(value ?? "").trim();

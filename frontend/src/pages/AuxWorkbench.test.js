@@ -1364,8 +1364,8 @@ describe("AuxWorkbench customer and document aux lists", () => {
 
   it("shows screen-specific empty state for document center", async () => {
     pushDefaultCustomerDocumentResources([], 0);
-    routeState.path = "/at-documents";
-    routeState.fullPath = "/at-documents";
+    routeState.path = "/documents";
+    routeState.fullPath = "/documents";
 
     const wrapper = mount(AuxWorkbench, {
       props: { screenKey: "at-documents" },

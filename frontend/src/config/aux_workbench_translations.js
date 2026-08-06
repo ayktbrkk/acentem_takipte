@@ -110,6 +110,16 @@ export const AUX_WORKBENCH_TRANSLATIONS = {
     no: "Hayır",
     strengths: "Güçlü Sinyaller",
     risks: "Risk Sinyalleri",
+    // Document enum display values (raw canonical keys resolved via translateText)
+    "Tax Certificate": "Vergi Levhası",
+    "National ID": "Kimlik",
+    "Original": "Orijinal",
+    "Vehicle Registration": "Ruhsat",
+    "ID Document": "Kimlik",
+    "Policy Copy": "Poliçe Kopyası",
+    "Damage Photo": "Hasar Fotoğrafı",
+    Active: "Aktif",
+    Archived: "Arşivlendi",
   },
   en: {
     recordCount: "records",
@@ -222,5 +232,15 @@ export const AUX_WORKBENCH_TRANSLATIONS = {
     no: "No",
     strengths: "Strengths",
     risks: "Risks",
+    // Document enum display values (raw canonical keys resolved via translateText)
+    "Tax Certificate": "Tax Certificate",
+    "National ID": "National ID",
+    "Original": "Original",
+    "Vehicle Registration": "Vehicle Registration",
+    "ID Document": "ID Document",
+    "Policy Copy": "Policy Copy",
+    "Damage Photo": "Damage Photo",
+    Active: "Active",
+    Archived: "Archived",
   },
 };

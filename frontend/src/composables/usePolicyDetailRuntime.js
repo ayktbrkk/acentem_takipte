@@ -279,19 +279,19 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   // Resources for searchable selects
   const branchesResource = createResource({
     url: "frappe.client.get_list",
-    params: { doctype: "AT Branch", fields: ["name", "branch_name"], limit_page_length: 500, order_by: "branch_name asc" },
+    params: { doctype: "AT Branch", fields: ["name", "branch_name"], filters: { is_active: 1 }, limit_page_length: 500, order_by: "branch_name asc" },
     auto: true
   });
 
   const companiesResource = createResource({
     url: "frappe.client.get_list",
-    params: { doctype: "AT Insurance Company", fields: ["name", "company_name"], limit_page_length: 500, order_by: "company_name asc" },
+    params: { doctype: "AT Insurance Company", fields: ["name", "company_name"], filters: { is_active: 1 }, limit_page_length: 500, order_by: "company_name asc" },
     auto: true
   });
 
   const salesEntitiesResource = createResource({
     url: "frappe.client.get_list",
-    params: { doctype: "AT Sales Entity", fields: ["name", "full_name", "office_branch"], limit_page_length: 1000, order_by: "full_name asc" },
+    params: { doctype: "AT Sales Entity", fields: ["name", "full_name", "office_branch"], filters: { is_active: 1 }, limit_page_length: 1000, order_by: "full_name asc" },
     auto: true
   });
 

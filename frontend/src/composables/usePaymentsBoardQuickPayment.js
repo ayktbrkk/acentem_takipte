@@ -59,6 +59,7 @@ export function usePaymentsBoardQuickPayment({ t, branchStore, reloadPayments, l
     params: {
       doctype: "AT Sales Entity",
       fields: ["name", "full_name"],
+      filters: { is_active: 1 },
       order_by: "full_name asc",
       limit_page_length: 500,
     },

@@ -66,6 +66,7 @@ export function useAuxRecordDetailQuickDialogs({
     params: {
       doctype: "AT Insurance Company",
       fields: ["name", "company_name", "company_code"],
+      filters: { is_active: 1 },
       order_by: "company_name asc",
       limit_page_length: 500,
     },

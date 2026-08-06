@@ -27,7 +27,7 @@ export function useClaimsBoardClaimActions({
       reference_doctype: "AT Claim",
       reference_name: claim.name,
     });
-    window.location.assign(`/at/at-documents?${query.toString()}`);
+    window.location.assign(`/at/documents?${query.toString()}`);
   }
 
   function openClaimPayment(claim) {

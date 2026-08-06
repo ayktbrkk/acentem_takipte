@@ -1,10 +1,18 @@
 <template>
   <div v-if="isSalesTab" class="space-y-4 lg:space-y-5">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
-      <div class="grid gap-4 content-start">
-      <SectionPanel :title="t('offerPipeline')" :count="formatNumber(salesPipelineOffers.length)" panel-class="surface-card h-full rounded-xl p-4">
+      <div class="grid grid-cols-1 gap-4 content-start">
+      <SectionPanel :title="t('recentOfferPipelineTitle')" panel-class="surface-card h-full rounded-xl p-4">
+        <template #trailing>
+          <DashboardPanelTrailing :count="previewCountBadge(salesFullTotals.pipelineTotal)" :meta="previewScopeMeta(salesPipelineOffers.length, salesFullTotals.pipelineTotal, t)" />
+        </template>
         <p class="mb-2 text-[11px] text-slate-500">{{ t("salesPipelineHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <div v-else-if="salesPipelineOffers.length === 0 && salesFullTotals.pipelineTotal > 0" class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 px-4 py-4 text-center">
+          <p class="text-sm font-medium text-slate-500">{{ t("previewEmptyTitle") }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ t("totalLabel") }}: {{ formatNumber(salesFullTotals.pipelineTotal) }}</p>
+          <ActionButton variant="secondary" size="sm" class="mt-3" @click="openPreviewList('offers')">{{ t("viewAllItems") }}</ActionButton>
+        </div>
         <EmptyState v-else-if="salesPipelineOffers.length === 0" :title="t('noOffer')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
           <EntityPreviewCard
@@ -44,8 +52,16 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('convertedOffersTitle')" :count="formatNumber(convertedSalesOffers.length)" panel-class="surface-card h-full rounded-xl p-4">
+      <SectionPanel :title="t('recentConvertedOffersTitle')" panel-class="surface-card h-full rounded-xl p-4">
+        <template #trailing>
+          <DashboardPanelTrailing :count="previewCountBadge(salesFullTotals.convertedTotal)" :meta="previewScopeMeta(convertedSalesOffers.length, salesFullTotals.convertedTotal, t)" />
+        </template>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <div v-else-if="convertedSalesOffers.length === 0 && salesFullTotals.convertedTotal > 0" class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 px-4 py-4 text-center">
+          <p class="text-sm font-medium text-slate-500">{{ t("previewEmptyTitle") }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ t("totalLabel") }}: {{ formatNumber(salesFullTotals.convertedTotal) }}</p>
+          <ActionButton variant="secondary" size="sm" class="mt-3" @click="openPreviewList('offers')">{{ t("viewAllItems") }}</ActionButton>
+        </div>
         <EmptyState v-else-if="convertedSalesOffers.length === 0" :title="t('noConvertedOffers')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
           <EntityPreviewCard
@@ -86,8 +102,11 @@
       </SectionPanel>
       </div>
 
-      <div class="grid gap-4 content-start">
-      <SectionPanel :title="t('recentLeads')" :count="formatNumber(displayRecentLeads.length)" panel-class="surface-card h-full rounded-xl p-4">
+      <div class="grid grid-cols-1 gap-4 content-start">
+      <SectionPanel :title="t('recentLeadsTitle')" panel-class="surface-card h-full rounded-xl p-4">
+        <template #trailing>
+          <DashboardPanelTrailing :count="formatNumber(displayRecentLeads.length)" :meta="previewScopeMeta(displayRecentLeads.length, null, t)" />
+        </template>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="displayRecentLeads.length === 0" :title="t('noLead')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
@@ -127,7 +146,10 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('salesCandidateActionTitle')" :count="formatNumber(salesCandidateActions.length)" panel-class="surface-card h-full rounded-xl p-4">
+      <SectionPanel :title="t('recentSalesActionsTitle')" panel-class="surface-card h-full rounded-xl p-4">
+        <template #trailing>
+          <DashboardPanelTrailing :count="formatNumber(salesCandidateActions.length)" :meta="previewScopeMeta(salesCandidateActions.length, null, t)" />
+        </template>
         <p class="mb-2 text-[11px] text-slate-500">{{ t("salesCandidateActionHint") }}</p>
         <div v-if="myTasksLoading || myRemindersLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="salesCandidateActions.length === 0" :title="t('noSalesCandidateAction')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
@@ -174,12 +196,15 @@
 <script setup>
 import { computed } from "vue";
 import EmptyState from "../app-shell/EmptyState.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 import DashboardTypeBadge from "./DashboardTypeBadge.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
+import DashboardPanelTrailing from "./DashboardPanelTrailing.vue";
+import { hasPreviewRecords, previewCountBadge, previewScopeMeta } from "../../utils/dashboardPreviewScope";
 
 const props = defineProps({
   convertedSalesOffers: { type: Array, required: true },
@@ -189,6 +214,7 @@ const props = defineProps({
   formatCurrencyBy: { type: Function, required: true },
   formatNumber: { type: Function, required: true },
   isSalesTab: { type: Boolean, required: true },
+  leadStatusSummary: { type: Array, default: () => [] },
   locale: { type: String, default: "en" },
   myRemindersLoading: { type: Boolean, required: true },
   myTasksLoading: { type: Boolean, required: true },
@@ -209,10 +235,25 @@ const props = defineProps({
   salesActionFacts: { type: Function, required: true },
   salesActionTitle: { type: Function, required: true },
   salesCandidateActions: { type: Array, required: true },
+  salesOfferStatusSummary: { type: Array, default: () => [] },
   salesPipelineOffers: { type: Array, required: true },
   setPreviewPage: { type: Function, required: true },
   shouldShowViewAll: { type: Function, required: true },
   t: { type: Function, required: true },
+});
+
+const salesFullTotals = computed(() => {
+  const offerRows = props.salesOfferStatusSummary || [];
+  const leadRows = props.leadStatusSummary || [];
+  const sum = (rows, keys) => rows.filter((r) => keys.includes(String(r?.key || ""))).reduce((acc, r) => acc + Number(r?.value || 0), 0);
+  const pipelineTotal = sum(offerRows, ["Draft", "Sent", "Accepted"]);
+  const convertedTotal = sum(offerRows, ["Converted"]);
+  const openLeadTotal = sum(leadRows, ["Open", "Replied"]);
+  return {
+    pipelineTotal,
+    convertedTotal,
+    openLeadTotal,
+  };
 });
 
 function normalizeText(value) {

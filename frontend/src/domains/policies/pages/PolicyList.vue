@@ -39,7 +39,7 @@
             <select v-model="filters.status" class="input h-9 py-1 text-sm" @change="applyFilters">
               <option value="">{{ t("allStatuses") }}</option>
               <option value="Pending">{{ t("statusOnay") }}</option>
-              <option value="Record">{{ t("statusWaiting") }}</option>
+              <option value="Record">{{ t("status_kayit") }}</option>
               <option value="Active">{{ t("statusActive") }}</option>
               <option value="Cancelled">{{ t("statusCancelled") }}</option>
               <option value="Archived">{{ t("statusArchived") }}</option>

@@ -1,25 +1,24 @@
 <template>
-  <div class="dashboard-hero flex flex-col rounded-2xl px-6 py-5 text-white shadow-md relative mb-4 sm:px-8 sm:py-6">
-    <div class="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+  <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div class="min-w-0">
-        <p class="at-hero-tag mb-1.5">{{ heroTag }}</p>
-        <h1 class="at-hero-title tracking-tight">{{ heroTitle }}</h1>
-        <p class="at-hero-subtitle mt-1.5 opacity-90 font-medium">{{ heroSubtitle }}</p>
-        <div class="mt-3 flex items-center gap-3">
-          <div class="flex h-6 items-center gap-2 rounded-full bg-white/10 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/90 backdrop-blur-md border border-white/10">
+        <h1 class="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">{{ heroTitle }}</h1>
+        <p class="mt-1 max-w-2xl text-sm text-slate-500">{{ heroSubtitle }}</p>
+        <div class="mt-2.5 flex flex-wrap items-center gap-2.5">
+          <span class="inline-flex h-6 items-center gap-1.5 rounded-full bg-slate-100 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
             <span class="inline-block h-1.5 w-1.5 rounded-full bg-at-green"></span>
             {{ rangeLabelText }}: {{ visibleRange }}
-          </div>
+          </span>
         </div>
       </div>
 
       <ActionToolbarGroup>
-        <div class="flex items-center gap-1.5 rounded-xl bg-white/10 p-1 backdrop-blur-md border border-white/10">
+        <div class="flex items-center gap-1 rounded-lg bg-slate-100 p-1">
           <button
             v-for="days in rangeOptions"
             :key="days"
-            class="rounded-lg px-4 py-2 text-xs font-bold transition-all"
-            :class="selectedRange === days ? 'bg-white text-brand-900 shadow-sm' : 'text-white hover:bg-white/10'"
+            class="rounded-md px-3 py-1.5 text-xs font-semibold transition-all focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+            :class="selectedRange === days ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
             :aria-pressed="selectedRange === days"
             :aria-label="`${rangeLabelText} ${rangeLabel(days)}`"
             @click="$emit('apply-range', days)"
@@ -32,9 +31,7 @@
           <ActionButton
             variant="secondary"
             size="sm"
-            class="!flex !h-9 !w-9 !items-center !justify-center !rounded-xl !border-white/10 !bg-white/10 !px-0 !text-white hover:!bg-white/20"
-            :aria-label="refreshLabel"
-            :title="refreshLabel"
+            v-bind="refreshButtonProps"
             @click="$emit('reload')"
           >
             <FeatherIcon name="refresh-cw" class="h-4 w-4" />
@@ -44,7 +41,6 @@
             v-if="showNewLeadAction"
             variant="primary"
             size="sm"
-            class="!flex !h-9 !items-center !gap-2 !rounded-xl !bg-brand-600 !px-5 !text-xs !font-bold !text-white !shadow-lg !shadow-brand-500/20 hover:!bg-brand-500"
             @click="$emit('new-lead')"
           >
             <FeatherIcon name="plus" class="h-4 w-4" />
@@ -55,7 +51,7 @@
     </div>
   </div>
 
-  <div class="surface-card rounded-xl p-1.5 md:w-fit">
+  <div class="surface-card mt-3 rounded-xl p-1.5 md:w-fit">
     <div class="flex gap-1 overflow-x-auto whitespace-nowrap px-1 py-0.5 md:overflow-visible" role="tablist" :aria-label="heroTitle">
       <button
         v-for="tab in dashboardTabs"
@@ -76,7 +72,7 @@
 </template>
 
 <script setup>
-import { nextTick, onMounted, watch } from "vue";
+import { computed, nextTick, onMounted, watch } from "vue";
 import { FeatherIcon } from "frappe-ui";
 import ActionToolbarGroup from "../app-shell/ActionToolbarGroup.vue";
 import ActionButton from "../app-shell/ActionButton.vue";
@@ -98,6 +94,11 @@ const props = defineProps({
 });
 
 defineEmits(["apply-range", "new-lead", "reload", "set-dashboard-tab"]);
+
+const refreshButtonProps = computed(() => ({
+  "aria-label": props.refreshLabel,
+  title: props.refreshLabel,
+}));
 
 function scrollActiveTabIntoView() {
   nextTick(() => {

@@ -46,6 +46,7 @@ export function usePolicyQuickCreateRuntime({
     params: {
       doctype: "AT Insurance Company",
       fields: ["name", "company_name"],
+      filters: { is_active: 1 },
       order_by: "company_name asc",
       limit_page_length: QUICK_OPTION_LIMIT,
     },
@@ -68,6 +69,7 @@ export function usePolicyQuickCreateRuntime({
     params: {
       doctype: "AT Sales Entity",
       fields: ["name", "full_name", "office_branch"],
+      filters: { is_active: 1 },
       order_by: "full_name asc",
       limit_page_length: QUICK_OPTION_LIMIT,
     },

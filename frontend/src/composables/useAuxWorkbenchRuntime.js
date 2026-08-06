@@ -15,6 +15,12 @@ import { translateText } from "@/platform/i18n";
 const OFFICE_BRANCH_FILTER_DOCTYPES = new Set([
   "AT Renewal Task",
   "AT Task",
+  "AT Reminder",
+  "AT Call Note",
+  "AT Activity",
+  "AT Segment",
+  "AT Campaign",
+  "AT Ownership Assignment",
   "AT Accounting Entry",
   "AT Notification Draft",
   "AT Notification Outbox",

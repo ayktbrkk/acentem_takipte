@@ -128,7 +128,7 @@ export function useSidebarNavigation() {
           { key: "renewals", label: t("renewals"), to: "/renewals", short: "RN", icon: IconLucideCalendarClock, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
           { key: "commissions", label: t("commissions"), to: "/commissions", short: "CM", icon: IconLucidePercent, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
           { key: "reconciliation", label: t("reconciliation"), to: "/reconciliation", short: "RC", icon: IconLucideCheckSquare, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },
-          { key: "at-documents", label: t("documentCenter"), to: "/at-documents", short: "DC", icon: IconLucideFolderOpen, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
+          { key: "at-documents", label: t("documentRegistry"), to: "/documents", short: "DC", icon: IconLucideFolderOpen, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
           { key: "files", label: t("files"), to: "/files", short: "FL", icon: IconLucidePaperclip, badgeClass: "text-slate-700", roles: ROLE_ACCOUNTANT },
           { key: "reports", label: t("reports"), to: "/reports", short: "RP", icon: IconLucideBarChart2, badgeClass: "text-brand-700", roles: ROLE_ACCOUNTANT },
           { key: "data-import", label: t("dataImport"), to: "/data-import", short: "IM", icon: IconLucideDownload, badgeClass: "text-brand-700", roles: ROLE_SYSTEM },

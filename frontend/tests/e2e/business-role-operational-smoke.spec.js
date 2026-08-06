@@ -52,7 +52,7 @@ test.describe("business role operational /at smoke", () => {
 
     await expectOperationalPage(page, "/at/payments", /Ödemeler|Payments/i);
     await expectOperationalPage(page, "/at/tasks", /Görevler|Tasks/i);
-    await expectOperationalPage(page, "/at/at-documents", /Doküman|Document/i);
+    await expectOperationalPage(page, "/at/documents", /Doküman|Document/i);
     await expectOperationalPage(page, "/at/reports", /Raporlar|Reports/i);
 
     const policyName = await getFirstRecordName(page, "AT Policy");

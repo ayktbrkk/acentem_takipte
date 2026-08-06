@@ -1,12 +1,14 @@
 <template>
   <div v-if="isDailyTab" class="space-y-4 lg:space-y-5">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
-      <div class="grid gap-4 content-start">
+      <div class="grid grid-cols-1 gap-4 content-start">
       <SectionPanel
-        :title="t('followUpSlaTitle')"
-        :count="formatNumber(prioritizedFollowUpItems.length)"
+        :title="t('recentFollowUpSlaTitle')"
         panel-class="surface-card h-full rounded-xl p-4"
       >
+        <template #trailing>
+          <DashboardPanelTrailing :count="previewCountBadge(dailyFullTotals.followUpTotal)" :meta="previewScopeMeta(prioritizedFollowUpItems.length, dailyFullTotals.followUpTotal, t)" />
+        </template>
         <p class="mb-2 text-[11px] text-slate-500">{{ t("followUpSlaHint") }}</p>
         <p v-if="followUpSettingsHint" class="mb-2 text-[11px] font-medium text-slate-600">{{ followUpSettingsHint }}</p>
         <div v-if="followUpLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -51,10 +53,12 @@
       </SectionPanel>
 
       <SectionPanel
-        :title="t('renewalAlertTitle')"
-        :count="displayRenewalAlertItems.length"
+        :title="t('recentRenewalAlertTitle')"
         panel-class="surface-card h-full rounded-xl p-4"
       >
+        <template #trailing>
+          <DashboardPanelTrailing :count="previewCountBadge(dailyFullTotals.renewalTotal)" :meta="previewScopeMeta(displayRenewalAlertItems.length, dailyFullTotals.renewalTotal, t)" />
+        </template>
         <p class="mb-2 text-[11px] text-slate-500">{{ t("renewalAlertHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <ul v-else-if="displayRenewalAlertItems.length > 0" class="overflow-hidden rounded-xl border border-slate-100 bg-white">
@@ -96,12 +100,14 @@
       </SectionPanel>
       </div>
 
-      <div class="grid gap-4 content-start">
+      <div class="grid grid-cols-1 gap-4 content-start">
         <SectionPanel
-          :title="t('todayTasksTitle')"
-          :count="formatNumber(priorityTaskItems.length)"
+          :title="t('recentTodayTasksTitle')"
           panel-class="surface-card h-full rounded-xl p-4"
         >
+          <template #trailing>
+            <DashboardPanelTrailing :count="previewCountBadge(dailyFullTotals.taskTotal)" :meta="previewScopeMeta(priorityTaskItems.length, dailyFullTotals.taskTotal, t)" />
+          </template>
           <p class="mb-2 text-[11px] text-slate-500">{{ t("myTasksHint") }}</p>
           <div v-if="myTasksLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else class="space-y-3">
@@ -146,9 +152,11 @@
 
       <SectionPanel
         :title="t('recentActivitiesTitle')"
-        :count="formatNumber(recentActivityItems.length)"
         panel-class="surface-card h-full rounded-xl p-4"
       >
+        <template #trailing>
+          <DashboardPanelTrailing :count="formatNumber(recentActivityItems.length)" :meta="previewScopeMeta(recentActivityItems.length, null, t)" />
+        </template>
         <div v-if="myActivitiesLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="recentActivityItems.length === 0" :title="t('recentActivitiesEmpty')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
@@ -188,10 +196,12 @@
       </SectionPanel>
 
       <SectionPanel
-        :title="t('openClaimsTitle')"
-        :count="formatNumber(openClaimsPreviewRows.length)"
+        :title="t('recentOpenClaimsTitle')"
         panel-class="surface-card h-full rounded-xl p-4"
       >
+        <template #trailing>
+          <DashboardPanelTrailing :count="previewCountBadge(dailyFullTotals.claimTotal)" :meta="previewScopeMeta(openClaimsPreviewRows.length, dailyFullTotals.claimTotal, t)" />
+        </template>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="openClaimsPreviewRows.length === 0" :title="t('noOpenClaims')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
@@ -246,11 +256,13 @@ import MetaListCard from "../app-shell/MetaListCard.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
-
-
+import ActionButton from "../app-shell/ActionButton.vue";
+import DashboardPanelTrailing from "./DashboardPanelTrailing.vue";
+import { previewCountBadge, previewScopeMeta } from "../../utils/dashboardPreviewScope";
 
 const props = defineProps({
   activityFacts: { type: Function, required: true },
+  claimOpenCount: { type: Number, default: 0 },
   dashboardLoading: { type: Boolean, required: true },
   displayRecentPolicies: { type: Array, required: true },
   displayRenewalAlertItems: { type: Array, required: true },
@@ -283,12 +295,24 @@ const props = defineProps({
   recentActivityItems: { type: Array, required: true },
   recentPolicyFacts: { type: Function, required: true },
   renewalAlertFacts: { type: Function, required: true },
+  renewalDueSoonCount: { type: Number, default: 0 },
   setPreviewPage: { type: Function, required: true },
   shouldShowViewAll: { type: Function, required: true },
   claimFacts: { type: Function, required: true },
   taskFacts: { type: Function, required: true },
   t: { type: Function, required: true },
   locale: { type: String, default: "en" },
+});
+
+const dailyFullTotals = computed(() => {
+  const fu = props.followUpSummary || {};
+  const tasks = props.myTaskSummary || {};
+  return {
+    followUpTotal: Number(fu.overdue || 0) + Number(fu.due_today || 0),
+    taskTotal: Number(tasks.overdue || 0) + Number(tasks.due_today || 0),
+    renewalTotal: Number(props.renewalDueSoonCount || 0),
+    claimTotal: Number(props.claimOpenCount || 0),
+  };
 });
 
 const followUpSettingsHint = computed(() => {

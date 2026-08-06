@@ -24,17 +24,6 @@
       />
     </template>
 
-    <div
-      v-if="dashboardAccessMessage"
-      :class="dashboardAccessMessageKind === 'permission' ? 'rounded-xl border border-at-red/20 bg-at-red/5 p-4' : 'rounded-xl border border-at-amber/20 bg-at-amber/5 p-4'"
-      role="alert"
-      aria-live="polite"
-    >
-      <p :class="dashboardAccessMessageKind === 'permission' ? 'text-sm font-semibold text-at-red' : 'text-sm font-semibold text-at-amber'">
-        {{ dashboardAccessMessage }}
-      </p>
-    </div>
-
     <!-- audit(perf/P-04): Skeleton loader hides the blank white screen while KPIs load -->
     <template #metrics>
       <SkeletonLoader
@@ -42,7 +31,7 @@
         variant="card"
         :count="4"
       />
-      <div v-else class="grid gap-3 md:gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div v-else class="mx-auto w-full max-w-[1280px] grid gap-3 md:gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <DashboardStatCard
           v-for="card in visibleQuickStatCards"
           :key="card.key"
@@ -57,7 +46,19 @@
       </div>
     </template>
 
-    <DashboardAnalyticsRow
+    <div class="mx-auto w-full max-w-[1280px] space-y-4">
+      <div
+        v-if="dashboardAccessMessage"
+        :class="dashboardAccessMessageKind === 'permission' ? 'rounded-xl border border-at-red/20 bg-at-red/5 p-4' : 'rounded-xl border border-at-amber/20 bg-at-amber/5 p-4'"
+        role="alert"
+        aria-live="polite"
+      >
+        <p :class="dashboardAccessMessageKind === 'permission' ? 'text-sm font-semibold text-at-red' : 'text-sm font-semibold text-at-amber'">
+          {{ dashboardAccessMessage }}
+        </p>
+      </div>
+
+      <DashboardAnalyticsRow
       :commission-trend="commissionTrend"
       :dashboard-loading="dashboardLoading"
       :format-currency="formatCurrency"
@@ -79,10 +80,12 @@
     >
       <DashboardDailyTab
         :activity-facts="activityFacts"
+        :claim-open-count="claimOpenCount"
         :dashboard-loading="dashboardLoading"
         :display-recent-policies="displayRecentPolicies"
         :display-renewal-alert-items="displayRenewalAlertItems"
         :follow-up-description="followUpDescription"
+        :renewal-due-soon-count="renewalDueSoonCount"
         :follow-up-facts="followUpFacts"
         :follow-up-loading="followUpLoading"
         :follow-up-meta="followUpMeta"
@@ -135,14 +138,17 @@
         :dashboard-loading="dashboardLoading"
         :dashboard-payment-facts="dashboardPaymentFacts"
         :dashboard-reconciliation-facts="dashboardReconciliationFacts"
+        :due-today-collection-count="dueTodayCollectionCount"
         :due-today-collection-payments="dueTodayCollectionPayments"
         :format-currency="formatCurrency"
         :format-number="formatNumber"
         :is-collections-tab="isCollectionsTab"
+        :locale="activeLocale"
         :open-collection-risk-item="openCollectionRiskItem"
         :open-payment-item="openPaymentItem"
         :open-preview-list="openPreviewList"
         :open-reconciliation-item="openReconciliationItem"
+        :overdue-collection-count="overdueCollectionCount"
         :overdue-collection-payments="overdueCollectionPayments"
         :paged-preview-items="pagedPreviewItems"
         :preview-page-count="previewPageCount"
@@ -169,9 +175,11 @@
         :format-currency-by="formatCurrencyBy"
         :format-number="formatNumber"
         :is-renewals-tab="isRenewalsTab"
+        :locale="activeLocale"
         :open-policy-item="openPolicyItem"
         :open-preview-list="openPreviewList"
         :open-renewal-task-item="openRenewalTaskItem"
+        :offer-waiting-renewal-count="offerWaitingRenewalCount"
         :paged-preview-items="pagedPreviewItems"
         :preview-page-count="previewPageCount"
         :preview-resolved-page="previewResolvedPage"
@@ -203,6 +211,8 @@
         :format-currency-by="formatCurrencyBy"
         :format-number="formatNumber"
         :is-sales-tab="isSalesTab"
+        :locale="activeLocale"
+        :lead-status-summary="leadStatusSummary"
         :my-reminders-loading="myRemindersLoading"
         :my-tasks-loading="myTasksLoading"
         :open-converted-policy-item="openConvertedPolicyItem"
@@ -211,6 +221,7 @@
         :open-policy-item="openPolicyItem"
         :open-preview-list="openPreviewList"
         :open-sales-action-item="openSalesActionItem"
+        :sales-offer-status-summary="salesOfferStatusSummary"
         :open-sales-action-list="openSalesActionList"
         :paged-preview-items="pagedPreviewItems"
         :preview-page-count="previewPageCount"
@@ -228,8 +239,7 @@
         :t="t"
       />
     </div>
-
-
+    </div>
 
     <Dialog
       v-model="showLeadDialog"
@@ -851,17 +861,15 @@ const {
   taskFacts,
   visibleQuickStatCards,
 } = useDashboardFacts({
-  acceptedOfferCount,
   buildQuickStatCard,
   claimOpenCount: computed(() => (openClaimsPreviewRows.value || []).length),
   dashboardCards,
   dashboardTabSeries,
-  dueTodayCollectionAmount,
   dueTodayCollectionCount,
   formatCurrency,
   formatDate,
   formatNumber,
-  overdueCollectionAmount,
+  leadStatusSummary,
   overdueCollectionCount,
   overdueCollectionPayments,
   dueTodayCollectionPayments,
@@ -873,13 +881,13 @@ const {
   myTaskSummary,
   offerWaitingRenewalCount,
   previousDashboardCards,
-  readyOfferCount,
+  reconciliationPreviewOpenDifference,
   renewalBucketCounts,
   renewalDueSoonCount: computed(() => (displayRenewalAlertItems.value || []).length),
   renewalTasks,
+  salesOfferStatusSummary,
   t,
   policyStatusRows,
-  convertedOfferCount,
 });
 
 watch(

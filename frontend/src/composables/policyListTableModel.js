@@ -28,7 +28,7 @@ export function mapPolicyRecordToTableRow(row, { formatDate, formatCurrency, t }
   return {
     ...row,
     name: row.record_name || row.name,
-    policy_primary: row.record_name || row.name || row.policy_no || fallbackLabel(t),
+    policy_primary: row.policy_no || row.record_name || row.name || fallbackLabel(t),
     policy_secondary: row.policy_no || fallbackLabel(t),
     customer_label: row.customer_full_name || row.customer_name || row.customer || fallbackLabel(t),
     customer_secondary: `${mapCustomerTypeLabel(row.customer_customer_type, t)} | ${row.customer_masked_tax_id || fallbackLabel(t)}`,

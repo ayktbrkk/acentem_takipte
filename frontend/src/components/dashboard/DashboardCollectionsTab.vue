@@ -1,9 +1,17 @@
 <template>
   <div v-if="isCollectionsTab" class="space-y-4 lg:space-y-5">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
-      <div class="grid gap-4 content-start">
-      <SectionPanel :title="t('todayCollectionsTitle')" :count="formatNumber(dueTodayCollectionPayments.length)" panel-class="surface-card h-full rounded-xl p-4">
+      <div class="grid grid-cols-1 gap-4 content-start">
+      <SectionPanel :title="t('todayCollectionsTitle')" panel-class="surface-card h-full rounded-xl p-4">
+        <template #trailing>
+          <DashboardPanelTrailing :count="previewCountBadge(dueTodayCollectionCount)" :meta="previewScopeMeta(dueTodayCollectionPayments.length, dueTodayCollectionCount, t)" />
+        </template>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <div v-else-if="dueTodayCollectionPayments.length === 0 && dueTodayCollectionCount > 0" class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 px-4 py-4 text-center">
+          <p class="text-sm font-medium text-slate-500">{{ t("previewEmptyTitle") }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ t("totalLabel") }}: {{ formatNumber(dueTodayCollectionCount) }}</p>
+          <ActionButton variant="secondary" size="sm" class="mt-3" @click="openPreviewList('payments')">{{ t("viewAllItems") }}</ActionButton>
+        </div>
         <EmptyState v-else-if="dueTodayCollectionPayments.length === 0" :title="t('noTodayCollections')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
           <EntityPreviewCard
@@ -43,8 +51,16 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('overdueCollectionsTitle')" :count="formatNumber(overdueCollectionPayments.length)" panel-class="surface-card h-full rounded-xl p-4">
+      <SectionPanel :title="t('overdueCollectionsTitle')" panel-class="surface-card h-full rounded-xl p-4">
+        <template #trailing>
+          <DashboardPanelTrailing :count="previewCountBadge(overdueCollectionCount)" :meta="previewScopeMeta(overdueCollectionPayments.length, overdueCollectionCount, t)" />
+        </template>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <div v-else-if="overdueCollectionPayments.length === 0 && overdueCollectionCount > 0" class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 px-4 py-4 text-center">
+          <p class="text-sm font-medium text-slate-500">{{ t("previewEmptyTitle") }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ t("totalLabel") }}: {{ formatNumber(overdueCollectionCount) }}</p>
+          <ActionButton variant="secondary" size="sm" class="mt-3" @click="openPreviewList('payments')">{{ t("viewAllItems") }}</ActionButton>
+        </div>
         <EmptyState v-else-if="overdueCollectionPayments.length === 0" :title="t('noOverdueCollections')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <ul v-else class="overflow-hidden rounded-xl border border-slate-100 bg-white">
           <EntityPreviewCard
@@ -86,7 +102,7 @@
       </SectionPanel>
       </div>
 
-      <div class="grid gap-4 content-start">
+      <div class="grid grid-cols-1 gap-4 content-start">
       <SectionPanel v-if="showCollectionsPerformance" :title="t('collectionsPerformanceTitle')" :show-count="false" panel-class="surface-card h-full rounded-xl p-4">
         <p class="mb-3 text-xs text-slate-500">{{ t("collectionsPerformanceHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -124,7 +140,10 @@
         </div>
       </SectionPanel>
 
-      <SectionPanel :title="t('collectionsRiskTitle')" :count="formatNumber(collectionRiskRows.length)" panel-class="surface-card h-full rounded-xl p-4">
+      <SectionPanel :title="t('recentCollectionsRiskTitle')" panel-class="surface-card h-full rounded-xl p-4">
+        <template #trailing>
+          <DashboardPanelTrailing :count="formatNumber(collectionRiskRows.length)" :meta="previewScopeMeta(collectionRiskRows.length, null, t)" />
+        </template>
         <p class="mb-2 text-[11px] text-slate-500">{{ t("collectionsRiskHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="collectionRiskRows.length === 0" :title="t('noCollectionsRisk')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
@@ -165,7 +184,10 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('reconciliationPreview')" :count="formatNumber(reconciliationPreviewRows.length)" :meta="reconciliationPreviewMeta" panel-class="surface-card h-full rounded-xl p-4">
+      <SectionPanel :title="t('recentReconciliationPreviewTitle')" panel-class="surface-card h-full rounded-xl p-4">
+        <template #trailing>
+          <DashboardPanelTrailing :count="formatNumber(reconciliationPreviewRows.length)" :meta="previewScopeMeta(reconciliationPreviewRows.length, null, t)" />
+        </template>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="reconciliationPreviewRows.length === 0" :title="t('noReconciliationPreview')" compact compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center" />
         <div v-else class="space-y-2">
@@ -213,6 +235,7 @@
 <script setup>
 import { computed } from "vue";
 import EmptyState from "../app-shell/EmptyState.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 import DashboardTypeBadge from "./DashboardTypeBadge.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
@@ -220,6 +243,8 @@ import PreviewPager from "../app-shell/PreviewPager.vue";
 import ProgressMetricRow from "../app-shell/ProgressMetricRow.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
+import DashboardPanelTrailing from "./DashboardPanelTrailing.vue";
+import { previewCountBadge, previewScopeMeta } from "../../utils/dashboardPreviewScope";
 
 const props = defineProps({
   collectionPaymentDirectionSummary: { type: Array, required: true },
@@ -229,6 +254,7 @@ const props = defineProps({
   dashboardLoading: { type: Boolean, required: true },
   dashboardPaymentFacts: { type: Function, required: true },
   dashboardReconciliationFacts: { type: Function, required: true },
+  dueTodayCollectionCount: { type: Number, required: true },
   dueTodayCollectionPayments: { type: Array, required: true },
   formatCurrency: { type: Function, required: true },
   formatNumber: { type: Function, required: true },
@@ -238,6 +264,7 @@ const props = defineProps({
   openPaymentItem: { type: Function, required: true },
   openPreviewList: { type: Function, required: true },
   openReconciliationItem: { type: Function, required: true },
+  overdueCollectionCount: { type: Number, required: true },
   overdueCollectionPayments: { type: Array, required: true },
   pagedPreviewItems: { type: Function, required: true },
   previewPageCount: { type: Function, required: true },
@@ -253,14 +280,6 @@ const props = defineProps({
 const showCollectionsPerformance = computed(() => {
   if (props.dashboardLoading) return true;
   return props.collectionPaymentStatusSummary.length > 0 || props.collectionPaymentDirectionSummary.length > 0;
-});
-
-const reconciliationPreviewMeta = computed(() => {
-  if (props.dashboardLoading) return "";
-  const diff = Number(props.reconciliationPreviewOpenDifference ?? 0);
-  if (!Number.isFinite(diff)) return "";
-  const sign = diff > 0 ? "+" : "";
-  return `${props.t("openDifference")}: ${sign}${props.formatCurrency(diff)}`;
 });
 
 function normalizeText(value) {

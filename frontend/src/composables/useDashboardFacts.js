@@ -61,17 +61,15 @@ function buildStatusRows(totals, order, colorMap, labelFn, totalBase) {
 }
 
 export function useDashboardFacts({
-  acceptedOfferCount,
   buildQuickStatCard,
   claimOpenCount,
   dashboardCards,
   dashboardTabSeries,
-  dueTodayCollectionAmount,
   dueTodayCollectionCount,
   formatCurrency,
   formatDate,
   formatNumber,
-  overdueCollectionAmount,
+  leadStatusSummary,
   overdueCollectionCount,
   overdueCollectionPayments,
   dueTodayCollectionPayments,
@@ -83,13 +81,13 @@ export function useDashboardFacts({
   myTaskSummary,
   offerWaitingRenewalCount,
   previousDashboardCards,
-  readyOfferCount,
+  reconciliationPreviewOpenDifference,
   renewalBucketCounts,
   renewalDueSoonCount,
   renewalTasks,
+  salesOfferStatusSummary,
   t,
   policyStatusRows,
-  convertedOfferCount,
 }) {
   function buildStaticQuickStatCard({ key, title, value, icon, valueClass = "", hint = t("todaySnapshot"), trendText = "" }) {
     const card = buildQuickStatCard({ key, title, value, icon, trendHint: hint });
@@ -132,42 +130,48 @@ export function useDashboardFacts({
     }),
   ]);
 
-  const collectionQuickStatCards = computed(() => [
-    buildStaticQuickStatCard({
-      key: "quick-collect-due-today-count",
-      title: t("kpiCollectionDueTodayCount"),
-      value: formatNumber(dueTodayCollectionCount.value),
-      icon: "calendar-days",
-    }),
-    buildStaticQuickStatCard({
-      key: "quick-collect-due-today-amount",
-      title: t("kpiCollectionDueTodayAmount"),
-      value: formatCurrency(dueTodayCollectionAmount.value),
-      icon: "banknote",
-    }),
-    buildStaticQuickStatCard({
-      key: "quick-collect-overdue-count",
-      title: t("kpiCollectionOverdueCount"),
-      value: formatNumber(overdueCollectionCount.value),
-      icon: "alert-triangle",
-      valueClass: "text-at-red",
-    }),
-    buildStaticQuickStatCard({
-      key: "quick-collect-overdue-amount",
-      title: t("kpiCollectionOverdueAmount"),
-      value: formatCurrency(overdueCollectionAmount.value),
-      icon: "wallet",
-      valueClass: "text-at-red",
-    }),
-  ]);
+  const collectionQuickStatCards = computed(() => {
+    const paidRow = (collectionPaymentStatusSummary.value || []).find((row) => String(row?.key || "") === "Paid");
+    const openDifference = Number(reconciliationPreviewOpenDifference?.value ?? 0);
+    return [
+      buildStaticQuickStatCard({
+        key: "quick-collect-due-today-count",
+        title: t("kpiCollectionDueTodayCount"),
+        value: formatNumber(dueTodayCollectionCount.value),
+        icon: "calendar-days",
+        valueClass: "text-brand-600",
+      }),
+      buildStaticQuickStatCard({
+        key: "quick-collect-overdue-count",
+        title: t("kpiCollectionOverdueCount"),
+        value: formatNumber(overdueCollectionCount.value),
+        icon: "alert-triangle",
+        valueClass: "text-at-red",
+      }),
+      buildStaticQuickStatCard({
+        key: "quick-collect-paid-count",
+        title: t("kpiCollectionPaidCount"),
+        value: formatNumber(paidRow?.value ?? 0),
+        icon: "check-circle",
+        valueClass: "text-at-green",
+      }),
+      buildStaticQuickStatCard({
+        key: "quick-collect-open-difference",
+        title: t("kpiCollectionOpenDifference"),
+        value: formatCurrency(openDifference),
+        icon: "git-branch",
+        valueClass: "text-at-amber",
+      }),
+    ];
+  });
 
   const renewalQuickStatCards = computed(() => [
-    quickStatCards.value.find((card) => card.key === "quick-renewal"),
     buildStaticQuickStatCard({
-      key: "quick-renewal-offer-waiting",
-      title: t("kpiRenewalOfferWaiting"),
-      value: formatNumber(offerWaitingRenewalCount.value),
-      icon: "file-clock",
+      key: "quick-renewal-due-soon",
+      title: t("kpiRenewalDueSoon"),
+      value: formatNumber(renewalBucketCounts.value.due7),
+      icon: "clock",
+      valueClass: "text-brand-600",
     }),
     buildStaticQuickStatCard({
       key: "quick-renewal-overdue",
@@ -177,13 +181,20 @@ export function useDashboardFacts({
       valueClass: "text-at-red",
     }),
     buildStaticQuickStatCard({
-      key: "quick-renewal-due7",
-      title: t("kpiRenewalDue7"),
-      value: formatNumber(renewalBucketCounts.value.due7),
-      icon: "clock",
+      key: "quick-renewal-offer-waiting",
+      title: t("kpiRenewalOfferWaiting"),
+      value: formatNumber(offerWaitingRenewalCount.value),
+      icon: "file-clock",
       valueClass: "text-at-amber",
     }),
-  ].filter(Boolean));
+    buildStaticQuickStatCard({
+      key: "quick-renewal-retention",
+      title: t("kpiRenewalRetention"),
+      value: `${formatNumber(renewalRetentionRate.value)}%`,
+      icon: "trending-up",
+      valueClass: "text-at-green",
+    }),
+  ]);
 
   const operationsQuickStatCards = computed(() => [
     buildStaticQuickStatCard({
@@ -218,34 +229,51 @@ export function useDashboardFacts({
     }),
   ]);
 
-  const salesQuickStatCards = computed(() => [
-    buildStaticQuickStatCard({
-      key: "quick-sales-ready-offers",
-      title: t("kpiReadyOffers"),
-      value: formatNumber(readyOfferCount.value),
-      icon: "send",
-    }),
-    buildStaticQuickStatCard({
-      key: "quick-sales-accepted-offers",
-      title: t("kpiAcceptedOffers"),
-      value: formatNumber(acceptedOfferCount.value),
-      icon: "badge-check",
-    }),
-    buildStaticQuickStatCard({
-      key: "quick-sales-converted-offers",
-      title: t("kpiConvertedOffers"),
-      value: formatNumber(convertedOfferCount.value),
-      icon: "repeat",
-    }),
-    buildQuickStatCard({
-      key: "quick-sales-gwp",
-      title: t("kpiGwp"),
-      value: formatCurrency(dashboardCards.value.total_gwp_try),
-      current: dashboardCards.value.total_gwp_try,
-      previous: previousDashboardCards.value.total_gwp_try,
-      icon: "bar-chart-2",
-    }),
-  ]);
+  const salesQuickStatCards = computed(() => {
+    const leadRows = leadStatusSummary?.value || [];
+    const offerRows = salesOfferStatusSummary?.value || [];
+    const openLeads = leadRows
+      .filter((row) => ["Open", "Replied"].includes(String(row?.key || "")))
+      .reduce((sum, row) => sum + Number(row?.value || 0), 0);
+    const pendingOffers = offerRows
+      .filter((row) => ["Draft", "Sent"].includes(String(row?.key || "")))
+      .reduce((sum, row) => sum + Number(row?.value || 0), 0);
+    const convertedOffers = offerRows
+      .filter((row) => String(row?.key || "") === "Converted")
+      .reduce((sum, row) => sum + Number(row?.value || 0), 0);
+    const totalOffers = offerRows.reduce((sum, row) => sum + Number(row?.value || 0), 0);
+    const conversionRate = totalOffers > 0 ? Math.round((convertedOffers / totalOffers) * 1000) / 10 : 0;
+    return [
+      buildStaticQuickStatCard({
+        key: "quick-sales-open-leads",
+        title: t("kpiOpenLeads"),
+        value: formatNumber(openLeads),
+        icon: "users",
+        valueClass: "text-brand-600",
+      }),
+      buildStaticQuickStatCard({
+        key: "quick-sales-pending-offers",
+        title: t("kpiPendingOffers"),
+        value: formatNumber(pendingOffers),
+        icon: "clock",
+        valueClass: "text-at-amber",
+      }),
+      buildStaticQuickStatCard({
+        key: "quick-sales-converted-offers",
+        title: t("kpiConvertedOffers"),
+        value: formatNumber(convertedOffers),
+        icon: "check-circle",
+        valueClass: "text-at-green",
+      }),
+      buildStaticQuickStatCard({
+        key: "quick-sales-conversion-rate",
+        title: t("kpiOfferConversionRate"),
+        value: `${formatNumber(conversionRate)}%`,
+        icon: "percent",
+        valueClass: "text-at-green",
+      }),
+    ];
+  });
 
   const visibleQuickStatCards = computed(() => {
     if (isCollectionsTab.value) return collectionQuickStatCards.value;

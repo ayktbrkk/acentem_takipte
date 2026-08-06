@@ -446,6 +446,87 @@ describe("Dashboard page store integration", () => {
     expect(text).toContain("Yenilemeler");
   });
 
+  it("opens the collections tab directly from the URL query", async () => {
+    routeState.query = { tab: "collections" };
+    const wrapper = mount(Dashboard, {
+      global: {
+        stubs: {
+          Dialog: true,
+          ActionToolbarGroup: genericStub,
+          FilterChipButton: FilterChipButtonStub,
+          ActionButton: ActionButtonStub,
+          ProgressMetricRow: true,
+          TrendMetricRow: true,
+          EntityPreviewCard: EntityPreviewCardStub,
+          MetaListCard: MetaListCardStub,
+          MiniFactList: true,
+          SectionPanel: SectionPanelStub,
+          MetricQuickCard: MetricQuickCardStub,
+          StatusBadge: true,
+          ActionPreviewCard: ActionPreviewCardStub,
+        },
+      },
+    });
+    await flushPromises();
+    await nextTick();
+    expect(wrapper.text()).toContain("Tahsilat Panosu");
+    expect(wrapper.text()).toContain("Tahsilat");
+  });
+
+  it("opens the renewals tab directly from the URL query", async () => {
+    routeState.query = { tab: "renewals" };
+    const wrapper = mount(Dashboard, {
+      global: {
+        stubs: {
+          Dialog: true,
+          ActionToolbarGroup: genericStub,
+          FilterChipButton: FilterChipButtonStub,
+          ActionButton: ActionButtonStub,
+          ProgressMetricRow: true,
+          TrendMetricRow: true,
+          EntityPreviewCard: EntityPreviewCardStub,
+          MetaListCard: MetaListCardStub,
+          MiniFactList: true,
+          SectionPanel: SectionPanelStub,
+          MetricQuickCard: MetricQuickCardStub,
+          StatusBadge: true,
+          ActionPreviewCard: ActionPreviewCardStub,
+        },
+      },
+    });
+    await flushPromises();
+    await nextTick();
+    expect(wrapper.text()).toContain("Yenileme Panosu");
+    expect(wrapper.text()).toContain("Yenilemeler");
+  });
+
+  it("falls back to the daily tab for an invalid tab query", async () => {
+    routeState.query = { tab: "bogus" };
+    const wrapper = mount(Dashboard, {
+      global: {
+        stubs: {
+          Dialog: true,
+          ActionToolbarGroup: genericStub,
+          FilterChipButton: FilterChipButtonStub,
+          ActionButton: ActionButtonStub,
+          ProgressMetricRow: true,
+          TrendMetricRow: true,
+          EntityPreviewCard: EntityPreviewCardStub,
+          MetaListCard: MetaListCardStub,
+          MiniFactList: true,
+          SectionPanel: SectionPanelStub,
+          MetricQuickCard: MetricQuickCardStub,
+          StatusBadge: true,
+          ActionPreviewCard: ActionPreviewCardStub,
+        },
+      },
+    });
+    await flushPromises();
+    await nextTick();
+    expect(wrapper.text()).toContain("Sigorta Kontrol Merkezi");
+    expect(wrapper.text()).toContain("Operasyon");
+  });
+
   it("renders my task panel and opens task detail route", async () => {
     routeState.query = { tab: "sales" };
     const wrapper = mount(Dashboard, {

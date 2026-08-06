@@ -404,19 +404,24 @@ const router = createRouter({
     },
     {
       path: "/at-documents/upload",
+      redirect: (to) => ({ path: "/documents/upload", query: to.query, hash: to.hash }),
+    },
+    {
+      path: "/documents/upload",
       name: "at-documents-upload",
       component: QuickDocumentUpload,
       meta: {
-        title: { tr: "Hızlı Doküman Yükle", en: "Quick Document Upload" },
-        section: { tr: "Doküman Merkezi", en: "Document Center" },
+        title: { tr: "Hizli Dokuman Yukle", en: "Quick Document Upload" },
+        section: { tr: "Dokuman Merkezi", en: "Document Center" },
         requiredRoles: ROLE_ACCOUNTANT,
       },
     },
-    ...AUX_WORKBENCH_ROUTE_DEFS.flatMap((def) => [
-      {
-        path: def.listPath,
-        name: def.listName,
-        component: def.key === "tasks"
+    ...AUX_WORKBENCH_ROUTE_DEFS.flatMap((def) => {
+      const routes = [
+        {
+          path: def.listPath,
+          name: def.listName,
+          component: def.key === "tasks"
           ? TasksList
           : def.key === "notification-drafts"
             ? NotificationDraftsList
@@ -471,7 +476,19 @@ const router = createRouter({
           : (route) => ({ screenKey: def.key, name: route.params.name }),
         meta: { ...def.detailMeta, requiredRoles: AUX_ROLE_MAP[def.key] || ROLE_ACCOUNTANT },
       },
-    ]),
+      ];
+      if (def.key === "at-documents") {
+        routes.unshift({
+          path: "/at-documents",
+          redirect: (to) => ({ path: "/documents", query: to.query, hash: to.hash }),
+        });
+        routes.push({
+          path: "/at-documents/:name",
+          redirect: (to) => ({ path: `/documents/${to.params.name}`, query: to.query, hash: to.hash }),
+        });
+      }
+      return routes;
+    }),
   ],
 });
 

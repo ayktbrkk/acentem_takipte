@@ -66,24 +66,8 @@
     @apply border border-slate-100 bg-white shadow-sm;
   }
 
-  .dashboard-hero {
-    background: linear-gradient(135deg, #0f4c5c 0%, #1e293b 44%, #0f766e 100%);
-  }
-
-  .at-hero-tag {
-    @apply text-xs font-semibold uppercase tracking-[0.22em] text-brand-100/90;
-  }
-
-  .at-hero-title {
-    @apply text-2xl font-semibold md:text-3xl;
-  }
-
-  .at-hero-subtitle {
-    @apply max-w-2xl text-sm text-slate-100/90;
-  }
-
   .at-hero-meta {
-    @apply text-xs text-brand-100/90;
+    @apply text-xs text-slate-500;
   }
 
   .at-page-toolbar {

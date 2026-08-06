@@ -20,7 +20,7 @@ export function mapClaimRecordToTableRow(row, { formatDate, formatCurrency, tran
     claim_primary: row.claim_no || row.name || unspecified,
     claim_secondary: row.policy_no || row.policy || unspecified,
     type_primary: format(row.claim_type),
-    type_secondary: format(row.branch || row.office_branch),
+    type_secondary: format(row.branch_name || row.branch || row.office_branch),
     finance_primary: formatCurrency(row.estimated_amount || row.approved_amount || 0),
     finance_secondary: formatCurrency(row.paid_amount || 0),
     claim_status: row.claim_status || row.status || "",

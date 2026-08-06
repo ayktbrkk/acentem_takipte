@@ -57,7 +57,7 @@ describe("Sidebar localization", () => {
     expect(wrapper.text()).toContain("MENÜ");
     expect(wrapper.text()).toContain("SATIŞ & PORTFÖY");
     expect(wrapper.text()).toContain("Fırsatlar");
-    expect(wrapper.text()).toContain("Doküman Merkezi");
+    expect(wrapper.text()).toContain("Doküman Kayıtları");
     const collapseToggles = wrapper.findAll('button[aria-label="Menüyü daralt"]');
     expect(collapseToggles.length).toBeGreaterThan(0);
     expect(collapseToggles[0].attributes("title")).toBe("Menüyü daralt");
@@ -119,7 +119,7 @@ describe("Sidebar localization", () => {
     expect(wrapper.text()).toContain("MENU");
     expect(wrapper.text()).toContain("SALES & PORTFOLIO");
     expect(wrapper.text()).toContain("Leads");
-    expect(wrapper.text()).toContain("Document Center");
+    expect(wrapper.text()).toContain("Document Registry");
     expect(wrapper.findAll('button[aria-label="Collapse menu"]').length).toBeGreaterThan(0);
   });
 

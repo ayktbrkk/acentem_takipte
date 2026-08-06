@@ -297,11 +297,13 @@ export const AUX_WORKBENCH_CONFIGS = {
     textFields: [],
     filterDefs: [
       F("is_head_office", "is_head_office", "select", { options: ["", "1", "0"] }),
+      F("is_active", "is_active", "select", { options: ["", "1", "0"] }),
       F("city", "city", "text", { mode: "like" }),
     ],
     presetDefs: [
       P("headoffice", L("Head Office", "Genel Müdürlük"), { is_head_office: "1" }),
       P("active", L("Active Branches", "Aktif Şubeler"), { is_active: "1" }),
+      P("inactive", L("Inactive Branches", "Pasif Şubeler"), { is_active: "0" }),
     ],
     quickCreate: { registryKey: "office_branch_master", label: L("New Office Branch", "Yeni Ofis Şubesi"), showSaveAndOpen: true },
     quickEdit: { registryKey: "office_branch_master_edit", label: L("Quick Edit", "Hızlı Düzenle") },
@@ -366,12 +368,14 @@ export const AUX_WORKBENCH_CONFIGS = {
     summaryFields: ["template_key", "event_key", "channel", "is_active"],
     detailGroups: [{ key: "base", fields: ["template_key", "event_key", "channel", "language", "subject", "is_active", "owner", "modified"] }],
     textFields: ["body_template"],
-    filterDefs: [F("channel", "channel", "select", { options: ["", "SMS", "Email"] }), F("is_active", "is_active", "select", { options: ["", "1", "0"] })],
+    filterDefs: [F("channel", "channel", "select", { options: ["", "SMS", "Email", "WHATSAPP", "Both"] }), F("is_active", "is_active", "select", { options: ["", "1", "0"] })],
     presetDefs: [
       P("active", L("Active Templates", "Aktif Şablonlar"), { is_active: "1" }),
       P("inactive", L("Inactive Templates", "Pasif Şablonlar"), { is_active: "0" }),
       P("sms", L("SMS Templates", "SMS Şablonları"), { channel: "SMS" }),
       P("email", L("Email Templates", "E-posta Şablonları"), { channel: "Email" }),
+      P("whatsapp", L("WhatsApp Templates", "WhatsApp Şablonları"), { channel: "WHATSAPP" }),
+      P("both", L("Multi-Channel Templates", "Çok Kanallı Şablonlar"), { channel: "Both" }),
     ],
     quickCreate: { registryKey: "notification_template_master", label: L("New Template", "Yeni Şablon"), showSaveAndOpen: true },
     quickEdit: { registryKey: "notification_template_master_edit", label: L("Quick Edit", "Hızlı Düzenle") },
@@ -579,7 +583,7 @@ export const AUX_WORKBENCH_CONFIGS = {
   },
   "at-documents": {
     key: "at-documents",
-    routeSegment: "at-documents",
+    routeSegment: "documents",
     doctype: "AT Document",
     labels: { list: L("Document Registry", "Doküman Kayıtları"), detail: L("Document Details", "Doküman Detayı"), section: L("Document Center", "Doküman Merkezi") },
     subtitle: L("Metadata records for uploaded documents", "Yüklenen dokümanların metadata kayıtları"),
