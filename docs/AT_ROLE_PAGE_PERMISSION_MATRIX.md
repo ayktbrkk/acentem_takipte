@@ -43,8 +43,8 @@ Use these files in this order when evaluating page visibility and permission int
 | `/communication` | `ROLE_ACCOUNTANT` | Custom API `api.communication.get_queue_snapshot` plus direct lookups on `AT Notification Template`, `AT Customer`, `AT Policy`, `AT Claim`, `AT Segment`, `AT Campaign` | Hybrid model: broad page visibility, narrower action permissions enforced by communication APIs | Keep in operational family; preserve narrower admin actions |
 | `/reports` | `ROLE_ACCOUNTANT` | Custom report APIs per report catalog; scheduled config API is separate | Page visibility is broad; scheduled-report configuration is admin-only | Keep page in operational family; keep scheduling as narrower sub-capability |
 | `/tasks` | `ROLE_ACCOUNTANT` | Generic aux runtime direct `frappe.client.get_list` and `get_count` on `AT Task` | Raw direct-read page, so it needs operational DocType convergence like other visible pages | Keep in operational family; align `AT Task` to it |
-| `/at-documents` | `ROLE_ACCOUNTANT` | Generic aux runtime direct `frappe.client.get_list` and `get_count` on `AT Document` | Current repo still reflects an older `AT User`-centric access assumption | Keep in operational family; align `AT Document` to it |
-| `/at-documents/upload` | `ROLE_ACCOUNTANT` | `api/documents.py` plus `AT Document` create semantics | Currently coupled to `AT Document` permission model | Keep in the same operational family as Document Registry |
+| `/documents` (was `/at-documents`) | `ROLE_ACCOUNTANT` | Generic aux runtime direct `frappe.client.get_list` and `get_count` on `AT Document` | Current repo still reflects an older `AT User`-centric access assumption | Keep in operational family; align `AT Document` to it |
+| `/documents/upload` (was `/at-documents/upload`) | `ROLE_ACCOUNTANT` | `api/documents.py` plus `AT Document` create semantics | Currently coupled to `AT Document` permission model | Keep in the same operational family as Document Registry |
 | `/files` | Operational document-center surface | Direct reads on `File` plus linked-reference navigation | Part of broader document access model, but not the primary mismatch raised in the current failures | Review only after `AT Document` contract is stabilized |
 | `/insurance-companies` | `ROLE_SYSTEM` | `AT Insurance Company` | System-only master-data surface | Keep system only |
 | `/branches` | `ROLE_SYSTEM` | `AT Branch` | System-only master-data surface | Keep system only |
@@ -71,7 +71,7 @@ Use these files in this order when evaluating page visibility and permission int
 | --- | --- | --- |
 | `/payments` | `AT Payment Installment` is directly read but not aligned to the operational role family | Add it to the operational permission convergence model and keep scope restrictions |
 | `/tasks` | `AT Task` is directly read through aux runtime but not aligned to the operational role family | Add it to the operational permission convergence model and keep scope restrictions |
-| `/at-documents` | Page is visible to operational users, but `AT Document` still reflects an older `AT User`-centric model | Move `AT Document` to the operational role family and choose a server-side scope model |
+| `/documents` (was `/at-documents`) | Page is visible to operational users, but `AT Document` still reflects an older `AT User`-centric model | Move `AT Document` to the operational role family and choose a server-side scope model |
 | `/reports` scheduled configs | Page visibility is broad but the scheduled-config API is intentionally narrow | Keep split capability and stop broad-role frontend calls to the admin-only endpoint |
 
 ## Recommended Implementation Order
@@ -118,7 +118,7 @@ Change scope:
 
 1. Move `AT Document` away from the old `AT User`-centric assumption and align it with the operational family used by the visible document pages.
 2. Decide where document scoping lives: DocType permission hooks, controller-level permission methods, or API-level filtering.
-3. Keep `/at-documents` and `/at-documents/upload` on the same backend contract so list, count, and create flows do not drift.
+3. Keep `/documents` and `/documents/upload` on the same backend contract so list, count, and create flows do not drift.
 
 Why second:
 
@@ -127,7 +127,7 @@ Why second:
 
 Validation after Step 2:
 
-1. Confirm an operational role can load `/at/at-documents` without `AT Document` permission errors.
+1. Confirm an operational role can load `/at/documents` without `AT Document` permission errors.
 2. Confirm upload/create still respects the chosen scope restrictions.
 3. Confirm `AT User` and `AT Customer` do not accidentally inherit staff-only document pages unless product explicitly wants that.
 
@@ -187,7 +187,7 @@ Validation after Step 4:
 2. Wire or verify scope enforcement in `acentem_takipte/acentem_takipte/doctype/branch_permissions.py` and `acentem_takipte/hooks.py`.
 3. Re-test `/payments` and `/tasks` before touching any other page.
 4. Then align `AT Document` across `setup_utils.py`, `api/documents.py`, and `doctype/at_document/at_document.py`.
-5. Re-test `/at-documents` and upload/create behavior before touching reports.
+5. Re-test `/documents` and upload/create behavior before touching reports.
 6. Then narrow the reports scheduled-config frontend call path in `frontend/src/pages/Reports.vue`, `frontend/src/composables/useReportsFilters.js`, and `frontend/src/composables/useReportsRuntime.js`.
 7. Only after these succeed, decide whether any router/sidebar change is still necessary.
 

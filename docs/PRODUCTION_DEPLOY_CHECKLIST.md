@@ -305,3 +305,15 @@ Do not call the release complete until all of the following are true:
 - Backend validations should be run in the Bench environment, not a standalone Windows Python environment without Frappe.
 - If a deployment changes frontend assets, validate both `npm run build` and `bench build --app acentem_takipte`.
 - In the Coolify/GHCR path, frontend assets are built into the image; do not rebuild them inside one running container unless you intentionally rebuild and redeploy the image.
+
+### 9.1 Access Log Retention Policy
+
+- **Retention window:** `AT Access Log` records are kept for **365 days**.
+- **Config key:** `at_access_log_retention_days` in `site_config.json`.
+- **Default:** when the key is absent or empty, the documented default of **365** applies.
+- **Scheduler:** the purge runs on the **daily** scheduler hook as `acentem_takipte.acentem_takipte.tasks.run_purge_access_logs_job`. It is fail-safe: a non-positive, non-numeric, or excessively large value (above the safe upper bound of 3650 days) skips the run and deletes nothing, and a cutoff that is not in the past also skips the run. Only records older than the computed cutoff are deleted, and every run is recorded as an `AT Access Log` audit row.
+- **Deploy verification:** confirm the site config value before/after deploy:
+  ```bash
+  bench --site <site> execute frappe.get_site_config
+  ```
+  Verify `at_access_log_retention_days` is either absent or a positive integer; log an operator decision in the deploy note whenever the value is set explicitly. After deploy, check the scheduler log (`logs/scheduler.log`) for the daily purge line and `logs/worker.error.log` for any cleanup failures.

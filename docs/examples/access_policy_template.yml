@@ -231,6 +231,12 @@ doctype_policies:
     runtime_scope:
       type: docperm_only
 
+  - doctype: AT Office Branch
+    visible_to: system
+    permission_bundle: system_only
+    runtime_scope:
+      type: docperm_only
+
   - doctype: AT Sales Entity
     visible_to: system
     permission_bundle: system_only
