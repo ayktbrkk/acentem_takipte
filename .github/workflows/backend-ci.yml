@@ -128,15 +128,15 @@ jobs:
           bench --site "$SITE_NAME" run-tests --app acentem_takipte
 
       - name: Run pytest function tests (fresh disposable site)
-        working-directory: ${{ env.BENCH_DIR }}
+        working-directory: ${{ env.BENCH_DIR }}/sites
         run: |
           # bench run-tests only collects unittest.TestCase classes; the plain
           # pytest-function tests would be silently skipped. Run them with the
           # correct pytest runner against the same disposable site, then drop the
-          # site so no test data is left behind on a dev database. The bench
-          # venv python is required: frappe and pytest live only in that venv,
-          # not in the runner's system python.
-          ./env/bin/python apps/acentem_takipte/scripts/run_pytest.py apps/acentem_takipte/acentem_takipte/acentem_takipte/tests
+          # site so no test data is left behind on a dev database. The bench venv
+          # python is required, and cwd is the sites dir so frappe's cwd-relative
+          # log paths (../logs and <site>/logs) resolve correctly in the CI layout.
+          ../env/bin/python ../apps/acentem_takipte/scripts/run_pytest.py ../apps/acentem_takipte/acentem_takipte/acentem_takipte/tests
         env:
           SITE_NAME: ${{ env.SITE_NAME }}
-          SITES_PATH: ./sites
+          SITES_PATH: .
