@@ -416,6 +416,16 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
         if field not in allowed_fields:
             continue
 
+        if (
+            doc.doctype == "AT Sales Entity"
+            and field == "commission_share_pct"
+            and int(doc.get("is_root") or 0) == 1
+        ):
+            frappe.throw(
+                _("Root sales entity commission share cannot be changed. "
+                  "The root entity absorbs the remaining commission automatically.")
+            )
+
         handler_spec = resolve_handler(doc.doctype, field)
         if handler_spec:
             apply_field_value(doc, field, value, handler_spec)
