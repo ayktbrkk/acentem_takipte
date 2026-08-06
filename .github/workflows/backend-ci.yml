@@ -133,8 +133,10 @@ jobs:
           # bench run-tests only collects unittest.TestCase classes; the plain
           # pytest-function tests would be silently skipped. Run them with the
           # correct pytest runner against the same disposable site, then drop the
-          # site so no test data is left behind on a dev database.
-          python apps/acentem_takipte/scripts/run_pytest.py apps/acentem_takipte/acentem_takipte/acentem_takipte/tests
+          # site so no test data is left behind on a dev database. The bench
+          # venv python is required: frappe and pytest live only in that venv,
+          # not in the runner's system python.
+          ./env/bin/python apps/acentem_takipte/scripts/run_pytest.py apps/acentem_takipte/acentem_takipte/acentem_takipte/tests
         env:
           SITE_NAME: ${{ env.SITE_NAME }}
           SITES_PATH: ${{ env.BENCH_DIR }}/sites
