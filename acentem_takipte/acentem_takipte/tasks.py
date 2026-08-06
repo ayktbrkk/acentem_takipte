@@ -315,9 +315,24 @@ def _run_payment_due_logic(limit: int = 250) -> dict[str, int]:
     return summary
 
 
+def _resolve_renewal_reminder_windows() -> tuple[int, ...]:
+    from acentem_takipte.acentem_takipte.domains.admin.services.general_settings import get_insurance_defaults
+    from acentem_takipte.acentem_takipte.renewal.reminders import REMINDER_STAGES
+
+    defaults = get_insurance_defaults()
+    lead_days = int(defaults.get("renewal_reminder_lead_days") or 0)
+    if lead_days <= 0:
+        return ()
+    windows = sorted(
+        {stage.days_before_expiry for stage in REMINDER_STAGES if 0 < stage.days_before_expiry <= lead_days},
+        reverse=True,
+    )
+    return tuple(windows)
+
+
 def _run_policy_renewal_reminder_logic(limit: int = 250) -> dict[str, int]:
     today = getdate(nowdate())
-    reminder_windows = (30, 15, 7)
+    reminder_windows = _resolve_renewal_reminder_windows()
     safe_limit = max(cint(limit), 1)
 
     scanned = 0
@@ -559,4 +574,26 @@ def _process_data_import_job_logic(import_job_name: str, requested_by: str) -> d
             user=requested_by,
         )
         raise
+
+
+def cleanup_expired_export_jobs() -> dict[str, int]:
+    """Scheduled task: delete expired export artifacts and their jobs."""
+    from acentem_takipte.acentem_takipte.platform.api.list_exports import cleanup_expired_export_jobs as _run
+
+    return _run()
+
+
+def run_purge_access_logs_job() -> dict[str, Any]:
+    """Scheduled task: purge access logs beyond the configured retention window.
+
+    Retention is controlled by the site config key
+    ``at_access_log_retention_days`` (documented default 365). Invalid or
+    missing-positive config and non-past cutoffs skip the run without deleting
+    anything; the privileged purge path audits every cleanup.
+    """
+    from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import (
+        run_access_log_retention_purge,
+    )
+
+    return run_access_log_retention_purge()
 

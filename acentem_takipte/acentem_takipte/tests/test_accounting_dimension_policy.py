@@ -37,6 +37,29 @@ def test_accounting_entry_autofills_dimensions_from_policy(monkeypatch):
     assert doc.sales_entity == "SE-001"
 
 
+def test_accounting_entry_populates_origin_office_branch_from_office_branch(monkeypatch):
+    """New entries must snapshot origin_office_branch so branch permission hooks
+    (which filter on origin_office_branch) never hide freshly synced records."""
+    doc = frappe.get_doc(
+        {
+            "doctype": "AT Accounting Entry",
+            "office_branch": "BR-IST",
+            "local_amount_try": 100,
+            "external_amount_try": 100,
+            "status": "Synced",
+        }
+    )
+
+    def _fake_get_value(doctype, name, fieldname, as_dict=False):
+        return None
+
+    monkeypatch.setattr(frappe.db, "get_value", _fake_get_value)
+
+    doc.validate()
+
+    assert doc.origin_office_branch == "BR-IST"
+
+
 def test_accounting_entry_rejects_sales_entity_office_mismatch(monkeypatch):
     doc = frappe.get_doc(
         {

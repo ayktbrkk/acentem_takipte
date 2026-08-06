@@ -203,5 +203,7 @@ scheduler_events = {
         "acentem_takipte.acentem_takipte.tasks.run_policy_renewal_reminder_job",
         "acentem_takipte.acentem_takipte.tasks.run_stale_renewal_task_job",
         "acentem_takipte.acentem_takipte.tasks.run_payment_due_job",
+        "acentem_takipte.acentem_takipte.tasks.cleanup_expired_export_jobs",
+        "acentem_takipte.acentem_takipte.tasks.run_purge_access_logs_job",
     ],
 }

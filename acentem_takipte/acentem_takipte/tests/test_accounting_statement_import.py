@@ -158,6 +158,7 @@ def test_import_statement_preview_rows_imports_only_matched_rows():
     assert result == {
         "imported": 1,
         "skipped": 1,
+        "skipped_locked": 0,
         "open_items": 1,
         "preview_summary": preview_payload["summary"],
     }

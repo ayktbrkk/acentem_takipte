@@ -488,14 +488,52 @@ def _hash_payload(payload: dict) -> str:
     return sha256(serialized.encode("utf-8")).hexdigest()
 
 
-def _get_or_create_entry(source_doctype: str, source_name: str):
-    entry_name = frappe.db.get_value(
+def _get_or_create_entry(
+    source_doctype: str,
+    source_name: str,
+    *,
+    prefer_statement_type: str | None = None,
+    exclude_statement_type: str | None = "commission",
+):
+    """Find or create an AT Accounting Entry for a source record.
+
+    Statement-imported entries that represent a different financial concept
+    (e.g. commission statement journals) must never be reused by the policy/
+    payment sync or the premium import path. The lookup therefore excludes
+    entries whose statement_type matches ``exclude_statement_type`` (default
+    ``"commission"``) so sync and premium import only ever operate on the
+    canonical policy/payment journal entry, and commission journals stay
+    isolated per statement batch.
+
+    When several eligible entries exist (e.g. a premium-imported entry plus a
+    legacy sync entry), ``prefer_statement_type`` makes the selection
+    deterministic instead of relying on arbitrary row order.
+    """
+    rows = frappe.db.get_all(
         "AT Accounting Entry",
-        {"source_doctype": source_doctype, "source_name": source_name},
-        "name",
+        filters={"source_doctype": source_doctype, "source_name": source_name},
+        fields=["name", "statement_type"],
+        order_by="creation asc, name asc",
+        limit_page_length=50,
     )
-    if entry_name:
-        return frappe.get_doc("AT Accounting Entry", entry_name)
+    eligible = [
+        row
+        for row in rows
+        if not exclude_statement_type
+        or str(row.get("statement_type") or "").strip() != exclude_statement_type
+    ]
+
+    if prefer_statement_type:
+        preferred = [
+            row["name"]
+            for row in eligible
+            if str(row.get("statement_type") or "").strip() == prefer_statement_type
+        ]
+        if preferred:
+            return frappe.get_doc("AT Accounting Entry", preferred[0])
+
+    if eligible:
+        return frappe.get_doc("AT Accounting Entry", eligible[0]["name"])
 
     return frappe.get_doc(
         {

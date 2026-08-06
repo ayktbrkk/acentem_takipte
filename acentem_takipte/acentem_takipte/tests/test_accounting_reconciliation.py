@@ -194,6 +194,47 @@ class TestAccountingReconciliation(IntegrationTestCase):
         self.assertEqual(entry.external_ref, "STM-001")
         self.assertEqual(flt(entry.external_amount_try), 999)
 
+    def test_sync_does_not_overwrite_commission_statement_entry(self):
+        """A commission statement journal and the canonical policy sync entry
+        are distinct financial records. Re-syncing a policy must never reuse
+        (and therefore corrupt) the commission entry's local_amount/statement
+        metadata."""
+        from acentem_takipte.acentem_takipte.accounting import _get_or_create_entry
+        from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
+            _get_or_create_commission_statement_entry,
+        )
+
+        deps = _create_dependencies()
+        policy = _create_policy(deps, status="Active", commission_amount=150)
+
+        commission_entry = _get_or_create_commission_statement_entry(
+            policy.name, "STM-001", "B1"
+        )
+        commission_entry.entry_type = "Policy"
+        commission_entry.local_amount_try = 150
+        commission_entry.external_amount_try = 999
+        commission_entry.external_ref = "STM-001"
+        commission_entry.statement_type = "commission"
+        commission_entry.statement_batch = "B1"
+        commission_entry.import_source = "commission_statement"
+        commission_entry.status = "Synced"
+        commission_entry.insert(ignore_permissions=True)
+
+        # Sync must not reuse the commission journal: it needs its own
+        # canonical policy/premium entry.
+        self.assertEqual(_get_or_create_entry("AT Policy", policy.name).name, None)
+
+        self.assertEqual(
+            sync_accounting_entry("AT Policy", policy.name, force=True).get("status"),
+            "Synced",
+        )
+
+        commission_entry.reload()
+        self.assertEqual(flt(commission_entry.local_amount_try), 150)
+        self.assertEqual(flt(commission_entry.external_amount_try), 999)
+        self.assertEqual(commission_entry.external_ref, "STM-001")
+        self.assertEqual(commission_entry.statement_type, "commission")
+
     def test_run_reconciliation_does_not_flag_entries_without_external_data(self):
         """Entries that have no real statement external data yet must not be
         flagged Missing External by the background reconciliation job."""

@@ -8,6 +8,9 @@ from typing import Any
 import frappe
 from frappe.utils import flt
 
+from acentem_takipte.acentem_takipte.doctype.at_commission_period.at_commission_period import (
+    is_commission_period_locked,
+)
 from acentem_takipte.acentem_takipte.utils.statuses import ATPolicyStatus
 
 
@@ -65,6 +68,32 @@ def build_statement_import_preview(
     }
 
 
+def _is_policy_in_locked_period(
+    policy_name: str | None, insurance_company: str | None
+) -> bool:
+    """Return True when the policy's commission period is locked.
+
+    Locked commission periods must not be mutated retroactively through any
+    statement import path (premium, commission or missing external), mirroring
+    the guards already enforced on AT Policy and AT Payment commission edits.
+    """
+    if not policy_name or not insurance_company:
+        return False
+    issue_date = frappe.db.get_value("AT Policy", policy_name, "issue_date")
+    if not issue_date:
+        return False
+    return is_commission_period_locked(insurance_company, issue_date)
+
+
+def _statement_payload_in_locked_period(payload: dict[str, Any]) -> bool:
+    policy_name = (
+        payload.get("source_name")
+        if payload.get("source_doctype") == "AT Policy"
+        else payload.get("policy")
+    )
+    return _is_policy_in_locked_period(policy_name, payload.get("insurance_company"))
+
+
 def import_statement_preview_rows(
     *,
     csv_text: str,
@@ -95,6 +124,7 @@ def import_statement_preview_rows(
 
     imported = 0
     skipped = 0
+    skipped_locked = 0
     open_items = 0
 
     for row in preview["rows"]:
@@ -115,7 +145,14 @@ def import_statement_preview_rows(
             continue
 
         payload = build_accounting_payload(source_doctype, source_name)
-        entry = _get_or_create_entry(source_doctype, source_name)
+        if _statement_payload_in_locked_period(payload):
+            skipped_locked += 1
+            continue
+        entry = _get_or_create_entry(
+            source_doctype,
+            source_name,
+            prefer_statement_type="premium",
+        )
         details_payload = {
             "import_source": "statement_preview",
             "external_ref": row.get("external_ref"),
@@ -179,6 +216,7 @@ def import_statement_preview_rows(
     return {
         "imported": imported,
         "skipped": skipped,
+        "skipped_locked": skipped_locked,
         "open_items": open_items,
         "preview_summary": preview["summary"],
     }
@@ -316,6 +354,7 @@ def import_commission_statement_rows(
 
     imported = 0
     open_items = 0
+    skipped_locked = 0
     statement_batch = _build_statement_batch_id(csv_text, insurance_company)
 
     for row in importable:
@@ -324,6 +363,9 @@ def import_commission_statement_rows(
             continue
 
         payload = _build_commission_statement_payload(row, matched_policy)
+        if _statement_payload_in_locked_period(payload):
+            skipped_locked += 1
+            continue
         external_ref = str(row.get("external_ref") or "").strip()
         entry = _get_or_create_commission_statement_entry(
             matched_policy["name"], external_ref, statement_batch
@@ -406,6 +448,7 @@ def import_commission_statement_rows(
         "skipped": skipped_unmatched + skipped_duplicate,
         "skipped_duplicate": skipped_duplicate,
         "skipped_unmatched": skipped_unmatched,
+        "skipped_locked": skipped_locked,
         "open_items": open_items,
         "missing_external": missing_external,
         "preview_summary": preview["summary"],
@@ -461,6 +504,7 @@ def generate_missing_external_for_commission_statement(
     batch = str(statement_batch or "").strip()
 
     generated = 0
+    skipped_locked = 0
     for policy in system_policies:
         policy_name = policy["name"]
         policy_no = str(policy.get("policy_no") or "").strip()
@@ -471,6 +515,10 @@ def generate_missing_external_for_commission_statement(
 
         commission_amount = flt(policy.get("commission_amount") or 0)
         if commission_amount <= 0:
+            continue
+
+        if _is_policy_in_locked_period(policy_name, policy.get("insurance_company")):
+            skipped_locked += 1
             continue
 
         # Use the commission-statement entry resolver so Missing External never
@@ -532,7 +580,7 @@ def generate_missing_external_for_commission_statement(
     if generated and not frappe.flags.in_test:
         frappe.db.commit()
 
-    return {"generated": generated}
+    return {"generated": generated, "skipped_locked": skipped_locked}
 
 
 def _parse_csv_rows(

@@ -338,6 +338,9 @@
         <div v-if="statementDialog.error" class="rounded-lg border border-at-red/20 bg-at-red/5 px-3 py-2 text-xs text-at-red">
           {{ statementDialog.error }}
         </div>
+        <div v-if="statementDialog.warning" class="rounded-lg border border-at-amber/20 bg-at-amber/5 px-3 py-2 text-xs text-at-amber">
+          {{ statementDialog.warning }}
+        </div>
         <div v-if="statementDialog.success" class="rounded-lg border border-at-green/20 bg-at-green/5 px-3 py-2 text-xs text-at-green">
           {{ statementDialog.success }}
         </div>
@@ -528,6 +531,7 @@ const statementDialog = reactive({
   delimiter: ",",
   error: "",
   success: "",
+  warning: "",
 });
 
 const statementLoading = ref(false);
@@ -599,6 +603,7 @@ function openStatementDialog() {
   statementDialog.csvText = "";
   statementDialog.error = "";
   statementDialog.success = "";
+  statementDialog.warning = "";
   statementPreview.value = null;
   statementHistoryResource.reload({
     insurance_company: filters.insurance_company || undefined,
@@ -618,6 +623,7 @@ async function runStatementPreview() {
   }
   statementDialog.error = "";
   statementDialog.success = "";
+  statementDialog.warning = "";
   statementLoading.value = true;
   try {
     await statementPreviewResource.reload({
@@ -637,6 +643,7 @@ async function runStatementPreview() {
 async function runStatementImport() {
   statementDialog.error = "";
   statementDialog.success = "";
+  statementDialog.warning = "";
   statementLoading.value = true;
   try {
     await statementImportResource.reload({
@@ -651,6 +658,7 @@ async function runStatementImport() {
     if (result.skipped) parts.push(`${result.skipped} ${t("skipped_label").toLowerCase()}`);
     if (result.missing_external?.generated) parts.push(`${result.missing_external.generated} ${t("missing_external_label").toLowerCase()}`);
     if (result.open_items) parts.push(`${result.open_items} ${t("open_items_label").toLowerCase()}`);
+    statementDialog.warning = result.skipped_locked ? t("statement_locked_skipped") : "";
     statementDialog.success = t("statement_import_success") + " — " + parts.join(", ");
     statementPreview.value = null;
     reload();

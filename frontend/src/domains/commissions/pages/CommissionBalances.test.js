@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mount } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { nextTick, reactive, ref } from "vue";
 
@@ -46,6 +46,92 @@ const ActionButtonStub = {
   emits: ["click"],
   template: `<button class="action-button-stub" @click="$emit('click')"><slot /></button>`,
 };
+
+const pageStubs = {
+  ActionButton: ActionButtonStub,
+  WorkbenchPageLayout: WorkbenchLayoutStub,
+  SaaSMetricCard: { template: `<div class="saas-metric-card-stub" />` },
+  SmartFilterBar: genericStub,
+  SectionPanel: genericStub,
+  ListTable: true,
+  SkeletonLoader: true,
+  SidePanel: {
+    props: ["show", "title", "subtitle"],
+    template: `<div v-if="show" class="side-panel-stub"><slot /></div>`,
+  },
+};
+
+function defaultResource() {
+  return {
+    data: ref(null),
+    loading: ref(false),
+    error: ref(null),
+    params: {},
+    reload: vi.fn(async () => null),
+  };
+}
+
+function importResultResource(result) {
+  const data = ref(null);
+  return {
+    data,
+    loading: ref(false),
+    error: ref(null),
+    params: {},
+    reload: vi.fn(async () => {
+      data.value = result;
+      return result;
+    }),
+  };
+}
+
+function importResources(importResult) {
+  return [
+    defaultResource(),
+    importResultResource({
+      summary: { total_rows: 1, matched_rows: 1, mismatched_rows: 0, unmatched_rows: 0 },
+      rows: [{ policy_no: "34567890", external_ref: "DEC-001", amount_try: 1000 }],
+    }),
+    importResultResource(importResult),
+    defaultResource(),
+    defaultResource(),
+    defaultResource(),
+  ];
+}
+
+function clickActionButton(wrapper, text) {
+  const button = wrapper
+    .findAll("button.action-button-stub")
+    .find((b) => b.text().includes(text));
+  return button.trigger("click");
+}
+
+async function mountCommissionPage(resources) {
+  resourceQueue.push(...resources);
+  const wrapper = mount(CommissionBalances, {
+    global: { stubs: pageStubs },
+  });
+  await Promise.resolve();
+  await Promise.resolve();
+  await nextTick();
+  return wrapper;
+}
+
+async function openImportDialog(wrapper) {
+  await clickActionButton(wrapper, "Ekstre Yükle");
+  await nextTick();
+}
+
+async function runImport(wrapper, csvText) {
+  await wrapper.find("textarea").setValue(csvText);
+  await nextTick();
+  // The import action is disabled until a preview succeeds, mirroring the
+  // product flow: preview first, then import.
+  await clickActionButton(wrapper, "Önizle");
+  await flushPromises();
+  await clickActionButton(wrapper, "İçe Aktar");
+  await flushPromises();
+}
 
 describe("CommissionBalances page", () => {
   beforeEach(() => {
@@ -258,5 +344,60 @@ describe("CommissionBalances page", () => {
 
     expect(wrapper.text()).toContain("Komisyon verileri yüklenemedi");
     expect(wrapper.text()).toContain("Tekrar Dene");
+  });
+
+  it("shows locked-period warning when import skipped locked rows", async () => {
+    const wrapper = await mountCommissionPage(
+      importResources({
+        imported: 2,
+        skipped: 1,
+        skipped_locked: 3,
+        open_items: 0,
+        missing_external: { generated: 0 },
+      }),
+    );
+    await openImportDialog(wrapper);
+    await runImport(wrapper, "policy_no,amount_try,external_ref\n34567890,1000.00,DEC-001");
+
+    expect(wrapper.text()).toContain("Kilitli komisyon dönemi nedeniyle bazı satırlar atlandı.");
+    expect(wrapper.text()).toContain("Ekstre başarıyla içe aktarıldı.");
+  });
+
+  it("hides locked-period warning when no locked rows were skipped", async () => {
+    const wrapper = await mountCommissionPage(
+      importResources({
+        imported: 2,
+        skipped: 1,
+        skipped_locked: 0,
+        open_items: 0,
+        missing_external: { generated: 0 },
+      }),
+    );
+    await openImportDialog(wrapper);
+    await runImport(wrapper, "policy_no,amount_try,external_ref\n34567890,1000.00,DEC-001");
+
+    expect(wrapper.text()).not.toContain("Kilitli komisyon dönemi nedeniyle bazı satırlar atlandı.");
+    expect(wrapper.text()).toContain("Ekstre başarıyla içe aktarıldı.");
+  });
+
+  it("clears locked-period warning when the dialog is reopened", async () => {
+    const wrapper = await mountCommissionPage(
+      importResources({
+        imported: 2,
+        skipped: 0,
+        skipped_locked: 3,
+        open_items: 0,
+        missing_external: { generated: 0 },
+      }),
+    );
+    await openImportDialog(wrapper);
+    await runImport(wrapper, "policy_no,amount_try,external_ref\n34567890,1000.00,DEC-001");
+    expect(wrapper.text()).toContain("Kilitli komisyon dönemi nedeniyle bazı satırlar atlandı.");
+
+    await clickActionButton(wrapper, "Kapat");
+    await nextTick();
+    await openImportDialog(wrapper);
+
+    expect(wrapper.text()).not.toContain("Kilitli komisyon dönemi nedeniyle bazı satırlar atlandı.");
   });
 });

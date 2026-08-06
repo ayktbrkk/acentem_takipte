@@ -975,3 +975,179 @@ class TestMissingExternalGeneration(FrappeTestCase):
             statement_batch="B1",
         )
         assert result["generated"] == 0
+
+
+class TestLockedPeriodStatementImport(FrappeTestCase):
+    """Locked commission periods must block all statement import paths so
+    accounting/commission sources in a locked period cannot be mutated
+    retroactively."""
+
+    def tearDown(self) -> None:
+        frappe.db.rollback()
+
+    def _create_policy_deps(self, policy_no: str, commission_amount: float):
+        from acentem_takipte.acentem_takipte.tests.test_utils import ensure_test_office_branch
+
+        suffix = frappe.generate_hash(length=8)
+        insurance_company = frappe.get_doc(
+            {
+                "doctype": "AT Insurance Company",
+                "company_name": f"Lock Ins {suffix}",
+                "company_code": f"LI{suffix[:4]}",
+            }
+        ).insert(ignore_permissions=True)
+
+        branch = frappe.get_doc(
+            {
+                "doctype": "AT Branch",
+                "branch_name": f"Lock Branch {suffix}",
+                "branch_code": f"LB{suffix[:4]}",
+                "insurance_company": insurance_company.name,
+            }
+        ).insert(ignore_permissions=True)
+
+        office_branch = ensure_test_office_branch(suffix)
+
+        sales_entity = frappe.get_doc(
+            {
+                "doctype": "AT Sales Entity",
+                "entity_type": "Agency",
+                "full_name": f"Lock Agency {suffix}",
+                "office_branch": office_branch,
+            }
+        ).insert(ignore_permissions=True)
+
+        customer = frappe.get_doc(
+            {
+                "doctype": "AT Customer",
+                "tax_id": _random_tax_id(),
+                "full_name": f"Lock Customer {suffix}",
+                "phone": "05559876543",
+                "email": f"lock.{suffix}@example.com",
+                "assigned_agent": "Administrator",
+            }
+        ).insert(ignore_permissions=True)
+
+        policy = frappe.get_doc(
+            {
+                "doctype": "AT Policy",
+                "policy_no": policy_no,
+                "customer": customer.name,
+                "sales_entity": sales_entity.name,
+                "insurance_company": insurance_company.name,
+                "branch": branch.name,
+                "office_branch": office_branch,
+                "status": "Active",
+                "issue_date": frappe.utils.nowdate(),
+                "start_date": frappe.utils.nowdate(),
+                "end_date": frappe.utils.add_days(frappe.utils.nowdate(), 365),
+                "currency": "TRY",
+                "net_premium": 1000,
+                "commission_amount": commission_amount,
+                "tax_amount": 120,
+            }
+        ).insert(ignore_permissions=True)
+
+        return {
+            "insurance_company": insurance_company.name,
+            "office_branch": office_branch,
+            "policy": policy.name,
+            "policy_no": policy.policy_no,
+        }
+
+    def _lock_current_period(self, insurance_company: str) -> None:
+        frappe.get_doc(
+            {
+                "doctype": "AT Commission Period",
+                "insurance_company": insurance_company,
+                "period_start": frappe.utils.add_days(frappe.utils.nowdate(), -1),
+                "period_end": frappe.utils.add_days(frappe.utils.nowdate(), 1),
+                "status": "Locked",
+            }
+        ).insert(ignore_permissions=True)
+
+    def test_commission_import_skips_policies_in_locked_period(self):
+        from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
+            import_commission_statement_rows,
+        )
+
+        deps = self._create_policy_deps("LOCK-2026-0001", 1000.0)
+        self._lock_current_period(deps["insurance_company"])
+
+        csv = _csv(
+            "policy_no,amount_try,external_ref",
+            f"{deps['policy_no']},1000.00,DEC-001",
+        )
+        result = import_commission_statement_rows(
+            csv_text=csv,
+            insurance_company=deps["insurance_company"],
+            office_branch=deps["office_branch"],
+            generate_missing=False,
+        )
+        self.assertEqual(result["imported"], 0)
+        self.assertEqual(result["skipped_locked"], 1)
+        self.assertEqual(
+            frappe.db.count(
+                "AT Accounting Entry",
+                {"source_doctype": "AT Policy", "source_name": deps["policy"]},
+            ),
+            0,
+        )
+
+    def test_premium_import_skips_policies_in_locked_period(self):
+        from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
+            import_statement_preview_rows,
+        )
+
+        deps = self._create_policy_deps("LOCK-PR-2026-0001", 1000.0)
+        self._lock_current_period(deps["insurance_company"])
+
+        csv = _csv(
+            "policy_no,amount_try,external_ref",
+            f"{deps['policy_no']},1000.00,DEC-001",
+        )
+        result = import_statement_preview_rows(
+            csv_text=csv,
+            insurance_company=deps["insurance_company"],
+            office_branch=deps["office_branch"],
+            statement_type="premium",
+        )
+        self.assertEqual(result["imported"], 0)
+        self.assertEqual(result["skipped_locked"], 1)
+
+    def test_missing_external_skips_policies_in_locked_period(self):
+        from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
+            generate_missing_external_for_commission_statement,
+        )
+
+        deps = self._create_policy_deps("LOCK-ME-2026-0001", 1000.0)
+        self._lock_current_period(deps["insurance_company"])
+
+        result = generate_missing_external_for_commission_statement(
+            policy_refs_from_statement=[],
+            insurance_company=deps["insurance_company"],
+            office_branch=deps["office_branch"],
+            statement_batch="B1",
+        )
+        self.assertEqual(result["generated"], 0)
+        self.assertEqual(result["skipped_locked"], 1)
+
+    def test_unlocked_period_imports_normally(self):
+        from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
+            import_commission_statement_rows,
+        )
+
+        deps = self._create_policy_deps("LOCK-FREE-2026-0001", 1000.0)
+
+        csv = _csv(
+            "policy_no,amount_try,external_ref",
+            f"{deps['policy_no']},1000.00,DEC-001",
+        )
+        result = import_commission_statement_rows(
+            csv_text=csv,
+            insurance_company=deps["insurance_company"],
+            office_branch=deps["office_branch"],
+            generate_missing=False,
+        )
+        self.assertEqual(result["imported"], 1)
+        self.assertEqual(result["skipped_locked"], 0)

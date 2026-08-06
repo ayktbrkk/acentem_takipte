@@ -61,3 +61,9 @@ class ATAccountingEntry(Document):
             if entity_branch and str(self.office_branch or "").strip() and str(entity_branch).strip() != str(self.office_branch).strip():
                 frappe.throw(frappe._("Sales Entity must belong to the selected Office Branch"))
 
+        # origin_office_branch snapshots the branch at record time and is the
+        # column used by the branch permission hooks. New entries must never
+        # leave it empty or branch-scoped users lose visibility of them.
+        if not str(self.origin_office_branch or "").strip() and str(self.office_branch or "").strip():
+            self.origin_office_branch = self.office_branch
+
