@@ -3,11 +3,15 @@ from __future__ import annotations
 import frappe
 from frappe.utils import cint
 
+from acentem_takipte.acentem_takipte.platform.utils.sentry import init_sentry
+
 
 def enforce_production_safety_flags(bootinfo=None):
     config = frappe.get_site_config() or {}
     if getattr(frappe.flags, "in_test", False):
         return bootinfo
+
+    init_sentry()
 
     if cint(config.get("developer_mode", 0)):
         frappe.logger("acentem_takipte.startup").warning(
