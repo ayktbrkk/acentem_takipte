@@ -4,10 +4,8 @@ import time
 from typing import Any
 
 import frappe
+from frappe import _
 from frappe.utils import cint
-
-# audit(f401): `_` became unused after report API error and permission messages
-# were inlined. Leave this note so the import is not silently reintroduced.
 
 from acentem_takipte.acentem_takipte.platform.api.security import assert_authenticated, assert_doctype_permission, assert_post_request, assert_roles
 from acentem_takipte.acentem_takipte.platform.services.export_payload_utils import (
@@ -385,7 +383,7 @@ def _assert_alert_test_rate_limit(user: str) -> None:
         count = 0
 
     if count >= ALERT_TEST_RATE_LIMIT_MAX_REQUESTS:
-        frappe.throw("Too many alert channel test requests. Please retry shortly.")
+        frappe.throw(_("Too many alert channel test requests. Please retry shortly."))
 
     try:
         cache.set_value(key, {"window_start": window_start, "count": count + 1})
