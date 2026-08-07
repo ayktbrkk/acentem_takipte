@@ -13,7 +13,7 @@ def _mask_dsn(text):
 
 def init_sentry():
     """Initializes Sentry for backend error tracking if a DSN is provided in site_config.json."""
-    if frappe.flags.sentry_initialized:
+    if getattr(frappe.flags, "sentry_initialized", False):
         return
 
     site_config = frappe.get_site_config()
