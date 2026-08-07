@@ -1,9 +1,19 @@
+import re
+
 import frappe
 import logging
 
+_DSN_PATTERN = re.compile(r"https://[^@\s]+@[^/\s]+")
+
+
+def _mask_dsn(text):
+    """Redact any Sentry DSN-looking value before it reaches a log or report."""
+    return _DSN_PATTERN.sub("[REDACTED]", str(text))
+
+
 def init_sentry():
     """Initializes Sentry for backend error tracking if a DSN is provided in site_config.json."""
-    if frappe.flags.sentry_initialized:
+    if getattr(frappe.flags, "sentry_initialized", False):
         return
 
     site_config = frappe.get_site_config()
@@ -37,8 +47,8 @@ def init_sentry():
         # sentry-sdk not installed, skip initialization
         pass
     except Exception as e:
-        # Don't crash the app if Sentry fails to init
-        frappe.log_error(title="Sentry Initialization Error", message=str(e))
+        # Don't crash the app if Sentry fails to init. The DSN is never logged.
+        frappe.log_error(title="Sentry Initialization Error", message=_mask_dsn(e))
 
 def capture_exception(exception=None):
     """Manually captures an exception to Sentry."""
