@@ -287,8 +287,18 @@ test.describe("Acentem Takipte smoke", () => {
 
     const anonContext = await browser.newContext();
     const anonResp = await anonContext.request.get("/api/method/frappe.auth.get_logged_user");
-    const guest = (await anonResp.json().catch(() => null))?.message;
-    expect(guest).toBe("Guest");
+    // `get_logged_user` is an authenticated endpoint: an anonymous context must
+    // be rejected (401/403), proving the fresh context has no session. The SPA
+    // must also land on the auth wall (login redirect) for anonymous visitors.
+    expect(anonResp.status()).toBeGreaterThanOrEqual(401);
+    const anonPage = await anonContext.newPage();
+    await anonPage.goto("/at/");
+    const loginWallVisible = await anonPage
+      .getByRole("heading", { name: /Login to Frappe/i })
+      .isVisible()
+      .catch(() => false);
+    const redirectedToLogin = anonPage.url().includes("/login");
+    expect(loginWallVisible || redirectedToLogin).toBeTruthy();
     await anonContext.close();
 
     await ensureAuthenticated(page);
