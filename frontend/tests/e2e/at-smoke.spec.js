@@ -268,7 +268,7 @@ test.describe("Acentem Takipte smoke", () => {
     expect(headers["content-security-policy"]).toBeTruthy();
   });
 
-  test("platform smoke: logout endpoint and anonymous session boundary", async ({ page, context }) => {
+  test("platform smoke: logout endpoint and anonymous session boundary", async ({ page, browser }) => {
     await ensureAuthenticated(page);
 
     const before = await callGetMethod(page, "frappe.auth.get_logged_user");
@@ -279,10 +279,16 @@ test.describe("Acentem Takipte smoke", () => {
     expect(logout.status).toBeGreaterThanOrEqual(200);
     expect(logout.status).toBeLessThan(300);
 
-    await context.clearCookies();
-    await page.goto("/at/");
-    const afterLogout = await callGetMethod(page, "frappe.auth.get_logged_user");
-    expect(String(afterLogout.json?.message || "")).toBe("Guest");
+    const anonContext = await browser.newContext();
+    const anonPage = await anonContext.newPage();
+    await anonPage.goto("/");
+    const guest = await anonPage.evaluate(async () => {
+      const res = await fetch("/api/method/frappe.auth.get_logged_user");
+      const json = await res.json().catch(() => null);
+      return json?.message;
+    });
+    expect(guest).toBe("Guest");
+    await anonContext.close();
 
     await ensureAuthenticated(page);
     const afterLogin = await callGetMethod(page, "frappe.auth.get_logged_user");
