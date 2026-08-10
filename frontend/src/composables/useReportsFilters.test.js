@@ -89,11 +89,11 @@ describe("useReportsFilters", () => {
     });
   });
 
-  it("allows scheduled report management only for desk users", () => {
+  it("allows scheduled report management only for System Manager/Administrator", () => {
     const route = reactive({ query: {} });
     const router = { replace: vi.fn() };
     const authStore = reactive({
-      roles: ["AT System Manager"],
+      roles: ["System Manager"],
       isDeskUser: true,
     });
     const branchStore = reactive({
@@ -116,5 +116,34 @@ describe("useReportsFilters", () => {
     });
 
     expect(result.canManageScheduledReports.value).toBe(true);
+  });
+
+  it("denies scheduled report management to AT System Manager-only users (backend gate)", () => {
+    const route = reactive({ query: {} });
+    const router = { replace: vi.fn() };
+    const authStore = reactive({
+      roles: ["AT System Manager", "AT Agent"],
+      isDeskUser: true,
+    });
+    const branchStore = reactive({
+      requestBranch: "IST",
+      activeBranch: { label: "Istanbul" },
+    });
+
+    const result = useReportsFilters({
+      props: { initialReportKey: "policy_list" },
+      t: (key) => key,
+      activeLocale: ref("tr"),
+      localeCode: ref("tr-TR"),
+      route,
+      router,
+      authStore,
+      branchStore,
+      refresh: vi.fn(),
+      visibleColumnKeys: ref([]),
+      groupByColumn: ref(""),
+    });
+
+    expect(result.canManageScheduledReports.value).toBe(false);
   });
 });
