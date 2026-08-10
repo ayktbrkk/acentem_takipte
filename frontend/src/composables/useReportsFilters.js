@@ -83,7 +83,12 @@ export function useReportsFilters({
   const visibleFilters = computed(() => new Set(reportFilterConfig[filters.reportKey] || []));
 
   const canManageScheduledReports = computed(() => {
-    return Boolean(unref(authStore.isDeskUser));
+    // Backend gate (assert_roles "System Manager"/"Administrator") must be mirrored.
+    // "AT System Manager" is intentionally NOT sufficient: the backend denies it.
+    const roles = new Set(
+      (unref(authStore.roles) || []).map((role) => String(role).trim().toLowerCase())
+    );
+    return roles.has("system manager") || roles.has("administrator");
   });
 
   const activeFilterCount = computed(() => {

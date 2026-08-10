@@ -19,6 +19,7 @@ on:
         options:
           - f4-smoke
           - all-e2e
+          - platform
       grep:
         description: "Playwright grep pattern"
         required: false
@@ -127,15 +128,53 @@ jobs:
             exit 1
           fi
 
-      - name: Run desk-free smoke tests
+      - name: Run platform smoke tests (data-independent)
+        id: platform_smoke
         shell: bash
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: platform-report.json
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: platform-junit.xml
         run: |
           set -euo pipefail
+          npm run e2e:smoke:ci -- --workers "${E2E_WORKERS}"
+
+      - name: Run business smoke tests (data-dependent)
+        id: business_smoke
+        if: ${{ inputs.profile != 'platform' }}
+        shell: bash
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: smoke-report.json
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: smoke-junit.xml
+        run: |
+          set +e
           if [ "${E2E_PROFILE}" = "all-e2e" ]; then
-            npm run e2e:ci -- --workers "${E2E_WORKERS}"
+            npm run e2e:ci -- --workers "${E2E_WORKERS}" --grep-invert "Acentem Takipte smoke"
           else
             npm run e2e:f4:ci -- --grep "${{ inputs.grep || 'F4 desk-free core flows' }}" --workers "${E2E_WORKERS}"
           fi
+          BUSINESS_EXIT=$?
+          set -e
+          echo "business_exit=${BUSINESS_EXIT}" >> "$GITHUB_OUTPUT"
+
+      - name: Classify smoke coverage
+        id: classify
+        if: always()
+        shell: bash
+        env:
+          BUSINESS_EXIT: ${{ steps.business_smoke.outputs.business_exit }}
+        run: |
+          set +e
+          OUTPUT=$(node scripts/e2e/classify-smoke-coverage.mjs \
+            test-results/platform-report.json \
+            test-results/smoke-report.json \
+            "${BUSINESS_EXIT:-0}" \
+            "${E2E_PROFILE}")
+          CLASSIFY_EXIT=$?
+          set -e
+          printf '%s\n' "$OUTPUT" >> "$GITHUB_STEP_SUMMARY"
+          OVERALL=$(printf '%s\n' "$OUTPUT" | sed -n 's/^- overall_smoke: //p')
+          echo "overall_smoke=${OVERALL}" >> "$GITHUB_OUTPUT"
+          exit "${CLASSIFY_EXIT}"
 
       - name: Upload Playwright report
         if: always()
@@ -158,6 +197,7 @@ jobs:
         shell: bash
         env:
           SMOKE_WEBHOOK_URL: ${{ secrets.SMOKE_WEBHOOK_URL }}
+          OVERALL_SMOKE: ${{ steps.classify.outputs.overall_smoke }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
@@ -166,7 +206,7 @@ jobs:
             exit 0
           fi
           STATUS="${{ job.status }}"
-          MSG="Desk-Free ${E2E_PROFILE} smoke run: ${STATUS}\nTarget: ${E2E_TARGET_LABEL}\nBase URL: ${E2E_BASE_URL}\nRun: ${RUN_URL}"
+          MSG="Desk-Free ${E2E_PROFILE} smoke run: ${STATUS}\nOverall: ${OVERALL_SMOKE:-unknown}\nTarget: ${E2E_TARGET_LABEL}\nBase URL: ${E2E_BASE_URL}\nRun: ${RUN_URL}"
           jq -n --arg text "$MSG" '{text:$text}' > /tmp/smoke-webhook.json
           curl -fsS -X POST -H "Content-Type: application/json" --data @/tmp/smoke-webhook.json "$SMOKE_WEBHOOK_URL"
 
@@ -175,6 +215,7 @@ jobs:
         shell: bash
         env:
           SMOKE_WEBHOOK_URL: ${{ secrets.SMOKE_WEBHOOK_URL }}
+          OVERALL_SMOKE: ${{ steps.classify.outputs.overall_smoke }}
         run: |
           if [ -n "${SMOKE_WEBHOOK_URL:-}" ]; then
             WEBHOOK_STATUS="enabled"
@@ -186,6 +227,7 @@ jobs:
             echo ""
             echo "- Target: \`${E2E_TARGET_LABEL}\`"
             echo "- Profile: \`${E2E_PROFILE}\`"
+            echo "- Overall: \`${OVERALL_SMOKE:-n/a}\`"
             echo "- Base URL: \`${E2E_BASE_URL}\`"
             echo "- Grep: \`${{ inputs.grep || 'F4 desk-free core flows' }}\`"
             echo "- Workers: \`${E2E_WORKERS}\`"

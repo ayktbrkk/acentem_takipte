@@ -18,7 +18,7 @@ services:
     volumes:
       - app_sites:/home/frappe/frappe-bench/sites
     healthcheck:
-      test: ["CMD-SHELL", "python3 - <<'PY'\nimport urllib.request\nreq = urllib.request.Request('http://127.0.0.1:8000/api/method/ping', headers={'Host': 'kipsigorta.acentemtakipte.com'})\nurllib.request.urlopen(req, timeout=5)\nPY"]
+      test: ["CMD-SHELL", "python3 - <<'PY'\nimport urllib.request\nreq = urllib.request.Request('http://127.0.0.1:8000/api/method/ping', headers={'Host': '${SITE_NAME}'})\nurllib.request.urlopen(req, timeout=5)\nPY"]
       interval: 30s
       timeout: 10s
       retries: 5
