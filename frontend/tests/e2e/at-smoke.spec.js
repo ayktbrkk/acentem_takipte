@@ -58,9 +58,15 @@ test.describe("Acentem Takipte smoke", () => {
     };
     const onPageError = (err) => pageErrors.push(String(err).slice(0, 300));
     const onFailed = (req) => {
-      if (["xhr", "fetch"].includes(req.resourceType())) {
-        failedRequests.push(`${req.resourceType()} ${req.url().slice(-80)}`);
-      }
+      if (!["xhr", "fetch"].includes(req.resourceType())) return;
+      const failure = req.failure?.() || null;
+      const errorText = failure?.errorText || "";
+      // Navigating away from a route cancels in-flight SPA fetches (dashboard
+      // widgets etc.). Those are browser-cancelled requests, not server
+      // failures, and must not fail the smoke. Real network errors
+      // (ERR_CONNECTION_*, ERR_NAME_NOT_RESOLVED, ERR_SSL_*, ...) still fail.
+      if (errorText === "net::ERR_ABORTED") return;
+      failedRequests.push(`${req.resourceType()} ${req.url().slice(-80)} (${errorText})`);
     };
     page.on("console", onConsole);
     page.on("pageerror", onPageError);
@@ -280,13 +286,8 @@ test.describe("Acentem Takipte smoke", () => {
     expect(logout.status).toBeLessThan(300);
 
     const anonContext = await browser.newContext();
-    const anonPage = await anonContext.newPage();
-    await anonPage.goto("/");
-    const guest = await anonPage.evaluate(async () => {
-      const res = await fetch("/api/method/frappe.auth.get_logged_user");
-      const json = await res.json().catch(() => null);
-      return json?.message;
-    });
+    const anonResp = await anonContext.request.get("/api/method/frappe.auth.get_logged_user");
+    const guest = (await anonResp.json().catch(() => null))?.message;
     expect(guest).toBe("Guest");
     await anonContext.close();
 
