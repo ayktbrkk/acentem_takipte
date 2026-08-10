@@ -255,4 +255,41 @@ test.describe("Acentem Takipte smoke", () => {
     );
     expect(response.ok).toBeFalsy();
   });
+
+  test("platform smoke: security headers are present", async ({ page, request }) => {
+    await ensureAuthenticated(page);
+
+    const response = await request.get("/at/");
+    expect(response.status()).toBeLessThan(500);
+    const headers = response.headers();
+    expect(headers["strict-transport-security"]).toBeTruthy();
+    expect(headers["x-content-type-options"]).toBe("nosniff");
+    expect(headers["x-frame-options"]).toBe("SAMEORIGIN");
+    expect(headers["content-security-policy"]).toBeTruthy();
+  });
+
+  test("platform smoke: logout invalidates session and login restores it", async ({ page }) => {
+    await ensureAuthenticated(page);
+
+    const before = await callGetMethod(page, "frappe.auth.get_logged_user");
+    expect(before.status).toBe(200);
+    expect(before.json?.message).not.toBe("Guest");
+
+    const logout = await callPostMethod(page, "logout");
+    expect(logout.status).toBe(200);
+
+    await page.goto("/at/");
+    await page
+      .getByRole("heading", { name: /Login to Frappe/i })
+      .waitFor({ timeout: 15000 })
+      .catch(() => {});
+
+    const afterLogout = await callGetMethod(page, "frappe.auth.get_logged_user");
+    expect(String(afterLogout.json?.message || "")).toBe("Guest");
+
+    await ensureAuthenticated(page);
+    const afterLogin = await callGetMethod(page, "frappe.auth.get_logged_user");
+    expect(afterLogin.status).toBe(200);
+    expect(afterLogin.json?.message).not.toBe("Guest");
+  });
 });
