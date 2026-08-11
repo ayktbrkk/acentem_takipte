@@ -5,6 +5,10 @@ import { createPinia, setActivePinia } from "pinia";
 import Sidebar from "./Sidebar.vue";
 import { useAuthStore } from "../state/authStore";
 
+vi.mock("frappe-ui", () => ({
+  createResource: () => ({ submit: vi.fn() }),
+}));
+
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
   createWebHistory: vi.fn(() => ({})),
@@ -61,7 +65,7 @@ describe("Sidebar localization", () => {
     const collapseToggles = wrapper.findAll('button[aria-label="Menüyü daralt"]');
     expect(collapseToggles).toHaveLength(1);
     expect(collapseToggles[0].attributes("title")).toBe("Menüyü daralt");
-    expect(wrapper.find('[data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
+    expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     expect(wrapper.text()).toContain("Acentem Takipte");
     expect(wrapper.find("footer").findAll('button[aria-label="Menüyü daralt"]')).toHaveLength(0);
   });
@@ -124,7 +128,7 @@ describe("Sidebar localization", () => {
     expect(wrapper.text()).toContain("Leads");
     expect(wrapper.text()).toContain("Document Registry");
     expect(wrapper.findAll('button[aria-label="Collapse menu"]')).toHaveLength(1);
-    expect(wrapper.find('[data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
+    expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     expect(wrapper.text()).toContain("Acentem Takipte");
     expect(wrapper.find("footer").findAll('button[aria-label="Collapse menu"]')).toHaveLength(0);
   });

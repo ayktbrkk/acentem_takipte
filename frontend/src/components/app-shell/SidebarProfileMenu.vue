@@ -1,8 +1,10 @@
 <template>
   <div ref="menuRef" class="relative w-full">
     <button
+      ref="triggerRef"
       data-testid="sidebar-profile-trigger"
       class="flex w-full items-center gap-2.5 rounded-lg p-1.5 text-left transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+      :class="props.collapsed ? 'justify-center' : ''"
       type="button"
       aria-haspopup="menu"
       :aria-expanded="menuOpen ? 'true' : 'false'"
@@ -12,7 +14,7 @@
       <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-medium text-white">
         {{ userInitials }}
       </span>
-      <span class="min-w-0 flex-1">
+      <span v-if="!props.collapsed" class="min-w-0 flex-1">
         <span class="block truncate text-xs font-medium text-slate-900" :title="displayUser">
           {{ displayUser }}
         </span>
@@ -32,6 +34,19 @@
         <p class="truncate text-sm font-semibold text-slate-900" :title="displayUser">{{ displayUser }}</p>
         <p class="truncate text-xs text-slate-500" :title="roleLabel">{{ roleLabel }}</p>
         <p class="truncate text-xs text-slate-500" :title="branchLabel">{{ branchLabel }}</p>
+      </div>
+
+      <div v-if="logoutError" class="border-b border-slate-100 px-4 py-3" role="alert" aria-live="polite">
+        <p class="text-xs text-at-red-700">{{ logoutError }}</p>
+        <button
+          ref="retryRef"
+          class="mt-2 rounded-md text-xs font-semibold text-at-red-700 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          type="button"
+          role="menuitem"
+          @click="logout"
+        >
+          {{ t("retry") }}
+        </button>
       </div>
 
       <div class="px-2 py-2" role="group" :aria-label="t('language')">
@@ -68,7 +83,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { createResource } from "frappe-ui";
 
 import { translateText } from "@/platform/i18n";
@@ -77,8 +92,17 @@ import { useBranchStore } from "../../platform/state/branchStore";
 
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
+const props = defineProps({
+  collapsed: {
+    type: Boolean,
+    default: false,
+  },
+});
 const menuOpen = ref(false);
 const menuRef = ref(null);
+const triggerRef = ref(null);
+const retryRef = ref(null);
+const logoutError = ref("");
 
 function t(key) {
   return translateText(key, authStore.locale);
@@ -92,6 +116,7 @@ const userInitials = computed(() => {
 });
 const roleLabel = computed(() => String(authStore.roles?.[0] || t("role")).trim() || t("role"));
 const branchLabel = computed(() => {
+  if (branchStore.canAccessAll && !branchStore.requestBranch) return t("allBranches");
   const branch = branchStore.selectedBranch;
   const selected = branch?.office_branch_name || branch?.name || branchStore.requestBranch;
   if (selected) return String(selected).trim();
@@ -125,34 +150,58 @@ async function persistLocaleViaFetch(locale) {
 }
 
 function toggleMenu() {
-  menuOpen.value = !menuOpen.value;
+  if (menuOpen.value) {
+    closeMenu(true);
+    return;
+  }
+  logoutError.value = "";
+  menuOpen.value = true;
+  nextTick(focusFirstMenuItem);
 }
 
-function closeMenu() {
+function focusTrigger() {
+  nextTick(() => triggerRef.value?.focus());
+}
+
+function closeMenu(restoreFocus = false) {
   menuOpen.value = false;
+  if (restoreFocus) focusTrigger();
 }
 
 function runAccountAction(action) {
-  closeMenu();
   if (action === "account") {
+    closeMenu(true);
     window.location.assign("/me");
     return;
   }
   if (action === "desk") {
+    closeMenu(true);
     window.location.assign("/desk");
     return;
   }
   if (action === "logout") {
-    fetch("/api/method/logout", {
+    logout();
+  }
+}
+
+async function logout() {
+  logoutError.value = "";
+  try {
+    const response = await fetch("/api/method/logout", {
       method: "POST",
       credentials: "include",
       headers: {
         Accept: "application/json",
         "X-Frappe-CSRF-Token": window.csrf_token || "",
       },
-    }).finally(() => {
-      window.location.assign("/login?redirect-to=/at");
     });
+    if (!response.ok) throw new Error("logout failed");
+    closeMenu(true);
+    window.location.assign("/login?redirect-to=/at");
+  } catch (error) {
+    logoutError.value = t("logoutError");
+    await nextTick();
+    retryRef.value?.focus();
   }
 }
 
@@ -177,7 +226,11 @@ async function setLocale(locale) {
 
   if (payload?.locale) authStore.setLocale(payload.locale);
   if (payload && typeof payload === "object") authStore.applyContext(payload);
-  closeMenu();
+  closeMenu(true);
+}
+
+function focusFirstMenuItem() {
+  menuRef.value?.querySelector('[role="menuitem"]')?.focus();
 }
 
 function handleDocumentClick(event) {
@@ -187,7 +240,7 @@ function handleDocumentClick(event) {
 function handleKeydown(event) {
   if (!menuOpen.value) return;
   if (event.key === "Escape") {
-    closeMenu();
+    closeMenu(true);
     return;
   }
 
@@ -195,7 +248,16 @@ function handleKeydown(event) {
   const current = items.indexOf(document.activeElement);
   if (!items.length || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
   event.preventDefault();
-  const next = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : (current + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
+  if (event.key === "Home") {
+    items[0].focus();
+    return;
+  }
+  if (event.key === "End") {
+    items[items.length - 1].focus();
+    return;
+  }
+  const direction = event.key === "ArrowDown" ? 1 : -1;
+  const next = current < 0 ? (direction === 1 ? 0 : items.length - 1) : (current + direction + items.length) % items.length;
   items[next].focus();
 }
 

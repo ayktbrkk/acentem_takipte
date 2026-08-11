@@ -56,12 +56,18 @@ const PROFILE_MENU_TRANSLATIONS = {
   },
 };
 
+let mountedWrappers = [];
+
 function mountSidebar() {
-  return mount(SidebarProfileMenu);
+  const wrapper = mount(SidebarProfileMenu, { attachTo: document.body });
+  mountedWrappers.push(wrapper);
+  return wrapper;
 }
 
 describe("Sidebar profile menu contract", () => {
   afterEach(() => {
+    mountedWrappers.forEach((wrapper) => wrapper.unmount());
+    mountedWrappers = [];
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -81,7 +87,8 @@ describe("Sidebar profile menu contract", () => {
       default_office_branch: "AT Sigorta",
       office_branches: [{ name: "HQ", office_branch_name: "AT Sigorta", is_default: 1 }],
     });
-    useBranchStore().hydrateFromSession();
+    const branchStore = useBranchStore();
+    branchStore.hydrateFromSession();
   });
 
   it("keeps new profile-menu labels exact in Turkish and English", () => {
@@ -113,6 +120,29 @@ describe("Sidebar profile menu contract", () => {
     expect(wrapper.text()).toContain("Çıkış Yap");
   });
 
+  it("shows all branches when access is global without an explicit request branch", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      locale: "tr",
+      user: "Aykut Yılmaz",
+      userId: "aykut",
+      roles: ["AT Manager"],
+      default_office_branch: "HQ",
+      can_access_all_office_branches: true,
+      office_branches: [{ name: "HQ", office_branch_name: "AT Sigorta", is_default: 1 }],
+    });
+    const branchStore = useBranchStore();
+    branchStore.hydrateFromSession();
+    branchStore.syncFromRoute({ query: {} });
+    expect(branchStore.canAccessAll).toBe(true);
+
+    const wrapper = mountSidebar();
+    await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
+
+    expect(wrapper.text()).toContain("Tüm Şubeler");
+    expect(wrapper.text()).not.toContain("AT Sigorta");
+  });
+
   it("closes with Escape and outside click", async () => {
     const wrapper = mountSidebar();
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
@@ -121,14 +151,28 @@ describe("Sidebar profile menu contract", () => {
 
     await trigger.trigger("click");
     expect(wrapper.find('[role="menu"]').exists()).toBe(true);
+    expect(document.activeElement).toBe(wrapper.find('[role="menuitem"]').element);
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     await wrapper.vm.$nextTick();
     expect(wrapper.find('[role="menu"]').exists()).toBe(false);
+    expect(document.activeElement).toBe(trigger.element);
 
     await trigger.trigger("click");
     document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await wrapper.vm.$nextTick();
     expect(wrapper.find('[role="menu"]').exists()).toBe(false);
+  });
+
+  it("moves focus through the menu when no item is currently focused", async () => {
+    const wrapper = mountSidebar();
+    const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
+
+    await trigger.trigger("click");
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
+    await wrapper.vm.$nextTick();
+
+    const items = wrapper.findAll('[role="menuitem"]');
+    expect(document.activeElement).toBe(items[items.length - 1].element);
   });
 
   it("switches to English through the profile menu and persists the locale", async () => {
@@ -141,6 +185,7 @@ describe("Sidebar profile menu contract", () => {
     const wrapper = mountSidebar();
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
     expect(trigger.exists()).toBe(true);
+    trigger.element.focus();
     await trigger.trigger("click");
 
     const englishAction = wrapper
@@ -159,6 +204,7 @@ describe("Sidebar profile menu contract", () => {
     );
     expect(resourceMock.localeResource.submit).toHaveBeenCalledWith({ locale: "en" });
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(trigger.element);
   });
 
   it("falls back to the session locale endpoint when resource persistence fails", async () => {
@@ -194,5 +240,55 @@ describe("Sidebar profile menu contract", () => {
         headers: { Accept: "application/json" },
       },
     );
+  });
+
+  it.each([
+    ["non-OK response", { ok: false, json: vi.fn() }, "en"],
+    ["network rejection", null, "en"],
+  ])("keeps the profile menu open with a retry state after logout %s", async (_label, response, locale) => {
+    const authStore = useAuthStore();
+    authStore.setLocale(locale);
+    const fetchMock = vi.fn();
+    if (response) {
+      fetchMock.mockResolvedValue(response);
+    } else {
+      fetchMock.mockRejectedValue(new Error("network unavailable"));
+    }
+    vi.stubGlobal("fetch", fetchMock);
+
+    const wrapper = mountSidebar();
+    await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
+    await wrapper
+      .findAll('[role="menuitem"]')
+      .find((item) => item.text().trim() === "Logout")
+      .trigger("click");
+    await wrapper.vm.$nextTick();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/method/logout",
+      expect.objectContaining({
+        method: "POST",
+        credentials: "include",
+        headers: expect.objectContaining({ "X-Frappe-CSRF-Token": "" }),
+      }),
+    );
+    expect(wrapper.find('[role="alert"]').text()).toContain("Logout failed");
+    expect(wrapper.find('button[role="menuitem"]').text()).toContain("Retry");
+  });
+
+  it("keeps successful logout free of an error state", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const wrapper = mountSidebar();
+    await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
+    await wrapper
+      .findAll('[role="menuitem"]')
+      .find((item) => item.text().trim() === "Çıkış Yap")
+      .trigger("click");
+    await Promise.resolve();
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/method/logout", expect.any(Object));
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
   });
 });

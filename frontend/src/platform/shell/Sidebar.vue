@@ -115,15 +115,7 @@
       </nav>
 
       <footer class="mt-auto border-t border-slate-100 px-3 py-3">
-        <div class="flex items-center gap-2.5" :class="isCollapsed ? 'justify-center' : ''">
-          <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-medium text-white">
-            {{ userInitials }}
-          </div>
-          <div v-if="!isCollapsed" class="min-w-0">
-            <p class="truncate text-xs font-medium text-slate-900">{{ userDisplayName }}</p>
-            <p class="truncate text-[10px] text-slate-400">{{ branchLabel }}</p>
-          </div>
-        </div>
+        <SidebarProfileMenu :collapsed="isCollapsed" />
         <div class="mt-3 flex items-center border-t border-slate-100 pt-3" :class="isCollapsed ? 'justify-center' : ''">
           <button
             class="max-lg:hidden grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
@@ -142,6 +134,7 @@
 
 <script setup>
 import ActionButton from "../ui/shell/ActionButton.vue";
+import SidebarProfileMenu from "../../components/app-shell/SidebarProfileMenu.vue";
 import IconLucidePanelLeftClose from '~icons/lucide/panel-left-close';
 import IconLucidePanelLeftOpen from '~icons/lucide/panel-left-open';
 import { useSidebarNavigation } from "../composables/useSidebarNavigation";
@@ -161,9 +154,6 @@ const {
   isCollapsed,
   collapseMenuLabel,
   expandMenuLabel,
-  userDisplayName,
-  userInitials,
-  branchLabel,
   navSections,
   toggleSidebarCollapsedDesktop,
   linkClass,
