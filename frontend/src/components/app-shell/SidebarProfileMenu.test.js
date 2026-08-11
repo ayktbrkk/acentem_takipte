@@ -1,10 +1,16 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 
 import Sidebar from "../../platform/shell/Sidebar.vue";
 import { useAuthStore } from "../../platform/state/authStore";
 import { useBranchStore } from "../../platform/state/branchStore";
+
+vi.mock("frappe-ui", () => ({
+  createResource: () => ({
+    submit: vi.fn().mockRejectedValue(new Error("Use fetch fallback in contract test")),
+  }),
+}));
 
 const RouterLinkStub = {
   props: ["to", "title"],
@@ -29,6 +35,11 @@ function mountSidebar() {
 }
 
 describe("Sidebar profile menu contract", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
   beforeEach(() => {
     setActivePinia(createPinia());
     const authStore = useAuthStore();
@@ -49,7 +60,6 @@ describe("Sidebar profile menu contract", () => {
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
 
     expect(trigger.exists()).toBe(true);
-    if (!trigger.exists()) return;
 
     expect(trigger.attributes("aria-haspopup")).toBe("menu");
     expect(trigger.attributes("aria-expanded")).toBe("false");
@@ -70,7 +80,6 @@ describe("Sidebar profile menu contract", () => {
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
 
     expect(trigger.exists()).toBe(true);
-    if (!trigger.exists()) return;
 
     await trigger.trigger("click");
     expect(wrapper.find('[role="menu"]').exists()).toBe(true);
@@ -83,5 +92,35 @@ describe("Sidebar profile menu contract", () => {
     await wrapper.vm.$nextTick();
     expect(wrapper.find('[role="menu"]').exists()).toBe(false);
     expect(wrapper.find('button[aria-label="Menüyü daralt"]').exists()).toBe(true);
+  });
+
+  it("switches to English through the profile menu and persists the locale", async () => {
+    const authStore = useAuthStore();
+    const setLocaleSpy = vi.spyOn(authStore, "setLocale");
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({ message: { locale: "en" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const wrapper = mountSidebar();
+    const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
+    expect(trigger.exists()).toBe(true);
+    await trigger.trigger("click");
+
+    const englishAction = wrapper
+      .findAll('[role="menuitem"]')
+      .find((item) => item.text().trim() === "English");
+    expect(englishAction).toBeTruthy();
+    await englishAction.trigger("click");
+
+    expect(setLocaleSpy).toHaveBeenCalledWith("en");
+    expect(authStore.locale).toBe("en");
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("set_session_locale?locale=en"),
+      expect.objectContaining({
+        method: "GET",
+        credentials: "include",
+      }),
+    );
   });
 });

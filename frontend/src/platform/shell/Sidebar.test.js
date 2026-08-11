@@ -157,6 +157,7 @@ describe("Sidebar localization", () => {
     const expandLabel = "Menüyü genişlet";
 
     expect(wrapper.findAll(`button[aria-label="${collapseLabel}"]`)).toHaveLength(1);
+    expect(wrapper.findAll(`button[aria-label="${expandLabel}"]`)).toHaveLength(0);
     expect(wrapper.find("footer").findAll(`button[aria-label="${collapseLabel}"]`)).toHaveLength(0);
     expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
 

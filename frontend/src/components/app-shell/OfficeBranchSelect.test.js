@@ -191,11 +191,12 @@ describe("OfficeBranchSelect", () => {
     });
     const branchStore = useBranchStore();
     branchStore.hydrateFromSession();
+    branchStore.setActiveBranch("");
 
     const wrapper = mount(OfficeBranchSelect);
     const trigger = wrapper.get('[data-testid="branch-scope-trigger"]');
     expect(trigger.attributes("aria-label")).toBe("Şube Kapsamı");
-    expect(trigger.text()).toContain("AT Sigorta");
+    expect(trigger.text()).toContain("Tüm Şubeler");
     expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
     await wrapper.get('[data-testid="branch-scope-trigger"]').trigger("click");
 
