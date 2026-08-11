@@ -43,7 +43,10 @@ describe("OfficeBranchSelect", () => {
   it("renders hierarchical branch labels", async () => {
     const wrapper = mount(OfficeBranchSelect);
 
-    expect(wrapper.get('[data-testid="branch-scope-trigger"]').text()).toContain("AT Sigorta");
+    const trigger = wrapper.get('[data-testid="branch-scope-trigger"]');
+    expect(trigger.attributes("aria-label")).toBe("Şube Kapsamı");
+    expect(trigger.text()).toContain("AT Sigorta");
+    expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
 
     await wrapper.get('[data-testid="branch-scope-trigger"]').trigger("click");
     const allOption = wrapper.find('[data-testid="branch-option-all"]');
@@ -190,6 +193,10 @@ describe("OfficeBranchSelect", () => {
     branchStore.hydrateFromSession();
 
     const wrapper = mount(OfficeBranchSelect);
+    const trigger = wrapper.get('[data-testid="branch-scope-trigger"]');
+    expect(trigger.attributes("aria-label")).toBe("Şube Kapsamı");
+    expect(trigger.text()).toContain("AT Sigorta");
+    expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
     await wrapper.get('[data-testid="branch-scope-trigger"]').trigger("click");
 
     const allClasses = wrapper.get('[data-testid="branch-option-all"]').classes();
