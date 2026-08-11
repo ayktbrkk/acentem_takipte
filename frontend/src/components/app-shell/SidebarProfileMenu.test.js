@@ -60,6 +60,7 @@ describe("Sidebar profile menu contract", () => {
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
 
     expect(trigger.exists()).toBe(true);
+    expect(wrapper.find('[role="menu"]').exists()).toBe(false);
 
     expect(trigger.attributes("aria-haspopup")).toBe("menu");
     expect(trigger.attributes("aria-expanded")).toBe("false");

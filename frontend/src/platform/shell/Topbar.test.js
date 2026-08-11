@@ -37,9 +37,9 @@ describe("Topbar shell contract", () => {
   });
 
   it.each([
-    ["tr", "TR", "Hesabım", "Çıkış Yap", "Desk'i Aç"],
-    ["en", "EN", "My Account", "Logout", "Open Desk"],
-  ])("keeps branch scope and current account controls in %s", async (locale, localeLabel, account, logout, desk) => {
+    ["tr", "Pano", "GENEL GÖRÜNÜM"],
+    ["en", "Dashboard", "OVERVIEW"],
+  ])("keeps page context and branch scope while controls move to the profile menu in %s", (locale, pageTitle, sectionLabel) => {
     const authStore = useAuthStore();
     authStore.applyContext({
       locale,
@@ -50,17 +50,12 @@ describe("Topbar shell contract", () => {
     });
 
     const wrapper = mountTopbar();
+    expect(wrapper.text()).toContain(pageTitle);
+    expect(wrapper.text()).toContain(sectionLabel);
     expect(wrapper.find('[data-testid="branch-scope-trigger"]').exists()).toBe(true);
     expect(wrapper.text()).toContain("Şube Kapsamı");
 
-    const localeButton = wrapper.findAll("button").find((button) => button.text() === localeLabel);
-    expect(localeButton).toBeTruthy();
-
-    const accountButton = wrapper.find('button[aria-haspopup="menu"]');
-    expect(accountButton.exists()).toBe(true);
-    await accountButton.trigger("click");
-    expect(wrapper.text()).toContain(account);
-    expect(wrapper.text()).toContain(logout);
-    expect(wrapper.text()).toContain(desk);
+    expect(wrapper.find('button[aria-haspopup="menu"]').exists()).toBe(false);
+    expect(wrapper.findAll("button").some((button) => ["TR", "EN"].includes(button.text().trim()))).toBe(false);
   });
 });
