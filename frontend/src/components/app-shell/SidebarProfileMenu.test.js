@@ -46,6 +46,9 @@ const PROFILE_MENU_TRANSLATIONS = {
     english: "English",
     openProfileMenu: "Profil menüsünü aç",
     closeProfileMenu: "Profil menüsünü kapat",
+    account: "Hesabım",
+    desk: "Desk'i Aç",
+    logout: "Çıkış Yap",
   },
   en: {
     profileMenu: "Profile menu",
@@ -56,6 +59,9 @@ const PROFILE_MENU_TRANSLATIONS = {
     english: "English",
     openProfileMenu: "Open profile menu",
     closeProfileMenu: "Close profile menu",
+    account: "My Account",
+    desk: "Open Desk",
+    logout: "Logout",
   },
 };
 
