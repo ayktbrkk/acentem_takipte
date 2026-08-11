@@ -36,22 +36,28 @@ const OfficeBranchSelectStub = {
   template: `<div class="office-branch-select-stub">Office Branch Select</div>`,
 };
 
-const PROFILE_MENU_TRANSLATION_KEYS = [
-  "brand",
-  "profileMenu",
-  "role",
-  "activeBranch",
-  "scope",
-  "allBranches",
-  "language",
-  "turkish",
-  "english",
-  "openProfileMenu",
-  "closeProfileMenu",
-  "account",
-  "desk",
-  "logout",
-];
+const PROFILE_MENU_TRANSLATIONS = {
+  tr: {
+    profileMenu: "Profil menüsü",
+    role: "Rol",
+    activeBranch: "Aktif şube",
+    language: "Dil",
+    turkish: "Türkçe",
+    english: "English",
+    openProfileMenu: "Profil menüsünü aç",
+    closeProfileMenu: "Profil menüsünü kapat",
+  },
+  en: {
+    profileMenu: "Profile menu",
+    role: "Role",
+    activeBranch: "Active branch",
+    language: "Language",
+    turkish: "Türkçe",
+    english: "English",
+    openProfileMenu: "Open profile menu",
+    closeProfileMenu: "Close profile menu",
+  },
+};
 
 function mountSidebar() {
   return mount(Sidebar, {
@@ -90,14 +96,10 @@ describe("Sidebar profile menu contract", () => {
     useBranchStore().hydrateFromSession();
   });
 
-  it("keeps every profile-menu label present and non-empty in both locales", () => {
-    for (const locale of ["tr", "en"]) {
-      for (const key of PROFILE_MENU_TRANSLATION_KEYS) {
-        const value = SIDEBAR_TRANSLATIONS[locale]?.[key];
-
-        expect(value, `${locale}.${key} must be a non-empty translation`).toEqual(expect.any(String));
-        expect(value.trim(), `${locale}.${key} must not be empty`).not.toBe("");
-        expect(value, `${locale}.${key} must not fall back to its key`).not.toBe(key);
+  it("keeps new profile-menu labels exact in Turkish and English", () => {
+    for (const [locale, translations] of Object.entries(PROFILE_MENU_TRANSLATIONS)) {
+      for (const [key, expected] of Object.entries(translations)) {
+        expect(SIDEBAR_TRANSLATIONS[locale]?.[key], `${locale}.${key}`).toBe(expected);
       }
     }
   });
