@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 
-import Sidebar from "../../platform/shell/Sidebar.vue";
+import SidebarProfileMenu from "./SidebarProfileMenu.vue";
 import { SIDEBAR_TRANSLATIONS } from "../../platform/i18n/sidebar";
 import { useAuthStore } from "../../platform/state/authStore";
 import { useBranchStore } from "../../platform/state/branchStore";
@@ -26,15 +26,6 @@ const resourceMock = vi.hoisted(() => {
 vi.mock("frappe-ui", () => ({
   createResource: resourceMock.createResource,
 }));
-
-const RouterLinkStub = {
-  props: ["to", "title"],
-  template: `<a :href="typeof to === 'string' ? to : to?.path || '/'" :title="title"><slot /></a>`,
-};
-
-const OfficeBranchSelectStub = {
-  template: `<div class="office-branch-select-stub">Office Branch Select</div>`,
-};
 
 const PROFILE_MENU_TRANSLATIONS = {
   tr: {
@@ -66,16 +57,7 @@ const PROFILE_MENU_TRANSLATIONS = {
 };
 
 function mountSidebar() {
-  return mount(Sidebar, {
-    props: { mobileOpen: false },
-    global: {
-      directives: { prefetch: {} },
-      stubs: {
-        RouterLink: RouterLinkStub,
-        OfficeBranchSelect: OfficeBranchSelectStub,
-      },
-    },
-  });
+  return mount(SidebarProfileMenu);
 }
 
 describe("Sidebar profile menu contract", () => {
@@ -131,7 +113,7 @@ describe("Sidebar profile menu contract", () => {
     expect(wrapper.text()).toContain("Çıkış Yap");
   });
 
-  it("closes with Escape and outside click without changing sidebar state", async () => {
+  it("closes with Escape and outside click", async () => {
     const wrapper = mountSidebar();
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
 
@@ -147,7 +129,6 @@ describe("Sidebar profile menu contract", () => {
     document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await wrapper.vm.$nextTick();
     expect(wrapper.find('[role="menu"]').exists()).toBe(false);
-    expect(wrapper.find('button[aria-label="Menüyü daralt"]').exists()).toBe(true);
   });
 
   it("switches to English through the profile menu and persists the locale", async () => {
