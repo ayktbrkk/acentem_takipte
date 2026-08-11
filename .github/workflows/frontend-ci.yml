@@ -92,6 +92,16 @@ jobs:
           E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
         run: npm run e2e:smoke:ci
 
+      - name: Upload smoke-e2e failure artifacts
+        if: failure() && steps.smoke_gate.outputs.skip != 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: smoke-e2e-failure-artifacts
+          path: |
+            frontend/test-results
+            frontend/playwright-report
+          if-no-files-found: ignore
+
   site-map-kpi:
     runs-on: ubuntu-latest
     needs: quality

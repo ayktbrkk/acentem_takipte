@@ -132,8 +132,10 @@ jobs:
         id: platform_smoke
         shell: bash
         env:
-          PLAYWRIGHT_JSON_OUTPUT_NAME: platform-report.json
-          PLAYWRIGHT_JUNIT_OUTPUT_NAME: platform-junit.xml
+          PLAYWRIGHT_JSON_OUTPUT_DIR: smoke-output/platform
+          PLAYWRIGHT_JSON_OUTPUT_NAME: report.json
+          PLAYWRIGHT_JUNIT_OUTPUT_DIR: smoke-output/platform
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: junit.xml
         run: |
           set -euo pipefail
           npm run e2e:smoke:ci -- --workers "${E2E_WORKERS}"
@@ -143,8 +145,10 @@ jobs:
         if: ${{ inputs.profile != 'platform' }}
         shell: bash
         env:
-          PLAYWRIGHT_JSON_OUTPUT_NAME: smoke-report.json
-          PLAYWRIGHT_JUNIT_OUTPUT_NAME: smoke-junit.xml
+          PLAYWRIGHT_JSON_OUTPUT_DIR: smoke-output/business
+          PLAYWRIGHT_JSON_OUTPUT_NAME: report.json
+          PLAYWRIGHT_JUNIT_OUTPUT_DIR: smoke-output/business
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: junit.xml
         run: |
           set +e
           if [ "${E2E_PROFILE}" = "all-e2e" ]; then
@@ -165,8 +169,8 @@ jobs:
         run: |
           set +e
           OUTPUT=$(node scripts/e2e/classify-smoke-coverage.mjs \
-            test-results/platform-report.json \
-            test-results/smoke-report.json \
+            smoke-output/platform/report.json \
+            smoke-output/business/report.json \
             "${BUSINESS_EXIT:-0}" \
             "${E2E_PROFILE}")
           CLASSIFY_EXIT=$?
@@ -184,13 +188,14 @@ jobs:
           path: |
             frontend/playwright-report
             frontend/test-results
+            frontend/smoke-output
           if-no-files-found: ignore
 
       - name: Append Playwright parsed summary
         if: always()
         shell: bash
         run: |
-          node scripts/e2e/print-playwright-summary.mjs test-results/smoke-report.json >> "$GITHUB_STEP_SUMMARY"
+          node scripts/e2e/print-playwright-summary.mjs smoke-output/business/report.json >> "$GITHUB_STEP_SUMMARY"
 
       - name: Optional webhook notification (Slack-compatible)
         if: always()
@@ -233,8 +238,8 @@ jobs:
             echo "- Workers: \`${E2E_WORKERS}\`"
             echo "- Trace mode: \`${E2E_TRACE_MODE}\`"
             echo "- Trigger: \`${{ github.event_name }}\`"
-            echo "- JUnit: \`test-results/smoke-junit.xml\`"
-            echo "- JSON: \`test-results/smoke-report.json\`"
+            echo "- JUnit: \`smoke-output/business/junit.xml\`"
+            echo "- JSON: \`smoke-output/business/report.json\`"
             echo "- Webhook: \`${WEBHOOK_STATUS}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 

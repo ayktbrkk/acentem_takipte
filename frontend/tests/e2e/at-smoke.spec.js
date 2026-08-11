@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { ensureAuthenticated, pageRequest } from "./helpers/auth.js";
 
@@ -14,6 +16,140 @@ async function callPostMethod(page, method, params = {}) {
 
 async function callGetMethod(page, method) {
   return pageRequest(page, "GET", `/api/method/${method}`);
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar collapse/expand failure diagnostics.
+//
+// The collapse/expand transition is intermittent in production: the collapse
+// class applies to the aside, but the "Menüyü genişlet" button never appears
+// in the DOM. These helpers capture the DOM + store state around the click and,
+// ONLY on assertion failure, a settling timeline plus a screenshot. Captures
+// are single-shot reads (no polling loop) so they cannot perturb the timing
+// the smoke is measuring. They never weaken the assertions and never capture
+// passwords, cookies, tokens or PII.
+// ---------------------------------------------------------------------------
+
+function readSidebarSnapshot(page) {
+  return page.evaluate(() => {
+    const labelPattern = /Menüyü daralt|Menüyü genişlet|Collapse menu|Expand menu/;
+    const aside = document.querySelector("aside");
+    const asideRect = aside ? aside.getBoundingClientRect() : null;
+    const asideCenterY = asideRect ? asideRect.y + asideRect.height / 2 : 0;
+    const buttons = [];
+    for (const button of document.querySelectorAll("aside button[aria-label], aside button[title]")) {
+      const ariaLabel = button.getAttribute("aria-label") || "";
+      const title = button.getAttribute("title") || "";
+      if (!labelPattern.test(ariaLabel) && !labelPattern.test(title)) continue;
+      const rect = button.getBoundingClientRect();
+      const style = window.getComputedStyle(button);
+      buttons.push({
+        index: buttons.length,
+        ariaLabel,
+        title,
+        visible:
+          !!(button.offsetWidth || button.offsetHeight || button.getClientRects().length) &&
+          style.display !== "none" &&
+          style.visibility !== "hidden",
+        enabled: !button.disabled,
+        boundingBox: {
+          x: Math.round(rect.x),
+          y: Math.round(rect.y),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        },
+        region: rect.y < asideCenterY ? "header" : "footer",
+      });
+    }
+    let localStorageCollapsed = null;
+    try {
+      const raw = window.localStorage.getItem("at_sidebar_collapsed");
+      localStorageCollapsed = raw === null ? null : raw === "1";
+    } catch {
+      localStorageCollapsed = null;
+    }
+    let storeCollapsed = null;
+    try {
+      const appEl = document.querySelector("#app");
+      const vueApp = appEl && appEl.__vue_app__;
+      const pinia =
+        vueApp && vueApp.config && vueApp.config.globalProperties && vueApp.config.globalProperties.$pinia;
+      const ui = pinia && pinia._s && pinia._s.get("ui");
+      if (ui) {
+        const value = ui.sidebarCollapsed;
+        storeCollapsed =
+          typeof value === "boolean"
+            ? value
+            : value && typeof value === "object" && "value" in value
+              ? value.value
+              : null;
+      }
+    } catch {
+      storeCollapsed = null;
+    }
+    return {
+      route: window.location.pathname + window.location.search,
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      sidebarClass: aside ? aside.className : null,
+      collapsed: aside ? /lg:w-24/.test(aside.className) : null,
+      localStorageCollapsed,
+      storeCollapsed,
+      buttons,
+    };
+  });
+}
+
+async function captureSidebarLabel(page, label) {
+  const snapshot = await readSidebarSnapshot(page);
+  return { label, ...snapshot };
+}
+
+async function captureSidebarFailureTimeline(page) {
+  const timeline = [];
+  const push = async (nextLabel) => {
+    timeline.push(await captureSidebarLabel(page, nextLabel));
+  };
+  await push("failure-immediate");
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await push("failure-after-raf");
+  await page.waitForTimeout(10);
+  await push("failure-after-10ms");
+  await page.waitForTimeout(100);
+  await push("failure-after-100ms");
+  await page.waitForTimeout(300);
+  await push("failure-after-300ms");
+  await page.waitForTimeout(1000);
+  await push("failure-after-1000ms");
+  return timeline;
+}
+
+async function attachSidebarFailureDiagnostics(page, testInfo, options) {
+  const { beforeClick, immediateAfterClick, consoleErrorCount, requestFailureCount, assertionError } = options;
+  const diagnostics = {
+    test: "sidebar-collapse-expand",
+    route: beforeClick.route,
+    viewport: beforeClick.viewport,
+    beforeClick,
+    immediateAfterClick,
+    timeline: await captureSidebarFailureTimeline(page),
+    failure: {
+      assertion: /toHaveClass/.test(String(assertionError || "")) ? "aside-collapsed-class" : "expand-button-visible",
+      expectedLabel: "Menüyü genişlet",
+      found: false,
+      assertionError: String(assertionError || "").slice(0, 300),
+      consoleErrorCount,
+      requestFailureCount,
+    },
+  };
+  const json = JSON.stringify(diagnostics, null, 2);
+  const outPath = testInfo.outputPath("sidebar-collapse-diagnostics.json");
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fs.writeFileSync(outPath, json, "utf8");
+  await testInfo.attach("sidebar-collapse-diagnostics", {
+    body: json,
+    contentType: "application/json",
+  });
+  await page.screenshot({ path: testInfo.outputPath("sidebar-collapse-failure.png") });
 }
 
 test.describe("Acentem Takipte smoke", () => {
@@ -42,7 +178,7 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(page.getByRole("heading", { name: /Policy Workbench|Poliçe/i }).first()).toBeVisible();
   });
 
-  test("authenticated smoke: comprehensive sidebar navigation", async ({ page }) => {
+  test("authenticated smoke: comprehensive sidebar navigation", async ({ page }, testInfo) => {
     // Each route performs one real full SPA boot (the shared /at/ reload between
     // links was removed as redundant). Headless Chromium plus the single-threaded
     // dev server still make each boot ~7-10s on this machine, so the budget is
@@ -58,9 +194,15 @@ test.describe("Acentem Takipte smoke", () => {
     };
     const onPageError = (err) => pageErrors.push(String(err).slice(0, 300));
     const onFailed = (req) => {
-      if (["xhr", "fetch"].includes(req.resourceType())) {
-        failedRequests.push(`${req.resourceType()} ${req.url().slice(-80)}`);
-      }
+      if (!["xhr", "fetch"].includes(req.resourceType())) return;
+      const failure = req.failure?.() || null;
+      const errorText = failure?.errorText || "";
+      // Navigating away from a route cancels in-flight SPA fetches (dashboard
+      // widgets etc.). Those are browser-cancelled requests, not server
+      // failures, and must not fail the smoke. Real network errors
+      // (ERR_CONNECTION_*, ERR_NAME_NOT_RESOLVED, ERR_SSL_*, ...) still fail.
+      if (errorText === "net::ERR_ABORTED") return;
+      failedRequests.push(`${req.resourceType()} ${req.url().slice(-80)} (${errorText})`);
     };
     page.on("console", onConsole);
     page.on("pageerror", onPageError);
@@ -113,9 +255,22 @@ test.describe("Acentem Takipte smoke", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/at/", { waitUntil: "domcontentloaded" });
     await expect(page.locator('button[aria-label="Menüyü daralt"]').first()).toBeVisible();
+    const beforeClick = await captureSidebarLabel(page, "before-click");
     await page.locator('button[aria-label="Menüyü daralt"]').first().click();
-    await expect(page.locator("aside").first()).toHaveClass(/lg:w-24/);
-    await expect(page.locator('button[aria-label="Menüyü genişlet"]').first()).toBeVisible();
+    const immediateAfterClick = await captureSidebarLabel(page, "immediate-after-click");
+    try {
+      await expect(page.locator("aside").first()).toHaveClass(/lg:w-24/);
+      await expect(page.locator('button[aria-label="Menüyü genişlet"]').first()).toBeVisible();
+    } catch (error) {
+      await attachSidebarFailureDiagnostics(page, testInfo, {
+        beforeClick,
+        immediateAfterClick,
+        consoleErrorCount: consoleErrors.length,
+        requestFailureCount: failedRequests.length,
+        assertionError: error?.message || String(error),
+      });
+      throw error;
+    }
     await page.reload({ waitUntil: "domcontentloaded" });
     await expect(page.locator("aside").first()).toHaveClass(/lg:w-24/);
     await expect(page.locator('button[aria-label="Menüyü genişlet"]').first()).toBeVisible();
@@ -280,14 +435,19 @@ test.describe("Acentem Takipte smoke", () => {
     expect(logout.status).toBeLessThan(300);
 
     const anonContext = await browser.newContext();
+    const anonResp = await anonContext.request.get("/api/method/frappe.auth.get_logged_user");
+    // `get_logged_user` is an authenticated endpoint: an anonymous context must
+    // be rejected (401/403), proving the fresh context has no session. The SPA
+    // must also land on the auth wall (login redirect) for anonymous visitors.
+    expect(anonResp.status()).toBeGreaterThanOrEqual(401);
     const anonPage = await anonContext.newPage();
-    await anonPage.goto("/");
-    const guest = await anonPage.evaluate(async () => {
-      const res = await fetch("/api/method/frappe.auth.get_logged_user");
-      const json = await res.json().catch(() => null);
-      return json?.message;
-    });
-    expect(guest).toBe("Guest");
+    await anonPage.goto("/at/");
+    const loginWallVisible = await anonPage
+      .getByRole("heading", { name: /Login to Frappe/i })
+      .isVisible()
+      .catch(() => false);
+    const redirectedToLogin = anonPage.url().includes("/login");
+    expect(loginWallVisible || redirectedToLogin).toBeTruthy();
     await anonContext.close();
 
     await ensureAuthenticated(page);
