@@ -56,6 +56,9 @@ describe("Sidebar profile menu contract", () => {
 
   beforeEach(() => {
     setActivePinia(createPinia());
+    resourceMock.createResource.mockClear();
+    resourceMock.localeResource.submit.mockReset();
+    resourceMock.localeResource.submit.mockImplementation(async ({ locale }) => ({ message: { locale } }));
     const authStore = useAuthStore();
     authStore.applyContext({
       locale: "tr",
@@ -127,11 +130,45 @@ describe("Sidebar profile menu contract", () => {
 
     expect(setLocaleSpy).toHaveBeenCalledWith("en");
     expect(authStore.locale).toBe("en");
+    expect(resourceMock.createResource).toHaveBeenCalledTimes(1);
     expect(resourceMock.createResource).toHaveBeenCalledWith(
       expect.objectContaining({
         url: "acentem_takipte.acentem_takipte.platform.api.session.set_session_locale",
       }),
     );
     expect(resourceMock.localeResource.submit).toHaveBeenCalledWith({ locale: "en" });
+  });
+
+  it("falls back to the session locale endpoint when resource persistence fails", async () => {
+    const authStore = useAuthStore();
+    const setLocaleSpy = vi.spyOn(authStore, "setLocale");
+    resourceMock.localeResource.submit.mockRejectedValue(new Error("Resource unavailable"));
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({ message: { locale: "en" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const wrapper = mountSidebar();
+    const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
+    expect(trigger.exists()).toBe(true);
+    await trigger.trigger("click");
+
+    const englishAction = wrapper
+      .findAll('[role="menuitem"]')
+      .find((item) => item.text().trim() === "English");
+    expect(englishAction).toBeTruthy();
+    await englishAction.trigger("click");
+
+    expect(setLocaleSpy).toHaveBeenCalledWith("en");
+    expect(authStore.locale).toBe("en");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/method/acentem_takipte.acentem_takipte.platform.api.session.set_session_locale?locale=en",
+      {
+        method: "GET",
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      },
+    );
   });
 });
