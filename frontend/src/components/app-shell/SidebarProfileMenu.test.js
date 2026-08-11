@@ -116,6 +116,8 @@ describe("Sidebar profile menu contract", () => {
     const authStore = useAuthStore();
     const setLocaleSpy = vi.spyOn(authStore, "setLocale");
     resourceMock.localeResource.submit.mockClear();
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
 
     const wrapper = mountSidebar();
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
@@ -137,6 +139,7 @@ describe("Sidebar profile menu contract", () => {
       }),
     );
     expect(resourceMock.localeResource.submit).toHaveBeenCalledWith({ locale: "en" });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("falls back to the session locale endpoint when resource persistence fails", async () => {
@@ -161,6 +164,8 @@ describe("Sidebar profile menu contract", () => {
 
     expect(setLocaleSpy).toHaveBeenCalledWith("en");
     expect(authStore.locale).toBe("en");
+    expect(resourceMock.localeResource.submit).toHaveBeenCalledWith({ locale: "en" });
+    await expect(resourceMock.localeResource.submit.mock.results[0].value).rejects.toThrow("Resource unavailable");
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/method/acentem_takipte.acentem_takipte.platform.api.session.set_session_locale?locale=en",
