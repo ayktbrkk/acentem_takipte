@@ -3,6 +3,7 @@ import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 
 import Sidebar from "../../platform/shell/Sidebar.vue";
+import { SIDEBAR_TRANSLATIONS } from "../../platform/i18n/sidebar";
 import { useAuthStore } from "../../platform/state/authStore";
 import { useBranchStore } from "../../platform/state/branchStore";
 
@@ -34,6 +35,23 @@ const RouterLinkStub = {
 const OfficeBranchSelectStub = {
   template: `<div class="office-branch-select-stub">Office Branch Select</div>`,
 };
+
+const PROFILE_MENU_TRANSLATION_KEYS = [
+  "brand",
+  "profileMenu",
+  "role",
+  "activeBranch",
+  "scope",
+  "allBranches",
+  "language",
+  "turkish",
+  "english",
+  "openProfileMenu",
+  "closeProfileMenu",
+  "account",
+  "desk",
+  "logout",
+];
 
 function mountSidebar() {
   return mount(Sidebar, {
@@ -70,6 +88,18 @@ describe("Sidebar profile menu contract", () => {
       office_branches: [{ name: "HQ", office_branch_name: "AT Sigorta", is_default: 1 }],
     });
     useBranchStore().hydrateFromSession();
+  });
+
+  it("keeps every profile-menu label present and non-empty in both locales", () => {
+    for (const locale of ["tr", "en"]) {
+      for (const key of PROFILE_MENU_TRANSLATION_KEYS) {
+        const value = SIDEBAR_TRANSLATIONS[locale]?.[key];
+
+        expect(value, `${locale}.${key} must be a non-empty translation`).toEqual(expect.any(String));
+        expect(value.trim(), `${locale}.${key} must not be empty`).not.toBe("");
+        expect(value, `${locale}.${key} must not fall back to its key`).not.toBe(key);
+      }
+    }
   });
 
   it("renders the user, role, branch, language, and logout actions", async () => {
