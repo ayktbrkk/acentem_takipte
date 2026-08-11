@@ -133,6 +133,7 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
     immediateAfterClick,
     timeline: await captureSidebarFailureTimeline(page),
     failure: {
+      assertion: /toHaveClass/.test(String(assertionError || "")) ? "aside-collapsed-class" : "expand-button-visible",
       expectedLabel: "Menüyü genişlet",
       found: false,
       assertionError: String(assertionError || "").slice(0, 300),
@@ -257,8 +258,8 @@ test.describe("Acentem Takipte smoke", () => {
     const beforeClick = await captureSidebarLabel(page, "before-click");
     await page.locator('button[aria-label="Menüyü daralt"]').first().click();
     const immediateAfterClick = await captureSidebarLabel(page, "immediate-after-click");
-    await expect(page.locator("aside").first()).toHaveClass(/lg:w-24/);
     try {
+      await expect(page.locator("aside").first()).toHaveClass(/lg:w-24/);
       await expect(page.locator('button[aria-label="Menüyü genişlet"]').first()).toBeVisible();
     } catch (error) {
       await attachSidebarFailureDiagnostics(page, testInfo, {
