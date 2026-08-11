@@ -294,37 +294,43 @@ test.describe("Adım 1.3b — Hızlı Ekranlar (QuickCreate Dialog)", () => {
    * - Dialog'un açıldığını doğrula
    * - Screenshot al
    * - ESC ile kapat
+   *
+   * Not: btnSelector entity bazlı tam create label'ını hedefler. Geniş
+   * "Yeni"/"New" substring eşleşmesi "Yenile" (refresh) butonunu da yakalar;
+   * .first() yanlış butona tıklayıp dialog'un açılmasını engellerdi. Tam
+   * label ("Yeni Müşteri" vb.) refresh ile çakışmaz ve TR/EN her iki locale'i
+   * kapsar.
    */
   const QUICK_CREATE_PAGES = [
     {
       label: "QC_Musteri_Olustur",
       triggerUrl: "/at/customers",
       // Müşteri listesindeki "Yeni Müşteri" butonu
-      btnSelector: 'button:has-text("Yeni"), button:has-text("New"), button[aria-label*="Yeni"], button[aria-label*="New"]',
+      btnSelector: 'button:has-text("Yeni Müşteri"), button:has-text("New Customer")',
       dialogSelector: "[role='dialog'], .modal, .dialog, .at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
     },
     {
       label: "QC_Teklif_Olustur",
       triggerUrl: "/at/offers",
-      btnSelector: 'button:has-text("Yeni"), button:has-text("New"), button[aria-label*="Yeni"], button[aria-label*="New"]',
+      btnSelector: 'button:has-text("Yeni Teklif"), button:has-text("New Offer")',
       dialogSelector: "[role='dialog'], .modal, .dialog, .at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
     },
     {
       label: "QC_Hasar_Olustur",
       triggerUrl: "/at/claims",
-      btnSelector: 'button:has-text("Yeni"), button:has-text("New"), button[aria-label*="Yeni"], button[aria-label*="New"]',
+      btnSelector: 'button:has-text("Yeni Hasar"), button:has-text("New Claim")',
       dialogSelector: "[role='dialog'], .modal, .dialog, .at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
     },
     {
       label: "QC_Police_Olustur",
       triggerUrl: "/at/policies",
-      btnSelector: 'button:has-text("Yeni"), button:has-text("New"), button[aria-label*="Yeni"], button[aria-label*="New"]',
+      btnSelector: 'button:has-text("Yeni Poliçe"), button:has-text("New Policy")',
       dialogSelector: "[role='dialog'], .modal, .dialog, .at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
     },
     {
       label: "QC_Firsat_Olustur",
       triggerUrl: "/at/leads",
-      btnSelector: 'button:has-text("Yeni"), button:has-text("New"), button[aria-label*="Yeni"], button[aria-label*="New"]',
+      btnSelector: 'button:has-text("Yeni Fırsat"), button:has-text("New Lead")',
       dialogSelector: "[role='dialog'], .modal, .dialog, .at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
     },
   ];
