@@ -20,7 +20,7 @@ vi.mock("vue-router", () => ({
 }));
 
 const OfficeBranchSelectStub = {
-  template: `<div data-testid="branch-scope-trigger">Şube Kapsamı · AT Sigorta</div>`,
+  template: `<div data-testid="branch-scope-trigger">Branch scope control</div>`,
 };
 
 function mountTopbar() {
@@ -53,7 +53,6 @@ describe("Topbar shell contract", () => {
     expect(wrapper.text()).toContain(pageTitle);
     expect(wrapper.text()).toContain(sectionLabel);
     expect(wrapper.find('[data-testid="branch-scope-trigger"]').exists()).toBe(true);
-    expect(wrapper.text()).toContain("Şube Kapsamı");
 
     expect(wrapper.find('button[aria-haspopup="menu"]').exists()).toBe(false);
     expect(wrapper.findAll("button").some((button) => ["TR", "EN"].includes(button.text().trim()))).toBe(false);

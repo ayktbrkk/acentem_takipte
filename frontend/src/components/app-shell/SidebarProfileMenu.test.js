@@ -6,10 +6,24 @@ import Sidebar from "../../platform/shell/Sidebar.vue";
 import { useAuthStore } from "../../platform/state/authStore";
 import { useBranchStore } from "../../platform/state/branchStore";
 
+const resourceMock = vi.hoisted(() => {
+  const localeResource = {
+    submit: vi.fn(async ({ locale }) => ({ message: { locale } })),
+  };
+
+  return {
+    localeResource,
+    createResource: vi.fn((options = {}) => {
+      if (String(options.url || "").includes("set_session_locale")) {
+        return localeResource;
+      }
+      return { submit: vi.fn() };
+    }),
+  };
+});
+
 vi.mock("frappe-ui", () => ({
-  createResource: () => ({
-    submit: vi.fn().mockRejectedValue(new Error("Use fetch fallback in contract test")),
-  }),
+  createResource: resourceMock.createResource,
 }));
 
 const RouterLinkStub = {
@@ -98,10 +112,7 @@ describe("Sidebar profile menu contract", () => {
   it("switches to English through the profile menu and persists the locale", async () => {
     const authStore = useAuthStore();
     const setLocaleSpy = vi.spyOn(authStore, "setLocale");
-    const fetchMock = vi.fn().mockResolvedValue({
-      json: vi.fn().mockResolvedValue({ message: { locale: "en" } }),
-    });
-    vi.stubGlobal("fetch", fetchMock);
+    resourceMock.localeResource.submit.mockClear();
 
     const wrapper = mountSidebar();
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
@@ -116,12 +127,11 @@ describe("Sidebar profile menu contract", () => {
 
     expect(setLocaleSpy).toHaveBeenCalledWith("en");
     expect(authStore.locale).toBe("en");
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining("set_session_locale?locale=en"),
+    expect(resourceMock.createResource).toHaveBeenCalledWith(
       expect.objectContaining({
-        method: "GET",
-        credentials: "include",
+        url: "acentem_takipte.acentem_takipte.platform.api.session.set_session_locale",
       }),
     );
+    expect(resourceMock.localeResource.submit).toHaveBeenCalledWith({ locale: "en" });
   });
 });
