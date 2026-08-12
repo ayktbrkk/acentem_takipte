@@ -340,6 +340,8 @@ test.describe("Acentem Takipte smoke", () => {
       { path: "/me", label: /Hesabım|My Account/ },
       { path: "/desk", label: /Desk'i Aç|Open Desk/ },
     ];
+    // These are shell-action checks only: the destinations are intercepted so
+    // this smoke does not claim to validate the separate /me or /desk pages.
     for (const destination of profileDestinations) {
       await profileTrigger.click();
       await expect(profileMenu).toBeVisible();
@@ -362,28 +364,69 @@ test.describe("Acentem Takipte smoke", () => {
 
     const scopeTrigger = page.getByTestId("branch-scope-trigger");
     await expect(scopeTrigger).toBeVisible();
-    await expect(scopeTrigger).toHaveAttribute("aria-haspopup", "listbox");
     if (await scopeTrigger.isDisabled()) {
+      await expect(scopeTrigger).not.toHaveAttribute("aria-haspopup");
+      await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+      await expect(scopeTrigger).toBeDisabled();
       await expect(page.getByTestId("branch-scope-lock-status")).toBeVisible();
     } else {
+      await expect(scopeTrigger).toHaveAttribute("aria-haspopup", "listbox");
+      await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+      await expect(scopeTrigger).not.toHaveAttribute("aria-controls");
       await scopeTrigger.click();
-      await expect(page.getByRole("listbox")).toBeVisible();
+      const listbox = page.getByRole("listbox");
+      await expect(listbox).toBeVisible();
+      await expect(scopeTrigger).toHaveAttribute("aria-expanded", "true");
+      const listboxId = await listbox.getAttribute("id");
+      expect(listboxId).toBeTruthy();
+      await expect(scopeTrigger).toHaveAttribute("aria-controls", listboxId);
+      await expect(listbox).toHaveAttribute("aria-label", /Scope|Kapsam/);
       await expect(page.getByTestId("branch-search-input")).toBeVisible();
       const branchOptions = page.locator('[role="option"]');
       const branchOptionCount = await branchOptions.count();
       if (branchOptionCount > 0) {
+        const selectedBefore = page.locator('[role="option"][aria-selected="true"]');
+        await expect(selectedBefore).toHaveCount(1);
+        const selectedValueBefore = await selectedBefore.getAttribute("data-testid");
+        const selectedLabelBefore = await scopeTrigger.locator("span[title]").last().getAttribute("title");
+        const alternatives = page.locator('[role="option"][aria-selected="false"]');
+        const alternativeCount = await alternatives.count();
         const allBranchesOption = page.getByTestId("branch-option-all");
         if (await allBranchesOption.count()) {
           await expect(allBranchesOption).toContainText(/Tüm Şubeler|All Branches/);
         }
-        const selectedBranchOption = page.locator('[role="option"][aria-selected="true"]');
-        await expect(selectedBranchOption).toHaveCount(1);
-        await branchOptions.first().click();
-        await expect(page.getByRole("listbox")).toBeHidden();
+        if (alternativeCount > 0) {
+          await alternatives.first().click();
+          await expect(listbox).toBeHidden();
+          await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+          await scopeTrigger.click();
+          await expect(listbox).toBeVisible();
+          const selectedAfter = page.locator('[role="option"][aria-selected="true"]');
+          await expect(selectedAfter).toHaveCount(1);
+          expect(await selectedAfter.getAttribute("data-testid")).not.toBe(selectedValueBefore);
+          expect(await scopeTrigger.locator("span[title]").last().getAttribute("title")).not.toBe(selectedLabelBefore);
+        } else {
+          expect(alternativeCount).toBe(0);
+        }
+        const activeDescendant = await scopeTrigger.getAttribute("aria-activedescendant");
+        if (await branchOptions.count()) {
+          expect(activeDescendant).toBeTruthy();
+          await expect(page.locator(`#${activeDescendant}`)).toHaveAttribute("role", "option");
+        } else {
+          expect(activeDescendant).toBeNull();
+        }
+        await page.keyboard.press("Escape");
+        await expect(listbox).toBeHidden();
         await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+        await expect(scopeTrigger).toBeFocused();
+      } else {
+        expect(await scopeTrigger.getAttribute("aria-activedescendant")).toBeNull();
+        await page.keyboard.press("Escape");
+        await expect(listbox).toBeHidden();
+        await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+        await expect(scopeTrigger).toBeFocused();
       }
     }
-    await page.keyboard.press("Escape");
 
     await page.setViewportSize({ width: 768, height: 900 });
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -407,6 +450,12 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(aside.getByText("Acentem Takipte", { exact: true })).toBeVisible();
     await expect(aside.locator('[data-testid="sidebar-brand-monogram"]')).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    const closeDrawerButton = aside.locator('button[title="Kapat"], button[title="Close"]');
+    await expect(closeDrawerButton).toHaveCount(1);
+    await expect(closeDrawerButton).toHaveAttribute("title", /Kapat|Close/);
+    await expect(closeDrawerButton).toHaveAccessibleName("X");
+    await closeDrawerButton.focus();
+    await expect(closeDrawerButton).toBeFocused();
 
     await profileTrigger.click();
     await expect(profileMenu).toBeVisible();
@@ -416,14 +465,24 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(profileTrigger).toBeFocused();
 
     if (!await scopeTrigger.isDisabled()) {
+      await expect(scopeTrigger).toHaveAttribute("aria-haspopup", "listbox");
+      await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+      await expect(scopeTrigger).not.toHaveAttribute("aria-controls");
       await scopeTrigger.click();
-      await expect(page.getByRole("listbox")).toBeVisible();
+      const mobileListbox = page.getByRole("listbox");
+      await expect(mobileListbox).toBeVisible();
+      await expect(scopeTrigger).toHaveAttribute("aria-expanded", "true");
+      const mobileListboxId = await mobileListbox.getAttribute("id");
+      expect(mobileListboxId).toBeTruthy();
+      await expect(scopeTrigger).toHaveAttribute("aria-controls", mobileListboxId);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
       await page.keyboard.press("Escape");
-      await expect(page.getByRole("listbox")).toBeHidden();
+      await expect(mobileListbox).toBeHidden();
+      await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+      await expect(scopeTrigger).toBeFocused();
     }
 
-    await aside.locator('button[title="Kapat"], button[title="Close"]').click();
+    await closeDrawerButton.click();
     await expect(aside).toHaveClass(/-translate-x-full/);
 
     // The existing platform smoke performs the real logout POST and anonymous
