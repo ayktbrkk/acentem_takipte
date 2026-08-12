@@ -88,7 +88,7 @@ function readSidebarSnapshot(page) {
       storeCollapsed = null;
     }
     return {
-      route: window.location.pathname + window.location.search,
+      route: window.location.pathname,
       viewport: { width: window.innerWidth, height: window.innerHeight },
       sidebarClass: aside ? aside.className : null,
       collapsed: aside ? /lg:w-24/.test(aside.className) : null,
@@ -123,6 +123,54 @@ async function captureSidebarFailureTimeline(page) {
   return timeline;
 }
 
+function classifyDiagnosticMessage(message) {
+  const value = String(message || "").toLowerCase();
+  if (/err_connection|err_name_not_resolved|err_ssl|err_internet_disconnected/.test(value)) {
+    return "network-connectivity";
+  }
+  if (/timeout|timed out/.test(value)) return "timeout";
+  if (/failed to fetch|networkerror|network error/.test(value)) return "network-fetch";
+  if (/typeerror/.test(value)) return "type-error";
+  if (/syntaxerror/.test(value)) return "syntax-error";
+  if (/referenceerror/.test(value)) return "reference-error";
+  return "runtime-error";
+}
+
+function sanitizeDiagnosticPath(value) {
+  const match = String(value || "").match(/\/(?:api|at|assets|files|favicon\.ico)(?:\/[^\s?#()]*)?/i);
+  if (!match) return null;
+
+  const safeSegments = new Set(["api", "at", "assets", "files", "favicon.ico"]);
+  return match[0]
+    .split(/[?#]/, 1)[0]
+    .split("/")
+    .map((segment) => (safeSegments.has(segment.toLowerCase()) ? segment : segment ? "[redacted]" : ""))
+    .join("/");
+}
+
+function sanitizeConsoleErrors(errors) {
+  return errors.map((message) => ({ category: "console-error", messageClass: classifyDiagnosticMessage(message) }));
+}
+
+function sanitizePageErrors(errors) {
+  return errors.map((message) => ({ category: "page-error", messageClass: classifyDiagnosticMessage(message) }));
+}
+
+function sanitizeFailedRequests(requests) {
+  return requests.map((request) => {
+    const value = String(request || "");
+    const resourceType = value.split(/\s+/, 1)[0] || "unknown";
+    const status = /\b(?:401|403|404|429|5\d\d)\b/.test(value) ? "http-error" : "network-error";
+    return {
+      category: "request-failure",
+      resourceType,
+      status,
+      networkError: classifyDiagnosticMessage(value),
+      pathname: sanitizeDiagnosticPath(value),
+    };
+  });
+}
+
 async function attachSidebarFailureDiagnostics(page, testInfo, options) {
   const {
     beforeClick,
@@ -133,6 +181,7 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
     failedRequests,
     assertionError,
   } = options;
+  const timeline = await captureSidebarFailureTimeline(page);
   const newConsoleErrors = consoleErrors.slice(baseline.consoleErrorCount);
   const newPageErrors = pageErrors.slice(baseline.pageErrorCount);
   const newFailedRequests = failedRequests.slice(baseline.requestFailureCount);
@@ -142,18 +191,18 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
     viewport: beforeClick.viewport,
     beforeClick,
     immediateAfterClick,
-    timeline: await captureSidebarFailureTimeline(page),
+    timeline,
     failure: {
       assertion: /toHaveClass/.test(String(assertionError || "")) ? "aside-collapsed-class" : "expand-button-visible",
       expectedLabel: "Menüyü genişlet",
       found: false,
-      assertionError: String(assertionError || "").slice(0, 300),
+      assertionClass: classifyDiagnosticMessage(assertionError),
       consoleErrorCount: newConsoleErrors.length,
-      consoleErrors: newConsoleErrors,
+      consoleErrors: sanitizeConsoleErrors(newConsoleErrors),
       pageErrorCount: newPageErrors.length,
-      pageErrors: newPageErrors,
+      pageErrors: sanitizePageErrors(newPageErrors),
       requestFailureCount: newFailedRequests.length,
-      failedRequests: newFailedRequests,
+      failedRequests: sanitizeFailedRequests(newFailedRequests),
     },
   };
   const json = JSON.stringify(diagnostics, null, 2);
@@ -187,10 +236,29 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
     for (const node of textNodes) {
       if (node.textContent?.trim()) node.textContent = "REDACTED";
     }
-    for (const element of clone.querySelectorAll("[title], [aria-label]")) {
-      element.removeAttribute("title");
-      element.removeAttribute("aria-label");
+    for (const element of clone.querySelectorAll("*")) {
+      for (const attribute of element.getAttributeNames()) {
+        if (
+          attribute === "title" ||
+          attribute === "style" ||
+          attribute === "src" ||
+          attribute === "srcset" ||
+          attribute === "background" ||
+          attribute === "href" ||
+          attribute === "poster" ||
+          attribute === "action" ||
+          attribute.startsWith("aria-") ||
+          attribute.startsWith("data-")
+        ) {
+          element.removeAttribute(attribute);
+        }
+      }
     }
+
+    const redactionStyle = document.createElement("style");
+    redactionStyle.textContent =
+      "*, *::before, *::after { background-image: none !important; content: none !important; }";
+    clone.prepend(redactionStyle);
 
     document.body.appendChild(clone);
     return clone.id;
