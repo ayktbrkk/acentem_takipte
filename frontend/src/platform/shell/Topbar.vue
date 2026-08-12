@@ -3,6 +3,7 @@
     <div class="flex w-full flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <button
+          data-testid="mobile-sidebar-trigger"
           class="rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-700 hover:bg-slate-100 lg:hidden"
           type="button"
           @click="$emit('toggle-sidebar')"

@@ -31,11 +31,17 @@
       :aria-label="t('profileMenu')"
     >
       <div class="border-b border-slate-100 px-4 pb-3 pt-2">
-        <p class="truncate text-sm font-semibold text-slate-900" :title="displayUser">{{ displayUser }}</p>
-        <p class="truncate text-xs text-slate-500" :title="`${t('role')}: ${roleLabel}`">
+        <p data-testid="profile-summary-user" class="truncate text-sm font-semibold text-slate-900" :title="displayUser">
+          {{ displayUser }}
+        </p>
+        <p data-testid="profile-summary-role" class="truncate text-xs text-slate-500" :title="`${t('role')}: ${roleLabel}`">
           <span class="font-medium text-slate-400">{{ t("role") }}:</span> {{ roleLabel }}
         </p>
-        <p class="truncate text-xs text-slate-500" :title="`${t('activeBranch')}: ${branchLabel}`">
+        <p
+          data-testid="profile-summary-active-branch"
+          class="truncate text-xs text-slate-500"
+          :title="`${t('activeBranch')}: ${branchLabel}`"
+        >
           <span class="font-medium text-slate-400">{{ t("activeBranch") }}:</span> {{ branchLabel }}
         </p>
       </div>

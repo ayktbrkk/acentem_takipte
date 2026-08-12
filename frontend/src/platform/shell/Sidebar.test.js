@@ -76,6 +76,7 @@ describe("Sidebar localization", () => {
     expect(wrapper.text()).toContain("Doküman Kayıtları");
     const collapseToggles = wrapper.findAll('button[aria-label="Menüyü daralt"]');
     expect(collapseToggles).toHaveLength(1);
+    expect(wrapper.find('[data-testid="sidebar-desktop-collapse-toggle"]').element).toBe(collapseToggles[0].element);
     expect(collapseToggles[0].attributes("title")).toBe("Menüyü daralt");
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     await wrapper.find('footer [data-testid="sidebar-profile-trigger"]').trigger("click");
@@ -270,11 +271,13 @@ describe("Sidebar localization", () => {
     const expandLabel = "Menüyü genişlet";
 
     expect(wrapper.findAll(`button[aria-label="${collapseLabel}"]`)).toHaveLength(1);
+    expect(wrapper.find('[data-testid="sidebar-desktop-collapse-toggle"]').exists()).toBe(true);
     expect(wrapper.findAll(`button[aria-label="${expandLabel}"]`)).toHaveLength(0);
     expect(wrapper.find("footer").findAll(`button[aria-label="${collapseLabel}"]`)).toHaveLength(0);
     expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
 
     await wrapper.find(`button[aria-label="${collapseLabel}"]`).trigger("click");
+    expect(wrapper.find('[data-testid="sidebar-desktop-collapse-toggle"]').exists()).toBe(true);
     expect(wrapper.findAll(`button[aria-label="${expandLabel}"]`)).toHaveLength(1);
     expect(wrapper.find("footer").findAll(`button[aria-label="${expandLabel}"]`)).toHaveLength(0);
     expect(wrapper.findAll(`button[aria-label="${collapseLabel}"]`).length).toBe(0);
