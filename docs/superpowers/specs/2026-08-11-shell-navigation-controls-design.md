@@ -206,3 +206,24 @@ profile-menu item. Its visual treatment is refined as a compact scope card:
 - Mobile overflow: test drawer, profile menu, scope card, and long labels at
   mobile widths.
 - Duplicate controls: assert control counts in unit/browser tests.
+
+## Iteration 2 Refinements
+
+The following refinements were approved after local visual review:
+
+- Remove the sidebar marketing subtitle entirely. `Acentem Takipte` is the
+  product identity; the page title and section context provide operational
+  context elsewhere in the shell. The subtitle must not truncate to an
+  ellipsis in the brand area.
+- Display the user's highest-priority business role rather than the generic
+  `AT User` label. Priority is `AT System Manager`, `AT Manager`,
+  `AT Accountant`, `AT Agent`, `System Manager`, then `Administrator`.
+- Localize the visible business-role label without changing backend role
+  values. For example, `AT Agent` displays as `AT Operasyon Kullanıcısı` in
+  Turkish and `AT Agent` in English.
+- Use a desktop top-bar language chip with a globe icon and the current full
+  language name. On mobile, use a compact `Türkçe | English` segmented control
+  inside the profile menu. The language persistence endpoint and locale state
+  remain unchanged.
+- Keep the profile menu compact: user name, localized business role, active
+  branch scope, language, account/Desk actions, and separated logout.

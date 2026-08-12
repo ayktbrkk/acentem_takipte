@@ -430,3 +430,23 @@ git commit -m "feat(shell): refine sidebar and account controls"
   above; otherwise keep the new component focused and local.
 - Do not merge or deploy until frontend tests, translation guard, build, and
   relevant browser checks are green and a human review is complete.
+
+## Iteration 2 Addendum
+
+Apply these approved refinements before final validation:
+
+- Remove the sidebar subtitle from `Sidebar.vue` and remove its canonical
+  translation key only if repository-wide usage confirms it is unused.
+- Add a localized business-role resolver in the profile presentation boundary;
+  do not change backend role names. Priority: `AT System Manager`, `AT Manager`,
+  `AT Accountant`, `AT Agent`, `System Manager`, `Administrator`.
+- Add exact TR/EN role labels, including `AT Agent` -> `AT Operasyon Kullanıcısı`
+  in Turkish and `AT Agent` in English.
+- Reintroduce language visibility as a desktop top-bar chip with a globe icon
+  and current full language name. On mobile, retain language choices inside
+  the profile menu as a compact segmented control.
+- Keep locale persistence behavior and endpoint unchanged.
+- Extend unit/browser coverage for role priority, role localization, subtitle
+  absence, desktop language chip, and mobile language segmented control.
+- Do not touch `uiState.js`/`uiStore.js` or add a workaround for the unresolved
+  production sidebar state anomaly.
