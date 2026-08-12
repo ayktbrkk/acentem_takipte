@@ -289,6 +289,71 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(aside).toHaveClass(/-translate-x-full/);
   });
 
+  test("authenticated shell controls: profile, scope, locale, and responsive drawer", async ({ page }) => {
+    await ensureAuthenticated(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/at/", { waitUntil: "domcontentloaded" });
+
+    const aside = page.locator("aside").first();
+    await expect(aside.getByText("Acentem Takipte", { exact: true })).toBeVisible();
+
+    const collapseToggle = aside.locator(
+      'button[aria-label="Menüyü daralt"], button[aria-label="Collapse menu"]',
+    );
+    await expect(collapseToggle).toHaveCount(1);
+    await expect(aside.locator("footer button[aria-label*='Menü'], footer button[aria-label*='menu']")).toHaveCount(0);
+
+    await collapseToggle.click();
+    await expect(aside).toHaveClass(/lg:w-24/);
+    await expect(aside.locator('[data-testid="sidebar-brand-monogram"]')).toHaveText("AT");
+    const iconLinks = aside.locator("nav a");
+    await expect(iconLinks).not.toHaveCount(0);
+    expect(await iconLinks.evaluateAll((links) => links.every((link) => Boolean(link.getAttribute("title"))))).toBe(true);
+
+    const profileTrigger = page.getByTestId("sidebar-profile-trigger");
+    await expect(profileTrigger).toHaveAttribute("aria-haspopup", "menu");
+    await profileTrigger.click();
+    const profileMenu = page.getByRole("menu");
+    await expect(profileMenu).toBeVisible();
+    const profileSummary = profileMenu.locator("p");
+    await expect(profileSummary).toHaveCount(3);
+    expect((await profileSummary.allTextContents()).every((text) => text.trim().length > 0)).toBe(true);
+    await expect(profileMenu.getByRole("menuitem", { name: /Türkçe|English/ })).toHaveCount(2);
+    await expect(profileMenu.getByRole("menuitem", { name: /Hesabım|My Account/ })).toBeVisible();
+    await expect(profileMenu.getByRole("menuitem", { name: /Desk'i Aç|Open Desk/ })).toBeVisible();
+    await expect(profileMenu.getByRole("menuitem", { name: /Çıkış Yap|Logout/ })).toBeVisible();
+
+    const routeBeforeLocaleChange = page.url();
+    await profileMenu.getByRole("menuitem", { name: "English", exact: true }).click();
+    await expect(page).toHaveURL(routeBeforeLocaleChange);
+    await profileTrigger.click();
+    await expect(page.getByRole("menu")).toBeVisible();
+
+    const scopeTrigger = page.getByTestId("branch-scope-trigger");
+    await expect(scopeTrigger).toBeVisible();
+    await expect(scopeTrigger).toHaveAttribute("aria-haspopup", "listbox");
+    await scopeTrigger.click();
+    await expect(page.getByRole("listbox")).toBeVisible();
+    await expect(page.getByTestId("branch-search-input")).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(aside).toHaveClass(/-translate-x-full/);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+
+    const menuButton = page.getByRole("button", { name: /Menu|Menü/i }).first();
+    await expect(menuButton).toBeVisible();
+    await menuButton.click();
+    await expect(aside).toHaveClass(/translate-x-0/);
+    await expect(aside.getByText("Acentem Takipte", { exact: true })).toBeVisible();
+    await expect(aside.locator('[data-testid="sidebar-brand-monogram"]')).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+
+    await aside.locator('button[title="Kapat"], button[title="Close"]').click();
+    await expect(aside).toHaveClass(/-translate-x-full/);
+  });
+
   test("anonim smoke: /at route ve session endpoint auth duvari", async ({ page, context }) => {
     await context.clearCookies();
 
