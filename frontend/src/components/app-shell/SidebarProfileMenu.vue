@@ -18,7 +18,11 @@
         <span class="block truncate text-xs font-medium text-slate-900" :title="displayUser">
           {{ displayUser }}
         </span>
-        <span class="block truncate text-[10px] text-slate-400" :title="branchLabel">
+        <span
+          data-testid="profile-trigger-active-branch"
+          class="block truncate text-[10px] text-slate-400"
+          :title="branchLabel"
+        >
           {{ branchLabel }}
         </span>
       </span>

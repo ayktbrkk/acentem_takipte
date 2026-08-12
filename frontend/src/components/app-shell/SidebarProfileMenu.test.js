@@ -111,6 +111,7 @@ describe("Sidebar profile menu contract", () => {
 
     expect(trigger.attributes("aria-haspopup")).toBe("menu");
     expect(trigger.attributes("aria-expanded")).toBe("false");
+    expect(trigger.find('[data-testid="profile-trigger-active-branch"]').text()).toContain("AT Sigorta");
     await trigger.trigger("click");
 
     const profileMenu = wrapper.find('[data-testid="sidebar-profile-menu"]');
@@ -204,6 +205,7 @@ describe("Sidebar profile menu contract", () => {
     await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
 
     expect(wrapper.text()).toContain(expectedFallback);
+    expect(wrapper.find('[data-testid="profile-trigger-active-branch"]').text()).toContain(expectedFallback);
     expect(wrapper.text()).not.toContain("-");
   });
 
