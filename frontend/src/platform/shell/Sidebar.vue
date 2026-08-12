@@ -8,7 +8,7 @@
     />
     <aside
       class="fixed inset-y-0 left-0 z-40 flex h-screen w-[220px] shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white transition-all duration-200 lg:static lg:z-0"
-      :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', isCollapsed ? 'lg:w-24' : 'lg:w-[220px]']"
+      :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', effectiveCollapsed ? 'lg:w-24' : 'lg:w-[220px]']"
     >
       <div class="border-b border-slate-100 px-4 py-4">
         <div class="mb-4 flex items-center justify-between lg:hidden">
@@ -20,8 +20,10 @@
 
         <div class="flex items-start gap-3">
           <div class="min-w-0 flex-1">
-            <p v-if="!isCollapsed" class="truncate text-sm font-medium text-slate-900">{{ t("brand") }}</p>
-            <template v-if="!isCollapsed">
+            <p v-if="!effectiveCollapsed" class="truncate text-sm font-medium text-slate-900" :title="t('brand')">
+              {{ t("brand") }}
+            </p>
+            <template v-if="!effectiveCollapsed">
               <p class="mt-0.5 truncate text-xs text-slate-400">{{ t("subtitle") }}</p>
             </template>
             <template v-else>
@@ -40,11 +42,11 @@
           <button
             class="max-lg:hidden grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none lg:grid"
             type="button"
-            :aria-label="isCollapsed ? expandMenuLabel : collapseMenuLabel"
-            :title="isCollapsed ? expandMenuLabel : collapseMenuLabel"
+            :aria-label="effectiveCollapsed ? expandMenuLabel : collapseMenuLabel"
+            :title="effectiveCollapsed ? expandMenuLabel : collapseMenuLabel"
             @click="toggleSidebarCollapsedDesktop"
           >
-            <component :is="isCollapsed ? IconLucidePanelLeftOpen : IconLucidePanelLeftClose" class="h-4 w-4" />
+            <component :is="effectiveCollapsed ? IconLucidePanelLeftOpen : IconLucidePanelLeftClose" class="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -52,7 +54,7 @@
       <nav class="flex-1 overflow-y-auto pb-4">
         <div v-for="section in navSections" :key="section.title" class="mb-4">
           <p
-            v-if="!isCollapsed"
+            v-if="!effectiveCollapsed"
             class="px-4 pb-1 pt-4 text-[10px] font-semibold tracking-widest text-slate-400"
           >
             {{ upper(section.title) }}
@@ -65,7 +67,7 @@
               :href="item.to"
               :title="item.label"
               class="group mx-2 mb-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900"
-              :class="linkClass(item)"
+              :class="linkClass(item, effectiveCollapsed)"
               @click="$emit('navigate')"
             >
               <component
@@ -81,7 +83,7 @@
               >
                 {{ item.short }}
               </span>
-              <div v-if="!isCollapsed" class="min-w-0 flex-1">
+              <div v-if="!effectiveCollapsed" class="min-w-0 flex-1">
                 <p class="truncate font-medium" :class="item.indent ? 'text-xs text-slate-500' : ''">
                   {{ item.label }}
                 </p>
@@ -95,7 +97,7 @@
               :to="item.to"
               :title="item.label"
               class="group mx-2 mb-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900"
-              :class="linkClass(item)"
+              :class="linkClass(item, effectiveCollapsed)"
               active-class="bg-brand-50 text-brand-700 font-medium border-l-2 border-brand-600 !rounded-l-none pl-[10px]"
               @click="$emit('navigate')"
             >
@@ -112,7 +114,7 @@
               >
                 {{ item.short }}
               </span>
-              <div v-if="!isCollapsed" class="min-w-0 flex-1">
+              <div v-if="!effectiveCollapsed" class="min-w-0 flex-1">
                 <p class="truncate font-medium" :class="item.indent ? 'text-xs text-slate-500' : ''">
                   {{ item.label }}
                 </p>
@@ -123,13 +125,15 @@
       </nav>
 
       <footer class="mt-auto border-t border-slate-100 px-3 py-3">
-        <SidebarProfileMenu :collapsed="isCollapsed" />
+        <SidebarProfileMenu :collapsed="effectiveCollapsed" />
       </footer>
     </aside>
   </div>
 </template>
 
 <script setup>
+import { computed, onBeforeUnmount, onMounted, shallowRef } from "vue";
+
 import ActionButton from "../ui/shell/ActionButton.vue";
 import SidebarProfileMenu from "../../components/app-shell/SidebarProfileMenu.vue";
 import IconLucidePanelLeftClose from '~icons/lucide/panel-left-close';
@@ -155,5 +159,35 @@ const {
   toggleSidebarCollapsedDesktop,
   linkClass,
 } = useSidebarNavigation();
+
+const isDesktopViewport = shallowRef(false);
+const effectiveCollapsed = computed(() => isCollapsed.value && isDesktopViewport.value);
+let desktopMediaQuery = null;
+
+function updateDesktopViewport(event) {
+  isDesktopViewport.value = Boolean(event?.matches ?? desktopMediaQuery?.matches);
+}
+
+onMounted(() => {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+
+  desktopMediaQuery = window.matchMedia("(min-width: 1024px)");
+  updateDesktopViewport();
+  if (typeof desktopMediaQuery.addEventListener === "function") {
+    desktopMediaQuery.addEventListener("change", updateDesktopViewport);
+  } else if (typeof desktopMediaQuery.addListener === "function") {
+    desktopMediaQuery.addListener(updateDesktopViewport);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (!desktopMediaQuery) return;
+  if (typeof desktopMediaQuery.removeEventListener === "function") {
+    desktopMediaQuery.removeEventListener("change", updateDesktopViewport);
+  } else if (typeof desktopMediaQuery.removeListener === "function") {
+    desktopMediaQuery.removeListener(updateDesktopViewport);
+  }
+  desktopMediaQuery = null;
+});
 </script>
 

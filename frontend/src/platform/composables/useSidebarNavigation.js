@@ -65,8 +65,8 @@ export function useSidebarNavigation() {
     uiStore.toggleSidebarCollapsed();
   }
 
-  function linkClass(item) {
-    if (isCollapsed.value) {
+  function linkClass(item, collapsed = isCollapsed.value) {
+    if (collapsed) {
       return "justify-center px-2";
     }
     if (item.indent) {

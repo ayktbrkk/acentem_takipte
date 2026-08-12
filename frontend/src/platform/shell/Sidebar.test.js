@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 
 import Sidebar from "./Sidebar.vue";
 import { useAuthStore } from "../state/authStore";
+import { useUiStore } from "../state/uiStore";
 
 vi.mock("frappe-ui", () => ({
   createResource: () => ({ submit: vi.fn() }),
@@ -32,6 +33,17 @@ const OfficeBranchSelectStub = {
 describe("Sidebar localization", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
+    useUiStore().setCollapsed(false);
+    vi.stubGlobal("matchMedia", (query) => ({
+      matches: query === "(min-width: 1024px)",
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("renders Turkish chrome labels when the locale is tr", () => {
@@ -67,7 +79,45 @@ describe("Sidebar localization", () => {
     expect(collapseToggles[0].attributes("title")).toBe("Menüyü daralt");
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     expect(wrapper.text()).toContain("Acentem Takipte");
+    expect(wrapper.find('p[title="Acentem Takipte"]').exists()).toBe(true);
     expect(wrapper.find("footer").findAll('button[aria-label="Menüyü daralt"]')).toHaveLength(0);
+  });
+
+  it("keeps the mobile drawer expanded when desktop collapse is persisted", () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      locale: "tr",
+      user: "Aykut",
+      userId: "aykut",
+      roles: ["AT Agent"],
+    });
+    useUiStore().setCollapsed(true);
+    vi.stubGlobal("matchMedia", (query) => ({
+      matches: false,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        mobileOpen: true,
+      },
+      global: {
+        directives: {
+          prefetch: {},
+        },
+        stubs: {
+          RouterLink: RouterLinkStub,
+          OfficeBranchSelect: OfficeBranchSelectStub,
+        },
+      },
+    });
+
+    expect(wrapper.find('[data-testid="sidebar-brand-monogram"]').exists()).toBe(false);
+    expect(wrapper.text()).toContain("Acentem Takipte");
+    expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
+    expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
   });
 
   it("shows alert channel settings for system managers", () => {
