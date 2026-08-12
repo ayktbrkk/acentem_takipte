@@ -185,6 +185,15 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
   const newConsoleErrors = consoleErrors.slice(baseline.consoleErrorCount);
   const newPageErrors = pageErrors.slice(baseline.pageErrorCount);
   const newFailedRequests = failedRequests.slice(baseline.requestFailureCount);
+  const assertionType = /toHaveClass/.test(String(assertionError || ""))
+    ? "aside-class"
+    : "expand-button-visibility";
+  const observedState = {
+    collapsed: Boolean(immediateAfterClick.collapsed),
+    expandButtonVisible: immediateAfterClick.buttons.some(
+      (button) => button.visible && /Menüyü genişlet|Expand menu/.test(`${button.ariaLabel} ${button.title}`),
+    ),
+  };
   const diagnostics = {
     test: "sidebar-collapse-expand",
     route: beforeClick.route,
@@ -193,7 +202,17 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
     immediateAfterClick,
     timeline,
     failure: {
-      assertion: /toHaveClass/.test(String(assertionError || "")) ? "aside-collapsed-class" : "expand-button-visible",
+      assertion: assertionType,
+      assertionEvidence: {
+        type: assertionType,
+        locator: "aside and localized desktop expand button",
+        expected: {
+          sidebarClass: "lg:w-24",
+          expandButtonVisible: true,
+        },
+        observed: observedState,
+        errorCategory: classifyDiagnosticMessage(assertionError),
+      },
       expectedLabel: "Menüyü genişlet",
       found: false,
       assertionClass: classifyDiagnosticMessage(assertionError),
@@ -222,6 +241,37 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
 
     const clone = sidebar.cloneNode(true);
     clone.id = "sidebar-collapse-diagnostics-redacted";
+    const safeGeometryAttributes = new Set([
+      "class",
+      "d",
+      "viewBox",
+      "width",
+      "height",
+      "fill",
+      "fill-rule",
+      "stroke",
+      "stroke-linecap",
+      "stroke-linejoin",
+      "stroke-width",
+      "points",
+      "cx",
+      "cy",
+      "r",
+      "x",
+      "x1",
+      "x2",
+      "y",
+      "y1",
+      "y2",
+    ]);
+    const scrubAttributes = (element) => {
+      for (const attribute of element.getAttributeNames()) {
+        if (!safeGeometryAttributes.has(attribute)) element.removeAttribute(attribute);
+      }
+    };
+    scrubAttributes(clone);
+    for (const element of clone.querySelectorAll("*")) scrubAttributes(element);
+    clone.id = "sidebar-collapse-diagnostics-redacted";
     clone.style.position = "fixed";
     clone.style.left = "0";
     clone.style.top = "0";
@@ -236,25 +286,6 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
     for (const node of textNodes) {
       if (node.textContent?.trim()) node.textContent = "REDACTED";
     }
-    for (const element of clone.querySelectorAll("*")) {
-      for (const attribute of element.getAttributeNames()) {
-        if (
-          attribute === "title" ||
-          attribute === "style" ||
-          attribute === "src" ||
-          attribute === "srcset" ||
-          attribute === "background" ||
-          attribute === "href" ||
-          attribute === "poster" ||
-          attribute === "action" ||
-          attribute.startsWith("aria-") ||
-          attribute.startsWith("data-")
-        ) {
-          element.removeAttribute(attribute);
-        }
-      }
-    }
-
     const redactionStyle = document.createElement("style");
     redactionStyle.textContent =
       "*, *::before, *::after { background-image: none !important; content: none !important; }";
