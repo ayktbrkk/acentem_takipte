@@ -107,25 +107,27 @@ describe("Sidebar profile menu contract", () => {
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
 
     expect(trigger.exists()).toBe(true);
-    expect(wrapper.find('[role="menu"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="sidebar-profile-menu"]').exists()).toBe(false);
 
     expect(trigger.attributes("aria-haspopup")).toBe("menu");
     expect(trigger.attributes("aria-expanded")).toBe("false");
     await trigger.trigger("click");
 
-    expect(wrapper.find('[role="menu"]').exists()).toBe(true);
+    const profileMenu = wrapper.find('[data-testid="sidebar-profile-menu"]');
+    expect(profileMenu.exists()).toBe(true);
+    expect(profileMenu.attributes("role")).toBe("menu");
     expect(wrapper.text()).toContain("Aykut Yılmaz");
     expect(wrapper.text()).toContain("Rol");
     expect(wrapper.text()).toContain("AT Yönetici");
     expect(wrapper.text()).toContain("Aktif şube");
     expect(wrapper.text()).toContain("AT Sigorta");
-    expect(wrapper.find('[data-testid="profile-mobile-language"]').exists()).toBe(true);
-    expect(wrapper.find('[data-testid="profile-mobile-language"]').text()).toContain("Türkçe");
-    expect(wrapper.find('[data-testid="profile-mobile-language"]').text()).toContain("English");
+    expect(profileMenu.find('[data-testid="profile-mobile-language"]').exists()).toBe(true);
+    expect(profileMenu.find('[data-testid="profile-mobile-language"]').text()).toContain("Türkçe");
+    expect(profileMenu.find('[data-testid="profile-mobile-language"]').text()).toContain("English");
     expect(wrapper.text()).toContain("Çıkış Yap");
-    expect(wrapper.find('[data-testid="profile-summary-user"]').text()).toBe("Aykut Yılmaz");
-    expect(wrapper.find('[data-testid="profile-summary-role"]').text()).toContain("AT Yönetici");
-    expect(wrapper.find('[data-testid="profile-summary-active-branch"]').text()).toContain("AT Sigorta");
+    expect(profileMenu.find('[data-testid="profile-summary-user"]').text()).toBe("Aykut Yılmaz");
+    expect(profileMenu.find('[data-testid="profile-summary-role"]').text()).toContain("AT Yönetici");
+    expect(profileMenu.find('[data-testid="profile-summary-active-branch"]').text()).toContain("AT Sigorta");
   });
 
   it("renders localized role and active-branch labels in English", async () => {
@@ -212,17 +214,18 @@ describe("Sidebar profile menu contract", () => {
     expect(trigger.exists()).toBe(true);
 
     await trigger.trigger("click");
-    expect(wrapper.find('[role="menu"]').exists()).toBe(true);
-    expect(document.activeElement).toBe(wrapper.find('[role="menuitem"]').element);
+    const profileMenu = wrapper.find('[data-testid="sidebar-profile-menu"]');
+    expect(profileMenu.exists()).toBe(true);
+    expect(document.activeElement).toBe(profileMenu.find('[role="menuitem"]').element);
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     await wrapper.vm.$nextTick();
-    expect(wrapper.find('[role="menu"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="sidebar-profile-menu"]').exists()).toBe(false);
     expect(document.activeElement).toBe(trigger.element);
 
     await trigger.trigger("click");
     document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await wrapper.vm.$nextTick();
-    expect(wrapper.find('[role="menu"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="sidebar-profile-menu"]').exists()).toBe(false);
   });
 
   it("moves focus through the menu when no item is currently focused", async () => {
