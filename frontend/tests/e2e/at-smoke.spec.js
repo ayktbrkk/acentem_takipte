@@ -124,7 +124,18 @@ async function captureSidebarFailureTimeline(page) {
 }
 
 async function attachSidebarFailureDiagnostics(page, testInfo, options) {
-  const { beforeClick, immediateAfterClick, consoleErrorCount, requestFailureCount, assertionError } = options;
+  const {
+    beforeClick,
+    immediateAfterClick,
+    baseline,
+    consoleErrors,
+    pageErrors,
+    failedRequests,
+    assertionError,
+  } = options;
+  const newConsoleErrors = consoleErrors.slice(baseline.consoleErrorCount);
+  const newPageErrors = pageErrors.slice(baseline.pageErrorCount);
+  const newFailedRequests = failedRequests.slice(baseline.requestFailureCount);
   const diagnostics = {
     test: "sidebar-collapse-expand",
     route: beforeClick.route,
@@ -137,8 +148,12 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
       expectedLabel: "Menüyü genişlet",
       found: false,
       assertionError: String(assertionError || "").slice(0, 300),
-      consoleErrorCount,
-      requestFailureCount,
+      consoleErrorCount: newConsoleErrors.length,
+      consoleErrors: newConsoleErrors,
+      pageErrorCount: newPageErrors.length,
+      pageErrors: newPageErrors,
+      requestFailureCount: newFailedRequests.length,
+      failedRequests: newFailedRequests,
     },
   };
   const json = JSON.stringify(diagnostics, null, 2);
@@ -149,7 +164,46 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
     body: json,
     contentType: "application/json",
   });
-  await page.screenshot({ path: testInfo.outputPath("sidebar-collapse-failure.png") });
+
+  // Keep the layout evidence while removing authenticated user, branch, and
+  // business text before the image is written to the test artifact.
+  const redactedSidebar = await page.evaluate(() => {
+    const sidebar = document.querySelector("aside");
+    if (!sidebar) return null;
+
+    const clone = sidebar.cloneNode(true);
+    clone.id = "sidebar-collapse-diagnostics-redacted";
+    clone.style.position = "fixed";
+    clone.style.left = "0";
+    clone.style.top = "0";
+    clone.style.zIndex = "2147483647";
+    clone.style.height = `${Math.min(window.innerHeight, sidebar.getBoundingClientRect().height)}px`;
+    clone.style.maxHeight = `${window.innerHeight}px`;
+    clone.style.pointerEvents = "none";
+
+    const walker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    for (const node of textNodes) {
+      if (node.textContent?.trim()) node.textContent = "REDACTED";
+    }
+    for (const element of clone.querySelectorAll("[title], [aria-label]")) {
+      element.removeAttribute("title");
+      element.removeAttribute("aria-label");
+    }
+
+    document.body.appendChild(clone);
+    return clone.id;
+  });
+  if (redactedSidebar) {
+    try {
+      await page.locator(`#${redactedSidebar}`).screenshot({
+        path: testInfo.outputPath("sidebar-collapse-failure.png"),
+      });
+    } finally {
+      await page.evaluate((id) => document.getElementById(id)?.remove(), redactedSidebar);
+    }
+  }
 }
 
 test.describe("Acentem Takipte smoke", () => {
@@ -256,6 +310,11 @@ test.describe("Acentem Takipte smoke", () => {
     await page.goto("/at/", { waitUntil: "domcontentloaded" });
     await expect(page.locator('button[aria-label="Menüyü daralt"]').first()).toBeVisible();
     const beforeClick = await captureSidebarLabel(page, "before-click");
+    const diagnosticsBaseline = {
+      consoleErrorCount: consoleErrors.length,
+      pageErrorCount: pageErrors.length,
+      requestFailureCount: failedRequests.length,
+    };
     await page.locator('button[aria-label="Menüyü daralt"]').first().click();
     const immediateAfterClick = await captureSidebarLabel(page, "immediate-after-click");
     try {
@@ -265,8 +324,10 @@ test.describe("Acentem Takipte smoke", () => {
       await attachSidebarFailureDiagnostics(page, testInfo, {
         beforeClick,
         immediateAfterClick,
-        consoleErrorCount: consoleErrors.length,
-        requestFailureCount: failedRequests.length,
+        baseline: diagnosticsBaseline,
+        consoleErrors,
+        pageErrors,
+        failedRequests,
         assertionError: error?.message || String(error),
       });
       throw error;
