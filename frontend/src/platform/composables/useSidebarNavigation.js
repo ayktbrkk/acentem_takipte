@@ -37,14 +37,12 @@ import IconLucidePaperclip from '~icons/lucide/paperclip';
 import IconLucidePercent from '~icons/lucide/percent';
 
 import { useAuthStore } from "../state/authStore";
-import { useBranchStore } from "../state/branchStore";
 import { useUiStore } from "../state/uiStore";
 import { SIDEBAR_TRANSLATIONS } from "../i18n/sidebar";
 import { translateText } from "@/platform/i18n";
 
 export function useSidebarNavigation() {
   const authStore = useAuthStore();
-  const branchStore = useBranchStore();
   const uiStore = useUiStore();
 
   function t(key) {
@@ -62,15 +60,6 @@ export function useSidebarNavigation() {
   const isCollapsed = computed(() => uiStore.sidebarCollapsed);
   const collapseMenuLabel = computed(() => t("collapseMenu"));
   const expandMenuLabel = computed(() => t("expandMenu"));
-  const userDisplayName = computed(() => String(authStore.user || authStore.userId || "-").trim() || "-");
-  const userInitials = computed(() => {
-    const parts = userDisplayName.value.split(/\s+/).filter(Boolean);
-    if (!parts.length) return "AT";
-    const raw = parts.slice(0, 2).map((part) => String(part[0] || "")).join("");
-    const locale = String(authStore.locale || "en").toLowerCase();
-    return locale.startsWith("tr") ? raw.toLocaleUpperCase("tr-TR") : raw.toUpperCase();
-  });
-  const branchLabel = computed(() => String(branchStore.requestBranch || authStore.defaultOfficeBranch || "-").trim() || "-");
 
   function toggleSidebarCollapsedDesktop() {
     uiStore.toggleSidebarCollapsed();
@@ -196,9 +185,6 @@ export function useSidebarNavigation() {
     isCollapsed,
     collapseMenuLabel,
     expandMenuLabel,
-    userDisplayName,
-    userInitials,
-    branchLabel,
     navSections,
     toggleSidebarCollapsedDesktop,
     linkClass,
