@@ -312,9 +312,12 @@ test.describe("Acentem Takipte smoke", () => {
 
     const profileTrigger = page.getByTestId("sidebar-profile-trigger");
     await expect(profileTrigger).toHaveAttribute("aria-haspopup", "menu");
+    await expect(profileTrigger).toHaveAttribute("aria-expanded", "false");
     await profileTrigger.click();
     const profileMenu = page.getByRole("menu");
     await expect(profileMenu).toBeVisible();
+    await expect(profileTrigger).toHaveAttribute("aria-expanded", "true");
+    await expect(page.locator('[role="menuitem"]').first()).toBeFocused();
     const profileSummary = profileMenu.locator("p");
     await expect(profileSummary).toHaveCount(3);
     expect((await profileSummary.allTextContents()).every((text) => text.trim().length > 0)).toBe(true);
@@ -323,7 +326,35 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(profileMenu.getByRole("menuitem", { name: /Desk'i Aç|Open Desk/ })).toBeVisible();
     await expect(profileMenu.getByRole("menuitem", { name: /Çıkış Yap|Logout/ })).toBeVisible();
 
+    await page.keyboard.press("Escape");
+    await expect(profileMenu).toBeHidden();
+    await expect(profileTrigger).toHaveAttribute("aria-expanded", "false");
+    await expect(profileTrigger).toBeFocused();
+    await profileTrigger.click();
+    await expect(profileMenu).toBeVisible();
+    await page.locator("main").click({ position: { x: 12, y: 12 } });
+    await expect(profileMenu).toBeHidden();
+    await expect(profileTrigger).toHaveAttribute("aria-expanded", "false");
+
+    const profileDestinations = [
+      { path: "/me", label: /Hesabım|My Account/ },
+      { path: "/desk", label: /Desk'i Aç|Open Desk/ },
+    ];
+    for (const destination of profileDestinations) {
+      await profileTrigger.click();
+      await expect(profileMenu).toBeVisible();
+      await page.route(`**${destination.path}`, (route) =>
+        route.fulfill({ status: 200, contentType: "text/html", body: "shell destination" }),
+      );
+      await profileMenu.getByRole("menuitem", { name: destination.label }).click();
+      await expect(page).toHaveURL(new RegExp(`${destination.path.replace("/", "\\/")}$`));
+      await page.goto("/at/", { waitUntil: "domcontentloaded" });
+      await page.unroute(`**${destination.path}`);
+      await expect(aside).toBeVisible();
+    }
+
     const routeBeforeLocaleChange = page.url();
+    await profileTrigger.click();
     await profileMenu.getByRole("menuitem", { name: "English", exact: true }).click();
     await expect(page).toHaveURL(routeBeforeLocaleChange);
     await profileTrigger.click();
@@ -332,10 +363,37 @@ test.describe("Acentem Takipte smoke", () => {
     const scopeTrigger = page.getByTestId("branch-scope-trigger");
     await expect(scopeTrigger).toBeVisible();
     await expect(scopeTrigger).toHaveAttribute("aria-haspopup", "listbox");
-    await scopeTrigger.click();
-    await expect(page.getByRole("listbox")).toBeVisible();
-    await expect(page.getByTestId("branch-search-input")).toBeVisible();
+    if (await scopeTrigger.isDisabled()) {
+      await expect(page.getByTestId("branch-scope-lock-status")).toBeVisible();
+    } else {
+      await scopeTrigger.click();
+      await expect(page.getByRole("listbox")).toBeVisible();
+      await expect(page.getByTestId("branch-search-input")).toBeVisible();
+      const branchOptions = page.locator('[role="option"]');
+      const branchOptionCount = await branchOptions.count();
+      if (branchOptionCount > 0) {
+        const allBranchesOption = page.getByTestId("branch-option-all");
+        if (await allBranchesOption.count()) {
+          await expect(allBranchesOption).toContainText(/Tüm Şubeler|All Branches/);
+        }
+        const selectedBranchOption = page.locator('[role="option"][aria-selected="true"]');
+        await expect(selectedBranchOption).toHaveCount(1);
+        await branchOptions.first().click();
+        await expect(page.getByRole("listbox")).toBeHidden();
+        await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+      }
+    }
     await page.keyboard.press("Escape");
+
+    await page.setViewportSize({ width: 768, height: 900 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(aside).toHaveClass(/-translate-x-full/);
+    await expect(page.getByRole("button", { name: /Menu|Menü/i }).first()).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
+    await page.getByRole("button", { name: /Menu|Menü/i }).first().click();
+    await expect(aside).toHaveClass(/translate-x-0/);
+    await expect(aside.getByText("Acentem Takipte", { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -350,8 +408,38 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(aside.locator('[data-testid="sidebar-brand-monogram"]')).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 
+    await profileTrigger.click();
+    await expect(profileMenu).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    await page.keyboard.press("Escape");
+    await expect(profileMenu).toBeHidden();
+    await expect(profileTrigger).toBeFocused();
+
+    if (!await scopeTrigger.isDisabled()) {
+      await scopeTrigger.click();
+      await expect(page.getByRole("listbox")).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("listbox")).toBeHidden();
+    }
+
     await aside.locator('button[title="Kapat"], button[title="Close"]').click();
     await expect(aside).toHaveClass(/-translate-x-full/);
+
+    // The existing platform smoke performs the real logout POST and anonymous
+    // auth-boundary check. Mock this UI request here to verify the menu action
+    // and redirect without invalidating the authenticated fixture for later tests.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await profileTrigger.click();
+    let logoutRequest = null;
+    await page.route("**/api/method/logout", async (route) => {
+      logoutRequest = route.request();
+      await route.fulfill({ status: 200, contentType: "application/json", body: '{"message":"ok"}' });
+    });
+    await profileMenu.getByRole("menuitem", { name: /Logout|Çıkış Yap/ }).click();
+    await expect(page).toHaveURL(/\/login\?redirect-to=\/at$/);
+    expect(logoutRequest?.method()).toBe("POST");
   });
 
   test("anonim smoke: /at route ve session endpoint auth duvari", async ({ page, context }) => {
