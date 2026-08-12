@@ -46,7 +46,7 @@ describe("Sidebar localization", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders Turkish chrome labels when the locale is tr", () => {
+  it("renders Turkish chrome labels when the locale is tr", async () => {
     const authStore = useAuthStore();
     authStore.applyContext({
       locale: "tr",
@@ -78,12 +78,16 @@ describe("Sidebar localization", () => {
     expect(collapseToggles).toHaveLength(1);
     expect(collapseToggles[0].attributes("title")).toBe("Menüyü daralt");
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
+    await wrapper.find('footer [data-testid="sidebar-profile-trigger"]').trigger("click");
+    expect(wrapper.find('footer [data-testid="profile-mobile-language"]').exists()).toBe(false);
     expect(wrapper.text()).toContain("Acentem Takipte");
     expect(wrapper.find('p[title="Acentem Takipte"]').exists()).toBe(true);
+    expect(wrapper.text()).not.toContain("Fırsat, poliçe, hasar ve tahsilat operasyonları");
+    expect(wrapper.findAll("p").filter((node) => node.classes().includes("mt-0.5"))).toHaveLength(0);
     expect(wrapper.find("footer").findAll('button[aria-label="Menüyü daralt"]')).toHaveLength(0);
   });
 
-  it("keeps the mobile drawer expanded when desktop collapse is persisted", () => {
+  it("keeps the mobile drawer expanded when desktop collapse is persisted", async () => {
     const authStore = useAuthStore();
     authStore.applyContext({
       locale: "tr",
@@ -118,6 +122,8 @@ describe("Sidebar localization", () => {
     expect(wrapper.text()).toContain("Acentem Takipte");
     expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
+    await wrapper.find('footer [data-testid="sidebar-profile-trigger"]').trigger("click");
+    expect(wrapper.find('footer [data-testid="profile-mobile-language"]').exists()).toBe(true);
   });
 
   it("removes the modern media query listener with the matching API", () => {
@@ -232,6 +238,7 @@ describe("Sidebar localization", () => {
     expect(wrapper.findAll('button[aria-label="Collapse menu"]')).toHaveLength(1);
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     expect(wrapper.text()).toContain("Acentem Takipte");
+    expect(wrapper.text()).not.toContain("Lead, policy, claim, and collections operations");
     expect(wrapper.find("footer").findAll('button[aria-label="Collapse menu"]')).toHaveLength(0);
   });
 

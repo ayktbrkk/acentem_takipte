@@ -1,10 +1,18 @@
+export const SIDEBAR_ROLE_PRIORITY = [
+  { role: "AT System Manager", labelKey: "roleATSystemManager" },
+  { role: "AT Manager", labelKey: "roleATManager" },
+  { role: "AT Accountant", labelKey: "roleATAccountant" },
+  { role: "AT Agent", labelKey: "roleATAgent" },
+  { role: "System Manager", labelKey: "roleSystemManager" },
+  { role: "Administrator", labelKey: "roleAdministrator" },
+];
+
 export const SIDEBAR_TRANSLATIONS = {
   tr: {
     menu: "Menü",
     brand: "Acentem Takipte",
     title: "Sigorta CRM",
     miniTitle: "CRM",
-    subtitle: "Fırsat, poliçe, hasar ve tahsilat operasyonları",
     sectionOverview: "Genel Görünüm",
     sectionSalesPortfolio: "Satış & Portföy",
     sectionOperations: "Operasyonlar",
@@ -73,13 +81,18 @@ export const SIDEBAR_TRANSLATIONS = {
     defaultSection: "Acentem Takipte",
     scope: "Kapsam",
     allBranches: "Tüm Şubeler",
+    roleATSystemManager: "AT Sistem Yöneticisi",
+    roleATManager: "AT Yönetici",
+    roleATAccountant: "AT Muhasebeci",
+    roleATAgent: "AT Operasyon Kullanıcısı",
+    roleSystemManager: "Sistem Yöneticisi",
+    roleAdministrator: "Yönetici",
   },
   en: {
     menu: "Menu",
     brand: "Acentem Takipte",
     title: "Insurance CRM",
     miniTitle: "CRM",
-    subtitle: "Lead, policy, claim, and collections operations",
     sectionOverview: "Overview",
     sectionSalesPortfolio: "Sales & Portfolio",
     sectionOperations: "Operations",
@@ -148,5 +161,11 @@ export const SIDEBAR_TRANSLATIONS = {
     defaultSection: "Acentem Takipte",
     scope: "Scope",
     allBranches: "All Branches",
+    roleATSystemManager: "AT System Manager",
+    roleATManager: "AT Manager",
+    roleATAccountant: "AT Accountant",
+    roleATAgent: "AT Agent",
+    roleSystemManager: "System Manager",
+    roleAdministrator: "Administrator",
   },
 };

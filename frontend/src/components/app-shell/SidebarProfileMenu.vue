@@ -32,8 +32,12 @@
     >
       <div class="border-b border-slate-100 px-4 pb-3 pt-2">
         <p class="truncate text-sm font-semibold text-slate-900" :title="displayUser">{{ displayUser }}</p>
-        <p class="truncate text-xs text-slate-500" :title="roleLabel">{{ roleLabel }}</p>
-        <p class="truncate text-xs text-slate-500" :title="branchLabel">{{ branchLabel }}</p>
+        <p class="truncate text-xs text-slate-500" :title="`${t('role')}: ${roleLabel}`">
+          <span class="font-medium text-slate-400">{{ t("role") }}:</span> {{ roleLabel }}
+        </p>
+        <p class="truncate text-xs text-slate-500" :title="`${t('activeBranch')}: ${branchLabel}`">
+          <span class="font-medium text-slate-400">{{ t("activeBranch") }}:</span> {{ branchLabel }}
+        </p>
       </div>
 
       <div v-if="logoutError" class="border-b border-slate-100 px-4 py-3" role="alert" aria-live="polite">
@@ -49,20 +53,22 @@
         </button>
       </div>
 
-      <div class="px-2 py-2" role="group" :aria-label="t('language')">
+      <div v-if="props.mobile" data-testid="profile-mobile-language" class="px-2 py-2" role="group" :aria-label="t('language')">
         <p class="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ t("language") }}</p>
-        <button
-          v-for="item in localeItems"
-          :key="item.locale"
-          class="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm text-slate-800 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-          type="button"
-          role="menuitem"
-          :aria-current="authStore.locale === item.locale ? 'true' : undefined"
-          @click="setLocale(item.locale)"
-        >
-          <span>{{ item.label }}</span>
-          <span v-if="authStore.locale === item.locale" aria-hidden="true">✓</span>
-        </button>
+        <div class="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1">
+          <button
+            v-for="item in localeItems"
+            :key="item.locale"
+            class="rounded-md px-2 py-1.5 text-center text-xs font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            :class="authStore.locale === item.locale ? 'bg-white text-brand-700 shadow-sm' : ''"
+            type="button"
+            role="menuitem"
+            :aria-current="authStore.locale === item.locale ? 'true' : undefined"
+            @click="setLocale(item.locale)"
+          >
+            {{ item.label }}
+          </button>
+        </div>
       </div>
 
       <div class="border-t border-slate-100 px-2 pt-2">
@@ -84,11 +90,11 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
-import { createResource } from "frappe-ui";
-
 import { translateText } from "@/platform/i18n";
+import { useLocalePreference } from "../../platform/composables/useLocalePreference";
 import { useAuthStore } from "../../platform/state/authStore";
 import { useBranchStore } from "../../platform/state/branchStore";
+import { SIDEBAR_ROLE_PRIORITY } from "../../platform/i18n/sidebar";
 
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
@@ -96,6 +102,10 @@ const props = defineProps({
   collapsed: {
     type: Boolean,
     default: false,
+  },
+  mobile: {
+    type: Boolean,
+    default: true,
   },
 });
 const menuOpen = ref(false);
@@ -114,7 +124,11 @@ const userInitials = computed(() => {
   const raw = parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}` : parts[0]?.[0] || "A";
   return authStore.locale === "tr" ? raw.toLocaleUpperCase("tr-TR") : raw.toUpperCase();
 });
-const roleLabel = computed(() => String(authStore.roles?.[0] || t("role")).trim() || t("role"));
+const roleLabel = computed(() => {
+  const normalizedRoles = new Set((authStore.roles || []).map((role) => String(role).trim().toLowerCase()));
+  const match = SIDEBAR_ROLE_PRIORITY.find(({ role }) => normalizedRoles.has(role.toLowerCase()));
+  return match ? t(match.labelKey) : t("role");
+});
 const branchLabel = computed(() => {
   if (branchStore.canAccessAll && !branchStore.requestBranch) return t("allBranches");
   const branch = branchStore.selectedBranch;
@@ -132,22 +146,7 @@ const accountMenuItems = computed(() => [
   { key: "logout", label: t("logout"), action: "logout", destructive: true },
 ]);
 
-const setLocaleResource = createResource({
-  url: "acentem_takipte.acentem_takipte.platform.api.session.set_session_locale",
-});
-
-async function persistLocaleViaFetch(locale) {
-  const response = await fetch(
-    `/api/method/acentem_takipte.acentem_takipte.platform.api.session.set_session_locale?locale=${encodeURIComponent(locale)}`,
-    {
-      method: "GET",
-      credentials: "include",
-      headers: { Accept: "application/json" },
-    },
-  );
-  const payload = await response.json().catch(() => null);
-  return payload?.message || null;
-}
+const { setLocale: persistLocale } = useLocalePreference();
 
 function toggleMenu() {
   if (menuOpen.value) {
@@ -160,7 +159,7 @@ function toggleMenu() {
 }
 
 function focusTrigger() {
-  nextTick(() => triggerRef.value?.focus());
+  triggerRef.value?.focus();
 }
 
 function closeMenu(restoreFocus = false) {
@@ -206,26 +205,7 @@ async function logout() {
 }
 
 async function setLocale(locale) {
-  authStore.setLocale(locale);
-  let payload = null;
-
-  try {
-    const response = await setLocaleResource.submit({ locale });
-    payload = response?.message && typeof response.message === "object" ? response.message : response;
-  } catch (error) {
-    // Keep the local locale when the resource request is unavailable.
-  }
-
-  if (!payload) {
-    try {
-      payload = await persistLocaleViaFetch(locale);
-    } catch (error) {
-      // Server persistence is non-critical for the local shell.
-    }
-  }
-
-  if (payload?.locale) authStore.setLocale(payload.locale);
-  if (payload && typeof payload === "object") authStore.applyContext(payload);
+  await persistLocale(locale);
   closeMenu(true);
 }
 

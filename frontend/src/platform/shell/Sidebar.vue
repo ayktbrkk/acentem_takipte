@@ -23,9 +23,6 @@
             <p v-if="!effectiveCollapsed" class="truncate text-sm font-medium text-slate-900" :title="t('brand')">
               {{ t("brand") }}
             </p>
-            <template v-if="!effectiveCollapsed">
-              <p class="mt-0.5 truncate text-xs text-slate-400">{{ t("subtitle") }}</p>
-            </template>
             <template v-else>
               <p
                 data-testid="sidebar-brand-monogram"
@@ -125,7 +122,7 @@
       </nav>
 
       <footer class="mt-auto border-t border-slate-100 px-3 py-3">
-        <SidebarProfileMenu :collapsed="effectiveCollapsed" />
+        <SidebarProfileMenu :collapsed="effectiveCollapsed" :mobile="!isDesktopViewport" />
       </footer>
     </aside>
   </div>
