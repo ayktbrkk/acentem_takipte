@@ -18,14 +18,22 @@
           </ActionButton>
         </div>
 
-        <div class="flex items-start gap-2.5">
+        <div class="flex items-start gap-3">
           <div class="min-w-0 flex-1">
-            <p class="text-sm font-medium text-slate-900" :class="isCollapsed ? 'text-center' : ''">{{ t("brand") }}</p>
+            <p v-if="!isCollapsed" class="truncate text-sm font-medium text-slate-900">{{ t("brand") }}</p>
             <template v-if="!isCollapsed">
-              <p class="mt-0.5 text-xs text-slate-400">{{ t("subtitle") }}</p>
+              <p class="mt-0.5 truncate text-xs text-slate-400">{{ t("subtitle") }}</p>
             </template>
             <template v-else>
-              <p class="mt-2 text-center text-xs font-semibold text-slate-700">{{ t("miniTitle") }}</p>
+              <p
+                data-testid="sidebar-brand-monogram"
+                class="mt-2 text-center text-xs font-semibold text-slate-700"
+                role="img"
+                :aria-label="t('brand')"
+                :title="t('brand')"
+              >
+                AT
+              </p>
             </template>
           </div>
 
@@ -116,17 +124,6 @@
 
       <footer class="mt-auto border-t border-slate-100 px-3 py-3">
         <SidebarProfileMenu :collapsed="isCollapsed" />
-        <div class="mt-3 flex items-center border-t border-slate-100 pt-3" :class="isCollapsed ? 'justify-center' : ''">
-          <button
-            class="max-lg:hidden grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
-            type="button"
-            :aria-label="isCollapsed ? expandMenuLabel : collapseMenuLabel"
-            :title="isCollapsed ? expandMenuLabel : collapseMenuLabel"
-            @click="toggleSidebarCollapsedDesktop"
-          >
-            <component :is="isCollapsed ? IconLucidePanelLeftOpen : IconLucidePanelLeftClose" class="h-4 w-4" />
-          </button>
-        </div>
       </footer>
     </aside>
   </div>

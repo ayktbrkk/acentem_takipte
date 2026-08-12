@@ -169,6 +169,10 @@ describe("Sidebar localization", () => {
     expect(wrapper.findAll(`button[aria-label="${expandLabel}"]`)).toHaveLength(1);
     expect(wrapper.find("footer").findAll(`button[aria-label="${expandLabel}"]`)).toHaveLength(0);
     expect(wrapper.findAll(`button[aria-label="${collapseLabel}"]`).length).toBe(0);
+    const collapsedBrand = wrapper.find('[data-testid="sidebar-brand-monogram"]');
+    expect(collapsedBrand.text()).toBe("AT");
+    expect(collapsedBrand.attributes("title")).toBe("Acentem Takipte");
+    expect(collapsedBrand.attributes("aria-label")).toBe("Acentem Takipte");
     expect(wrapper.findAll("nav a p").length).toBe(0);
 
     await wrapper.find(`button[aria-label="${expandLabel}"]`).trigger("click");
