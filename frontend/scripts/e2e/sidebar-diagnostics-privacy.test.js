@@ -20,4 +20,14 @@ describe("sidebar diagnostics route privacy", () => {
     expect(smokeSource).toContain("return `/${category}`");
     expect(smokeSource).toContain("return \"/at\"");
   });
+
+  it("reports evidence for the assertion that actually failed", () => {
+    expect(smokeSource).toContain(
+      'const expectedLabel = assertionType === "aside-class" ? "lg:w-24" : "Menüyü genişlet"',
+    );
+    expect(smokeSource).toContain(
+      "const found = assertionType === \"aside-class\" ? observedState.collapsed : observedState.expandButtonVisible",
+    );
+    expect(smokeSource).toContain("expectedLabel,\n      found,");
+  });
 });

@@ -204,6 +204,11 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
       (button) => button.visible && /Menüyü genişlet|Expand menu/.test(`${button.ariaLabel} ${button.title}`),
     ),
   };
+  const expected = assertionType === "aside-class"
+    ? { sidebarClass: "lg:w-24" }
+    : { expandButtonVisible: true };
+  const expectedLabel = assertionType === "aside-class" ? "lg:w-24" : "Menüyü genişlet";
+  const found = assertionType === "aside-class" ? observedState.collapsed : observedState.expandButtonVisible;
   const diagnostics = {
     test: "sidebar-collapse-expand",
     route: beforeClick.route,
@@ -216,15 +221,12 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
       assertionEvidence: {
         type: assertionType,
         locator: "aside and localized desktop expand button",
-        expected: {
-          sidebarClass: "lg:w-24",
-          expandButtonVisible: true,
-        },
+        expected,
         observed: observedState,
         errorCategory: classifyDiagnosticMessage(assertionError),
       },
-      expectedLabel: "Menüyü genişlet",
-      found: false,
+      expectedLabel,
+      found,
       assertionClass: classifyDiagnosticMessage(assertionError),
       consoleErrorCount: newConsoleErrors.length,
       consoleErrors: sanitizeConsoleErrors(newConsoleErrors),
