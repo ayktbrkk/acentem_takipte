@@ -35,6 +35,7 @@ function readSidebarSnapshot(page) {
     function sanitizeDiagnosticRoute(pathname) {
       const safeRouteCategories = new Set(["at", "desk", "login"]);
       const category = String(pathname || "")
+        .replace(/^\/+/, "")
         .split(/[/?#]/, 1)[0]
         .toLowerCase();
       if (safeRouteCategories.has(category)) return `/${category}`;

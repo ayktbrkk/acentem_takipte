@@ -16,6 +16,7 @@ describe("sidebar diagnostics route privacy", () => {
 
   it("allows only static shell route categories and strips dynamic segments", () => {
     expect(smokeSource).toContain("const safeRouteCategories = new Set([\"at\", \"desk\", \"login\"])");
+    expect(smokeSource).toContain(".replace(/^\\/+/, \"\")");
     expect(smokeSource).toContain("return `/${category}`");
     expect(smokeSource).toContain("return \"/at\"");
   });
