@@ -32,6 +32,15 @@ async function callGetMethod(page, method) {
 
 function readSidebarSnapshot(page) {
   return page.evaluate(() => {
+    function sanitizeDiagnosticRoute(pathname) {
+      const safeRouteCategories = new Set(["at", "desk", "login"]);
+      const category = String(pathname || "")
+        .split(/[/?#]/, 1)[0]
+        .toLowerCase();
+      if (safeRouteCategories.has(category)) return `/${category}`;
+      return "/at";
+    }
+
     const labelPattern = /Menüyü daralt|Menüyü genişlet|Collapse menu|Expand menu/;
     const aside = document.querySelector("aside");
     const asideRect = aside ? aside.getBoundingClientRect() : null;
@@ -88,7 +97,7 @@ function readSidebarSnapshot(page) {
       storeCollapsed = null;
     }
     return {
-      route: window.location.pathname,
+      route: sanitizeDiagnosticRoute(window.location.pathname),
       viewport: { width: window.innerWidth, height: window.innerHeight },
       sidebarClass: aside ? aside.className : null,
       collapsed: aside ? /lg:w-24/.test(aside.className) : null,
