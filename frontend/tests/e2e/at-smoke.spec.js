@@ -474,7 +474,9 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(aside.locator('footer [data-testid="sidebar-desktop-collapse-toggle"]')).toHaveCount(0);
 
     const profileTrigger = page.getByTestId("sidebar-profile-trigger");
-    await expect(profileTrigger.getByTestId("profile-trigger-active-branch")).toHaveText(/\S/);
+    const activeBranchLabel = profileTrigger.getByTestId("profile-trigger-active-branch");
+    await expect(activeBranchLabel).toHaveText(/\S/);
+    const activeBranchText = (await activeBranchLabel.innerText()).trim();
 
     await collapseToggle.click();
     await expect(aside).toHaveClass(/lg:w-24/);
@@ -492,6 +494,7 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(profileMenu.getByRole("menuitem").first()).toBeFocused();
     await expect(profileMenu.getByTestId("profile-summary-user")).toHaveText(/\S/);
     await expect(profileMenu.getByTestId("profile-summary-role")).toHaveText(/\S/);
+    await expect(profileMenu.getByTestId("profile-summary-active-branch")).toContainText(activeBranchText);
     await expect(profileMenu.getByTestId("profile-mobile-language")).toHaveCount(0);
     await expect(profileMenu.getByRole("menuitem", { name: /Hesabım|My Account/ })).toBeVisible();
     await expect(profileMenu.getByRole("menuitem", { name: /Desk'i Aç|Open Desk/ })).toBeVisible();
