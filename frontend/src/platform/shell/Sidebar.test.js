@@ -120,6 +120,58 @@ describe("Sidebar localization", () => {
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
   });
 
+  it("removes the modern media query listener with the matching API", () => {
+    const mediaQuery = {
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    };
+    vi.stubGlobal("matchMedia", vi.fn(() => mediaQuery));
+
+    const wrapper = mount(Sidebar, {
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const listener = mediaQuery.addEventListener.mock.calls[0][1];
+
+    wrapper.unmount();
+
+    expect(mediaQuery.addEventListener).toHaveBeenCalledWith("change", listener);
+    expect(mediaQuery.removeEventListener).toHaveBeenCalledWith("change", listener);
+    expect(mediaQuery.addListener).not.toHaveBeenCalled();
+    expect(mediaQuery.removeListener).not.toHaveBeenCalled();
+  });
+
+  it("removes the legacy media query listener with the matching API", () => {
+    const mediaQuery = {
+      matches: true,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    vi.stubGlobal("matchMedia", vi.fn(() => mediaQuery));
+
+    const wrapper = mount(Sidebar, {
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const listener = mediaQuery.addListener.mock.calls[0][0];
+
+    wrapper.unmount();
+
+    expect(mediaQuery.addListener).toHaveBeenCalledWith(listener);
+    expect(mediaQuery.removeListener).toHaveBeenCalledWith(listener);
+    expect(mediaQuery.removeEventListener).not.toHaveBeenCalled();
+  });
+
   it("shows alert channel settings for system managers", () => {
     const authStore = useAuthStore();
     authStore.applyContext({

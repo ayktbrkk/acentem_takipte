@@ -163,6 +163,7 @@ const {
 const isDesktopViewport = shallowRef(false);
 const effectiveCollapsed = computed(() => isCollapsed.value && isDesktopViewport.value);
 let desktopMediaQuery = null;
+let desktopMediaQueryListenerMode = null;
 
 function updateDesktopViewport(event) {
   isDesktopViewport.value = Boolean(event?.matches ?? desktopMediaQuery?.matches);
@@ -174,20 +175,23 @@ onMounted(() => {
   desktopMediaQuery = window.matchMedia("(min-width: 1024px)");
   updateDesktopViewport();
   if (typeof desktopMediaQuery.addEventListener === "function") {
+    desktopMediaQueryListenerMode = "eventListener";
     desktopMediaQuery.addEventListener("change", updateDesktopViewport);
   } else if (typeof desktopMediaQuery.addListener === "function") {
+    desktopMediaQueryListenerMode = "listener";
     desktopMediaQuery.addListener(updateDesktopViewport);
   }
 });
 
 onBeforeUnmount(() => {
   if (!desktopMediaQuery) return;
-  if (typeof desktopMediaQuery.removeEventListener === "function") {
+  if (desktopMediaQueryListenerMode === "eventListener") {
     desktopMediaQuery.removeEventListener("change", updateDesktopViewport);
-  } else if (typeof desktopMediaQuery.removeListener === "function") {
+  } else if (desktopMediaQueryListenerMode === "listener") {
     desktopMediaQuery.removeListener(updateDesktopViewport);
   }
   desktopMediaQuery = null;
+  desktopMediaQueryListenerMode = null;
 });
 </script>
 
