@@ -60,6 +60,41 @@ describe("OfficeBranchSelect", () => {
     expect(wrapper.text()).toContain("Merkez");
   });
 
+  it("keeps the scope card bounded and exposes a clear locked state", () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      locale: "tr",
+      office_branches: [{ name: "HQ", office_branch_name: "AT Sigorta", is_head_office: 1, is_default: 1 }],
+      default_office_branch: "HQ",
+      can_access_all_office_branches: false,
+    });
+    useBranchStore().hydrateFromSession();
+
+    const wrapper = mount(OfficeBranchSelect);
+
+    expect(wrapper.classes()).toContain("max-w-full");
+    expect(wrapper.classes()).toContain("md:max-w-[300px]");
+    expect(wrapper.text()).toContain("Sabit kapsam");
+    expect(wrapper.get('[data-testid="branch-scope-trigger"]').attributes("disabled")).toBeDefined();
+  });
+
+  it("uses the English scope label and all-branches value", () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      locale: "en",
+      can_access_all_office_branches: true,
+    });
+    const branchStore = useBranchStore();
+    branchStore.hydrateFromSession();
+    branchStore.setActiveBranch("");
+
+    const wrapper = mount(OfficeBranchSelect);
+    const trigger = wrapper.get('[data-testid="branch-scope-trigger"]');
+
+    expect(trigger.attributes("aria-label")).toBe("Branch Scope");
+    expect(trigger.text()).toContain("All Branches");
+  });
+
   it("supports keyboard navigation and selection", async () => {
     const wrapper = mount(OfficeBranchSelect);
     const trigger = wrapper.get('[data-testid="branch-scope-trigger"]');
