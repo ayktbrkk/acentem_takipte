@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 
 import OfficeBranchSelect from "./OfficeBranchSelect.vue";
 import { useAuthStore } from "../../stores/auth";
 import { useBranchStore } from "../../stores/branch";
+import { setPreferredLocale } from "../../state/session";
 
 const routerReplace = vi.fn(async () => {});
 
@@ -16,11 +17,16 @@ vi.mock("vue-router", () => ({
 }));
 
 describe("OfficeBranchSelect", () => {
+  afterEach(() => {
+    setPreferredLocale("en");
+  });
+
   beforeEach(() => {
     routerReplace.mockReset();
     setActivePinia(createPinia());
 
     const authStore = useAuthStore();
+    setPreferredLocale("tr");
     authStore.applyContext({
       user: "manager@example.com",
       full_name: "AT Manager",
@@ -80,6 +86,7 @@ describe("OfficeBranchSelect", () => {
 
   it("uses the English scope label and all-branches value", () => {
     const authStore = useAuthStore();
+    setPreferredLocale("en");
     authStore.applyContext({
       locale: "en",
       can_access_all_office_branches: true,

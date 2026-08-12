@@ -6,6 +6,7 @@ import SidebarProfileMenu from "./SidebarProfileMenu.vue";
 import { SIDEBAR_TRANSLATIONS } from "../../platform/i18n/sidebar";
 import { useAuthStore } from "../../platform/state/authStore";
 import { useBranchStore } from "../../platform/state/branchStore";
+import { setPreferredLocale } from "../../platform/state/session";
 
 const resourceMock = vi.hoisted(() => {
   const localeResource = {
@@ -68,6 +69,7 @@ describe("Sidebar profile menu contract", () => {
   afterEach(() => {
     mountedWrappers.forEach((wrapper) => wrapper.unmount());
     mountedWrappers = [];
+    setPreferredLocale("en");
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -78,6 +80,7 @@ describe("Sidebar profile menu contract", () => {
     resourceMock.localeResource.submit.mockReset();
     resourceMock.localeResource.submit.mockImplementation(async ({ locale }) => ({ message: { locale } }));
     const authStore = useAuthStore();
+    setPreferredLocale("tr");
     authStore.applyContext({
       locale: "tr",
       user: "Aykut Yılmaz",
@@ -148,6 +151,7 @@ describe("Sidebar profile menu contract", () => {
     ["en", "Not provided"],
   ])("localizes a missing non-global branch in %s", async (locale, expectedFallback) => {
     const authStore = useAuthStore();
+    setPreferredLocale(locale);
     authStore.applyContext({
       locale,
       user: "Aykut Yılmaz",
