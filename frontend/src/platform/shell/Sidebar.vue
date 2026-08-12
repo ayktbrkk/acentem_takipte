@@ -8,7 +8,7 @@
     />
     <aside
       class="fixed inset-y-0 left-0 z-40 flex h-screen w-[220px] shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white transition-all duration-200 lg:static lg:z-0"
-      :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', isCollapsed ? 'lg:w-24' : 'lg:w-[220px]']"
+      :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', effectiveCollapsed ? 'lg:w-24' : 'lg:w-[220px]']"
     >
       <div class="border-b border-slate-100 px-4 py-4">
         <div class="mb-4 flex items-center justify-between lg:hidden">
@@ -18,25 +18,35 @@
           </ActionButton>
         </div>
 
-        <div class="flex items-start gap-2.5">
+        <div class="flex items-start gap-3">
           <div class="min-w-0 flex-1">
-            <p class="text-sm font-medium text-slate-900" :class="isCollapsed ? 'text-center' : ''">{{ t("brand") }}</p>
-            <template v-if="!isCollapsed">
-              <p class="mt-0.5 text-xs text-slate-400">{{ t("subtitle") }}</p>
+            <p v-if="!effectiveCollapsed" class="truncate text-sm font-medium text-slate-900" :title="t('brand')">
+              {{ t("brand") }}
+            </p>
+            <template v-if="!effectiveCollapsed">
+              <p class="mt-0.5 truncate text-xs text-slate-400">{{ t("subtitle") }}</p>
             </template>
             <template v-else>
-              <p class="mt-2 text-center text-xs font-semibold text-slate-700">{{ t("miniTitle") }}</p>
+              <p
+                data-testid="sidebar-brand-monogram"
+                class="mt-2 text-center text-xs font-semibold text-slate-700"
+                role="img"
+                :aria-label="t('brand')"
+                :title="t('brand')"
+              >
+                AT
+              </p>
             </template>
           </div>
 
           <button
             class="max-lg:hidden grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none lg:grid"
             type="button"
-            :aria-label="isCollapsed ? expandMenuLabel : collapseMenuLabel"
-            :title="isCollapsed ? expandMenuLabel : collapseMenuLabel"
+            :aria-label="effectiveCollapsed ? expandMenuLabel : collapseMenuLabel"
+            :title="effectiveCollapsed ? expandMenuLabel : collapseMenuLabel"
             @click="toggleSidebarCollapsedDesktop"
           >
-            <component :is="isCollapsed ? IconLucidePanelLeftOpen : IconLucidePanelLeftClose" class="h-4 w-4" />
+            <component :is="effectiveCollapsed ? IconLucidePanelLeftOpen : IconLucidePanelLeftClose" class="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -44,7 +54,7 @@
       <nav class="flex-1 overflow-y-auto pb-4">
         <div v-for="section in navSections" :key="section.title" class="mb-4">
           <p
-            v-if="!isCollapsed"
+            v-if="!effectiveCollapsed"
             class="px-4 pb-1 pt-4 text-[10px] font-semibold tracking-widest text-slate-400"
           >
             {{ upper(section.title) }}
@@ -57,7 +67,7 @@
               :href="item.to"
               :title="item.label"
               class="group mx-2 mb-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900"
-              :class="linkClass(item)"
+              :class="linkClass(item, effectiveCollapsed)"
               @click="$emit('navigate')"
             >
               <component
@@ -73,7 +83,7 @@
               >
                 {{ item.short }}
               </span>
-              <div v-if="!isCollapsed" class="min-w-0 flex-1">
+              <div v-if="!effectiveCollapsed" class="min-w-0 flex-1">
                 <p class="truncate font-medium" :class="item.indent ? 'text-xs text-slate-500' : ''">
                   {{ item.label }}
                 </p>
@@ -87,7 +97,7 @@
               :to="item.to"
               :title="item.label"
               class="group mx-2 mb-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900"
-              :class="linkClass(item)"
+              :class="linkClass(item, effectiveCollapsed)"
               active-class="bg-brand-50 text-brand-700 font-medium border-l-2 border-brand-600 !rounded-l-none pl-[10px]"
               @click="$emit('navigate')"
             >
@@ -104,7 +114,7 @@
               >
                 {{ item.short }}
               </span>
-              <div v-if="!isCollapsed" class="min-w-0 flex-1">
+              <div v-if="!effectiveCollapsed" class="min-w-0 flex-1">
                 <p class="truncate font-medium" :class="item.indent ? 'text-xs text-slate-500' : ''">
                   {{ item.label }}
                 </p>
@@ -115,33 +125,17 @@
       </nav>
 
       <footer class="mt-auto border-t border-slate-100 px-3 py-3">
-        <div class="flex items-center gap-2.5" :class="isCollapsed ? 'justify-center' : ''">
-          <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-medium text-white">
-            {{ userInitials }}
-          </div>
-          <div v-if="!isCollapsed" class="min-w-0">
-            <p class="truncate text-xs font-medium text-slate-900">{{ userDisplayName }}</p>
-            <p class="truncate text-[10px] text-slate-400">{{ branchLabel }}</p>
-          </div>
-        </div>
-        <div class="mt-3 flex items-center border-t border-slate-100 pt-3" :class="isCollapsed ? 'justify-center' : ''">
-          <button
-            class="max-lg:hidden grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
-            type="button"
-            :aria-label="isCollapsed ? expandMenuLabel : collapseMenuLabel"
-            :title="isCollapsed ? expandMenuLabel : collapseMenuLabel"
-            @click="toggleSidebarCollapsedDesktop"
-          >
-            <component :is="isCollapsed ? IconLucidePanelLeftOpen : IconLucidePanelLeftClose" class="h-4 w-4" />
-          </button>
-        </div>
+        <SidebarProfileMenu :collapsed="effectiveCollapsed" />
       </footer>
     </aside>
   </div>
 </template>
 
 <script setup>
+import { computed, onBeforeUnmount, onMounted, shallowRef } from "vue";
+
 import ActionButton from "../ui/shell/ActionButton.vue";
+import SidebarProfileMenu from "../../components/app-shell/SidebarProfileMenu.vue";
 import IconLucidePanelLeftClose from '~icons/lucide/panel-left-close';
 import IconLucidePanelLeftOpen from '~icons/lucide/panel-left-open';
 import { useSidebarNavigation } from "../composables/useSidebarNavigation";
@@ -161,12 +155,43 @@ const {
   isCollapsed,
   collapseMenuLabel,
   expandMenuLabel,
-  userDisplayName,
-  userInitials,
-  branchLabel,
   navSections,
   toggleSidebarCollapsedDesktop,
   linkClass,
 } = useSidebarNavigation();
+
+const isDesktopViewport = shallowRef(false);
+const effectiveCollapsed = computed(() => isCollapsed.value && isDesktopViewport.value);
+let desktopMediaQuery = null;
+let desktopMediaQueryListenerMode = null;
+
+function updateDesktopViewport(event) {
+  isDesktopViewport.value = Boolean(event?.matches ?? desktopMediaQuery?.matches);
+}
+
+onMounted(() => {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+
+  desktopMediaQuery = window.matchMedia("(min-width: 1024px)");
+  updateDesktopViewport();
+  if (typeof desktopMediaQuery.addEventListener === "function") {
+    desktopMediaQueryListenerMode = "eventListener";
+    desktopMediaQuery.addEventListener("change", updateDesktopViewport);
+  } else if (typeof desktopMediaQuery.addListener === "function") {
+    desktopMediaQueryListenerMode = "listener";
+    desktopMediaQuery.addListener(updateDesktopViewport);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (!desktopMediaQuery) return;
+  if (desktopMediaQueryListenerMode === "eventListener") {
+    desktopMediaQuery.removeEventListener("change", updateDesktopViewport);
+  } else if (desktopMediaQueryListenerMode === "listener") {
+    desktopMediaQuery.removeListener(updateDesktopViewport);
+  }
+  desktopMediaQuery = null;
+  desktopMediaQueryListenerMode = null;
+});
 </script>
 

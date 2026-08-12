@@ -32,6 +32,16 @@ async function callGetMethod(page, method) {
 
 function readSidebarSnapshot(page) {
   return page.evaluate(() => {
+    function sanitizeDiagnosticRoute(pathname) {
+      const safeRouteCategories = new Set(["at", "desk", "login"]);
+      const category = String(pathname || "")
+        .replace(/^\/+/, "")
+        .split(/[/?#]/, 1)[0]
+        .toLowerCase();
+      if (safeRouteCategories.has(category)) return `/${category}`;
+      return "/at";
+    }
+
     const labelPattern = /Menüyü daralt|Menüyü genişlet|Collapse menu|Expand menu/;
     const aside = document.querySelector("aside");
     const asideRect = aside ? aside.getBoundingClientRect() : null;
@@ -88,7 +98,7 @@ function readSidebarSnapshot(page) {
       storeCollapsed = null;
     }
     return {
-      route: window.location.pathname + window.location.search,
+      route: sanitizeDiagnosticRoute(window.location.pathname),
       viewport: { width: window.innerWidth, height: window.innerHeight },
       sidebarClass: aside ? aside.className : null,
       collapsed: aside ? /lg:w-24/.test(aside.className) : null,
@@ -123,22 +133,107 @@ async function captureSidebarFailureTimeline(page) {
   return timeline;
 }
 
+function classifyDiagnosticMessage(message) {
+  const value = String(message || "").toLowerCase();
+  if (/err_connection|err_name_not_resolved|err_ssl|err_internet_disconnected/.test(value)) {
+    return "network-connectivity";
+  }
+  if (/timeout|timed out/.test(value)) return "timeout";
+  if (/failed to fetch|networkerror|network error/.test(value)) return "network-fetch";
+  if (/typeerror/.test(value)) return "type-error";
+  if (/syntaxerror/.test(value)) return "syntax-error";
+  if (/referenceerror/.test(value)) return "reference-error";
+  return "runtime-error";
+}
+
+function sanitizeDiagnosticPath(value) {
+  const match = String(value || "").match(/\/(?:api|at|assets|files|favicon\.ico)(?:\/[^\s?#()]*)?/i);
+  if (!match) return null;
+
+  const safeSegments = new Set(["api", "at", "assets", "files", "favicon.ico"]);
+  return match[0]
+    .split(/[?#]/, 1)[0]
+    .split("/")
+    .map((segment) => (safeSegments.has(segment.toLowerCase()) ? segment : segment ? "[redacted]" : ""))
+    .join("/");
+}
+
+function sanitizeConsoleErrors(errors) {
+  return errors.map((message) => ({ category: "console-error", messageClass: classifyDiagnosticMessage(message) }));
+}
+
+function sanitizePageErrors(errors) {
+  return errors.map((message) => ({ category: "page-error", messageClass: classifyDiagnosticMessage(message) }));
+}
+
+function sanitizeFailedRequests(requests) {
+  return requests.map((request) => {
+    const value = String(request || "");
+    const resourceType = value.split(/\s+/, 1)[0] || "unknown";
+    const status = /\b(?:401|403|404|429|5\d\d)\b/.test(value) ? "http-error" : "network-error";
+    return {
+      category: "request-failure",
+      resourceType,
+      status,
+      networkError: classifyDiagnosticMessage(value),
+      pathname: sanitizeDiagnosticPath(value),
+    };
+  });
+}
+
 async function attachSidebarFailureDiagnostics(page, testInfo, options) {
-  const { beforeClick, immediateAfterClick, consoleErrorCount, requestFailureCount, assertionError } = options;
+  const {
+    beforeClick,
+    immediateAfterClick,
+    baseline,
+    consoleErrors,
+    pageErrors,
+    failedRequests,
+    assertionError,
+  } = options;
+  const timeline = await captureSidebarFailureTimeline(page);
+  const newConsoleErrors = consoleErrors.slice(baseline.consoleErrorCount);
+  const newPageErrors = pageErrors.slice(baseline.pageErrorCount);
+  const newFailedRequests = failedRequests.slice(baseline.requestFailureCount);
+  const assertionType = /toHaveClass/.test(String(assertionError || ""))
+    ? "aside-class"
+    : "expand-button-visibility";
+  const observedState = {
+    collapsed: Boolean(immediateAfterClick.collapsed),
+    expandButtonVisible: immediateAfterClick.buttons.some(
+      (button) => button.visible && /Menüyü genişlet|Expand menu/.test(`${button.ariaLabel} ${button.title}`),
+    ),
+  };
+  const expected = assertionType === "aside-class"
+    ? { sidebarClass: "lg:w-24" }
+    : { expandButtonVisible: true };
+  const expectedLabel = assertionType === "aside-class" ? "lg:w-24" : "Menüyü genişlet";
+  const found = assertionType === "aside-class" ? observedState.collapsed : observedState.expandButtonVisible;
   const diagnostics = {
     test: "sidebar-collapse-expand",
     route: beforeClick.route,
     viewport: beforeClick.viewport,
     beforeClick,
     immediateAfterClick,
-    timeline: await captureSidebarFailureTimeline(page),
+    timeline,
     failure: {
-      assertion: /toHaveClass/.test(String(assertionError || "")) ? "aside-collapsed-class" : "expand-button-visible",
-      expectedLabel: "Menüyü genişlet",
-      found: false,
-      assertionError: String(assertionError || "").slice(0, 300),
-      consoleErrorCount,
-      requestFailureCount,
+      assertion: assertionType,
+      assertionEvidence: {
+        type: assertionType,
+        locator: "aside and localized desktop expand button",
+        expected,
+        observed: observedState,
+        errorCategory: classifyDiagnosticMessage(assertionError),
+      },
+      expectedLabel,
+      found,
+      assertionClass: classifyDiagnosticMessage(assertionError),
+      consoleErrorCount: newConsoleErrors.length,
+      consoleErrors: sanitizeConsoleErrors(newConsoleErrors),
+      pageErrorCount: newPageErrors.length,
+      pageErrors: sanitizePageErrors(newPageErrors),
+      requestFailureCount: newFailedRequests.length,
+      failedRequests: sanitizeFailedRequests(newFailedRequests),
     },
   };
   const json = JSON.stringify(diagnostics, null, 2);
@@ -149,7 +244,77 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
     body: json,
     contentType: "application/json",
   });
-  await page.screenshot({ path: testInfo.outputPath("sidebar-collapse-failure.png") });
+
+  // Keep the layout evidence while removing authenticated user, branch, and
+  // business text before the image is written to the test artifact.
+  const redactedSidebar = await page.evaluate(() => {
+    const sidebar = document.querySelector("aside");
+    if (!sidebar) return null;
+
+    const clone = sidebar.cloneNode(true);
+    clone.id = "sidebar-collapse-diagnostics-redacted";
+    const safeGeometryAttributes = new Set([
+      "class",
+      "d",
+      "viewBox",
+      "width",
+      "height",
+      "fill",
+      "fill-rule",
+      "stroke",
+      "stroke-linecap",
+      "stroke-linejoin",
+      "stroke-width",
+      "points",
+      "cx",
+      "cy",
+      "r",
+      "x",
+      "x1",
+      "x2",
+      "y",
+      "y1",
+      "y2",
+    ]);
+    const scrubAttributes = (element) => {
+      for (const attribute of element.getAttributeNames()) {
+        if (!safeGeometryAttributes.has(attribute)) element.removeAttribute(attribute);
+      }
+    };
+    scrubAttributes(clone);
+    for (const element of clone.querySelectorAll("*")) scrubAttributes(element);
+    clone.id = "sidebar-collapse-diagnostics-redacted";
+    clone.style.position = "fixed";
+    clone.style.left = "0";
+    clone.style.top = "0";
+    clone.style.zIndex = "2147483647";
+    clone.style.height = `${Math.min(window.innerHeight, sidebar.getBoundingClientRect().height)}px`;
+    clone.style.maxHeight = `${window.innerHeight}px`;
+    clone.style.pointerEvents = "none";
+
+    const walker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    for (const node of textNodes) {
+      if (node.textContent?.trim()) node.textContent = "REDACTED";
+    }
+    const redactionStyle = document.createElement("style");
+    redactionStyle.textContent =
+      "*, *::before, *::after { background-image: none !important; content: none !important; }";
+    clone.prepend(redactionStyle);
+
+    document.body.appendChild(clone);
+    return clone.id;
+  });
+  if (redactedSidebar) {
+    try {
+      await page.locator(`#${redactedSidebar}`).screenshot({
+        path: testInfo.outputPath("sidebar-collapse-failure.png"),
+      });
+    } finally {
+      await page.evaluate((id) => document.getElementById(id)?.remove(), redactedSidebar);
+    }
+  }
 }
 
 test.describe("Acentem Takipte smoke", () => {
@@ -256,6 +421,11 @@ test.describe("Acentem Takipte smoke", () => {
     await page.goto("/at/", { waitUntil: "domcontentloaded" });
     await expect(page.locator('button[aria-label="Menüyü daralt"]').first()).toBeVisible();
     const beforeClick = await captureSidebarLabel(page, "before-click");
+    const diagnosticsBaseline = {
+      consoleErrorCount: consoleErrors.length,
+      pageErrorCount: pageErrors.length,
+      requestFailureCount: failedRequests.length,
+    };
     await page.locator('button[aria-label="Menüyü daralt"]').first().click();
     const immediateAfterClick = await captureSidebarLabel(page, "immediate-after-click");
     try {
@@ -265,8 +435,10 @@ test.describe("Acentem Takipte smoke", () => {
       await attachSidebarFailureDiagnostics(page, testInfo, {
         beforeClick,
         immediateAfterClick,
-        consoleErrorCount: consoleErrors.length,
-        requestFailureCount: failedRequests.length,
+        baseline: diagnosticsBaseline,
+        consoleErrors,
+        pageErrors,
+        failedRequests,
         assertionError: error?.message || String(error),
       });
       throw error;
@@ -287,6 +459,223 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(aside).toHaveClass(/translate-x-0/);
     await page.goto("/at/payments", { waitUntil: "domcontentloaded" });
     await expect(aside).toHaveClass(/-translate-x-full/);
+  });
+
+  test("authenticated shell controls: profile, scope, locale, and responsive drawer", async ({ page }) => {
+    await ensureAuthenticated(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/at/", { waitUntil: "domcontentloaded" });
+
+    const aside = page.locator("aside").first();
+    await expect(aside.getByText("Acentem Takipte", { exact: true })).toBeVisible();
+
+    const collapseToggle = aside.locator(
+      'button[aria-label="Menüyü daralt"], button[aria-label="Collapse menu"]',
+    );
+    await expect(collapseToggle).toHaveCount(1);
+    await expect(aside.locator("footer button[aria-label*='Menü'], footer button[aria-label*='menu']")).toHaveCount(0);
+
+    await collapseToggle.click();
+    await expect(aside).toHaveClass(/lg:w-24/);
+    await expect(aside.locator('[data-testid="sidebar-brand-monogram"]')).toHaveText("AT");
+    const iconLinks = aside.locator("nav a");
+    await expect(iconLinks).not.toHaveCount(0);
+    expect(await iconLinks.evaluateAll((links) => links.every((link) => Boolean(link.getAttribute("title"))))).toBe(true);
+
+    const profileTrigger = page.getByTestId("sidebar-profile-trigger");
+    await expect(profileTrigger).toHaveAttribute("aria-haspopup", "menu");
+    await expect(profileTrigger).toHaveAttribute("aria-expanded", "false");
+    await profileTrigger.click();
+    const profileMenu = page.getByRole("menu");
+    await expect(profileMenu).toBeVisible();
+    await expect(profileTrigger).toHaveAttribute("aria-expanded", "true");
+    await expect(page.locator('[role="menuitem"]').first()).toBeFocused();
+    const profileSummary = profileMenu.locator("p");
+    await expect(profileSummary).toHaveCount(3);
+    expect((await profileSummary.allTextContents()).every((text) => text.trim().length > 0)).toBe(true);
+    await expect(profileMenu.getByRole("menuitem", { name: /Türkçe|English/ })).toHaveCount(2);
+    await expect(profileMenu.getByRole("menuitem", { name: /Hesabım|My Account/ })).toBeVisible();
+    await expect(profileMenu.getByRole("menuitem", { name: /Desk'i Aç|Open Desk/ })).toBeVisible();
+    await expect(profileMenu.getByRole("menuitem", { name: /Çıkış Yap|Logout/ })).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(profileMenu).toBeHidden();
+    await expect(profileTrigger).toHaveAttribute("aria-expanded", "false");
+    await expect(profileTrigger).toBeFocused();
+    await profileTrigger.click();
+    await expect(profileMenu).toBeVisible();
+    await page.locator("main").click({ position: { x: 12, y: 12 } });
+    await expect(profileMenu).toBeHidden();
+    await expect(profileTrigger).toHaveAttribute("aria-expanded", "false");
+
+    const profileDestinations = [
+      { path: "/me", label: /Hesabım|My Account/ },
+      { path: "/desk", label: /Desk'i Aç|Open Desk/ },
+    ];
+    // These are shell-action checks only: the destinations are intercepted so
+    // this smoke does not claim to validate the separate /me or /desk pages.
+    for (const destination of profileDestinations) {
+      await profileTrigger.click();
+      await expect(profileMenu).toBeVisible();
+      await page.route(`**${destination.path}`, (route) =>
+        route.fulfill({ status: 200, contentType: "text/html", body: "shell destination" }),
+      );
+      await profileMenu.getByRole("menuitem", { name: destination.label }).click();
+      await expect(page).toHaveURL(new RegExp(`${destination.path.replace("/", "\\/")}$`));
+      await page.goto("/at/", { waitUntil: "domcontentloaded" });
+      await page.unroute(`**${destination.path}`);
+      await expect(aside).toBeVisible();
+    }
+
+    const routeBeforeLocaleChange = page.url();
+    await profileTrigger.click();
+    await profileMenu.getByRole("menuitem", { name: "English", exact: true }).click();
+    await expect(page).toHaveURL(routeBeforeLocaleChange);
+    await profileTrigger.click();
+    await expect(page.getByRole("menu")).toBeVisible();
+
+    const scopeTrigger = page.getByTestId("branch-scope-trigger");
+    await expect(scopeTrigger).toBeVisible();
+    if (await scopeTrigger.isDisabled()) {
+      await expect(scopeTrigger).not.toHaveAttribute("aria-haspopup");
+      await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+      await expect(scopeTrigger).toBeDisabled();
+      await expect(page.getByTestId("branch-scope-lock-status")).toBeVisible();
+    } else {
+      await expect(scopeTrigger).toHaveAttribute("aria-haspopup", "listbox");
+      await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+      await expect(scopeTrigger).not.toHaveAttribute("aria-controls");
+      await scopeTrigger.click();
+      const listbox = page.getByRole("listbox");
+      await expect(listbox).toBeVisible();
+      await expect(scopeTrigger).toHaveAttribute("aria-expanded", "true");
+      const listboxId = await listbox.getAttribute("id");
+      expect(listboxId).toBeTruthy();
+      await expect(scopeTrigger).toHaveAttribute("aria-controls", listboxId);
+      await expect(listbox).toHaveAttribute("aria-label", /Scope|Kapsam/);
+      await expect(page.getByTestId("branch-search-input")).toBeVisible();
+      const branchOptions = page.locator('[role="option"]');
+      const branchOptionCount = await branchOptions.count();
+      if (branchOptionCount > 0) {
+        const selectedBefore = page.locator('[role="option"][aria-selected="true"]');
+        await expect(selectedBefore).toHaveCount(1);
+        const selectedValueBefore = await selectedBefore.getAttribute("data-testid");
+        const selectedLabelBefore = await scopeTrigger.locator("span[title]").last().getAttribute("title");
+        const alternatives = page.locator('[role="option"][aria-selected="false"]');
+        const alternativeCount = await alternatives.count();
+        const allBranchesOption = page.getByTestId("branch-option-all");
+        if (await allBranchesOption.count()) {
+          await expect(allBranchesOption).toContainText(/Tüm Şubeler|All Branches/);
+        }
+        if (alternativeCount > 0) {
+          await alternatives.first().click();
+          await expect(listbox).toBeHidden();
+          await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+          await scopeTrigger.click();
+          await expect(listbox).toBeVisible();
+          const selectedAfter = page.locator('[role="option"][aria-selected="true"]');
+          await expect(selectedAfter).toHaveCount(1);
+          expect(await selectedAfter.getAttribute("data-testid")).not.toBe(selectedValueBefore);
+          expect(await scopeTrigger.locator("span[title]").last().getAttribute("title")).not.toBe(selectedLabelBefore);
+        } else {
+          expect(alternativeCount).toBe(0);
+        }
+        const activeDescendant = await scopeTrigger.getAttribute("aria-activedescendant");
+        if (await branchOptions.count()) {
+          expect(activeDescendant).toBeTruthy();
+          await expect(page.locator(`#${activeDescendant}`)).toHaveAttribute("role", "option");
+        } else {
+          expect(activeDescendant).toBeNull();
+        }
+        await page.keyboard.press("Escape");
+        await expect(listbox).toBeHidden();
+        await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+        await expect(scopeTrigger).toBeFocused();
+      } else {
+        expect(await scopeTrigger.getAttribute("aria-activedescendant")).toBeNull();
+        await page.keyboard.press("Escape");
+        await expect(listbox).toBeHidden();
+        await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+        await expect(scopeTrigger).toBeFocused();
+      }
+    }
+
+    await page.setViewportSize({ width: 768, height: 900 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(aside).toHaveClass(/-translate-x-full/);
+    await expect(page.getByRole("button", { name: /Menu|Menü/i }).first()).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
+    await page.getByRole("button", { name: /Menu|Menü/i }).first().click();
+    await expect(aside).toHaveClass(/translate-x-0/);
+    await expect(aside.getByText("Acentem Takipte", { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(aside).toHaveClass(/-translate-x-full/);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+
+    const menuButton = page.getByRole("button", { name: /Menu|Menü/i }).first();
+    await expect(menuButton).toBeVisible();
+    await menuButton.click();
+    await expect(aside).toHaveClass(/translate-x-0/);
+    const desktopSidebarToggle = aside.locator(
+      'button[aria-label="Menüyü daralt"], button[aria-label="Collapse menu"], button[aria-label="Menüyü genişlet"], button[aria-label="Expand menu"]',
+    );
+    await expect(desktopSidebarToggle).toHaveCount(1);
+    await expect(desktopSidebarToggle).toBeHidden();
+    await expect(aside.getByText("Acentem Takipte", { exact: true })).toBeVisible();
+    await expect(aside.locator('[data-testid="sidebar-brand-monogram"]')).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    const closeDrawerButton = aside.locator('button[title="Kapat"], button[title="Close"]');
+    await expect(closeDrawerButton).toHaveCount(1);
+    await expect(closeDrawerButton).toHaveAttribute("title", /Kapat|Close/);
+    await expect(closeDrawerButton).toHaveAccessibleName("X");
+    await closeDrawerButton.focus();
+    await expect(closeDrawerButton).toBeFocused();
+
+    await profileTrigger.click();
+    await expect(profileMenu).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    await page.keyboard.press("Escape");
+    await expect(profileMenu).toBeHidden();
+    await expect(profileTrigger).toBeFocused();
+
+    if (!await scopeTrigger.isDisabled()) {
+      await expect(scopeTrigger).toHaveAttribute("aria-haspopup", "listbox");
+      await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+      await expect(scopeTrigger).not.toHaveAttribute("aria-controls");
+      await scopeTrigger.click();
+      const mobileListbox = page.getByRole("listbox");
+      await expect(mobileListbox).toBeVisible();
+      await expect(scopeTrigger).toHaveAttribute("aria-expanded", "true");
+      const mobileListboxId = await mobileListbox.getAttribute("id");
+      expect(mobileListboxId).toBeTruthy();
+      await expect(scopeTrigger).toHaveAttribute("aria-controls", mobileListboxId);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+      await page.keyboard.press("Escape");
+      await expect(mobileListbox).toBeHidden();
+      await expect(scopeTrigger).toHaveAttribute("aria-expanded", "false");
+      await expect(scopeTrigger).toBeFocused();
+    }
+
+    await closeDrawerButton.click();
+    await expect(aside).toHaveClass(/-translate-x-full/);
+
+    // The existing platform smoke performs the real logout POST and anonymous
+    // auth-boundary check. Mock this UI request here to verify the menu action
+    // and redirect without invalidating the authenticated fixture for later tests.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await profileTrigger.click();
+    let logoutRequest = null;
+    await page.route("**/api/method/logout", async (route) => {
+      logoutRequest = route.request();
+      await route.fulfill({ status: 200, contentType: "application/json", body: '{"message":"ok"}' });
+    });
+    await profileMenu.getByRole("menuitem", { name: /Logout|Çıkış Yap/ }).click();
+    await expect(page).toHaveURL(/\/login\?redirect-to=\/at$/);
+    expect(logoutRequest?.method()).toBe("POST");
   });
 
   test("anonim smoke: /at route ve session endpoint auth duvari", async ({ page, context }) => {

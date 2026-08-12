@@ -1,5 +1,5 @@
 <template>
-  <div ref="pickerRef" class="relative w-full min-w-0 md:w-[300px]">
+  <div ref="pickerRef" class="relative w-full min-w-0 max-w-full md:w-[300px] md:max-w-[300px]">
     <div
       class="rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 transition"
       :class="isLocked
@@ -34,6 +34,7 @@
             </span>
             <span
               v-if="isLocked"
+              data-testid="branch-scope-lock-status"
               class="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold text-slate-500"
             >
               {{ t("singleBranchLocked") }}
@@ -45,14 +46,14 @@
               aria-hidden="true"
               :class="isLocked ? 'opacity-40' : ''"
             ></span>
-            <span class="block truncate text-[13px] font-semibold text-slate-900" :title="selectedLabel">
+            <span class="block truncate text-[13px] font-semibold text-slate-900" :title="selectedLabel || t('scope')">
               {{ selectedLabel }}
             </span>
           </span>
         </span>
 
         <span class="shrink-0 text-slate-400" :aria-hidden="true">
-          <component :is="isOpen ? IconChevronUp : IconChevronDown" class="h-4 w-4" />
+          <component :is="isOpen ? IconChevronUp : IconChevronDown" class="h-3.5 w-3.5" />
         </span>
       </button>
     </div>
@@ -72,7 +73,7 @@
         <p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
           {{ t("activeScope") }}
         </p>
-        <p class="mt-0.5 truncate text-[13px] font-semibold text-slate-900" :title="selectedLabel">
+        <p class="mt-0.5 truncate text-[13px] font-semibold text-slate-900" :title="selectedLabel || t('scope')">
           {{ selectedLabel }}
         </p>
         <p
