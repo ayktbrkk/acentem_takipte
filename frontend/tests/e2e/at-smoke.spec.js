@@ -447,6 +447,11 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(menuButton).toBeVisible();
     await menuButton.click();
     await expect(aside).toHaveClass(/translate-x-0/);
+    const desktopSidebarToggle = aside.locator(
+      'button[aria-label="Menüyü daralt"], button[aria-label="Collapse menu"], button[aria-label="Menüyü genişlet"], button[aria-label="Expand menu"]',
+    );
+    await expect(desktopSidebarToggle).toHaveCount(1);
+    await expect(desktopSidebarToggle).toBeHidden();
     await expect(aside.getByText("Acentem Takipte", { exact: true })).toBeVisible();
     await expect(aside.locator('[data-testid="sidebar-brand-monogram"]')).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
