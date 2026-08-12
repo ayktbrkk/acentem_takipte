@@ -1,3 +1,12 @@
+export const SIDEBAR_ROLE_PRIORITY = [
+  { role: "AT System Manager", labelKey: "roleATSystemManager" },
+  { role: "AT Manager", labelKey: "roleATManager" },
+  { role: "AT Accountant", labelKey: "roleATAccountant" },
+  { role: "AT Agent", labelKey: "roleATAgent" },
+  { role: "System Manager", labelKey: "roleSystemManager" },
+  { role: "Administrator", labelKey: "roleAdministrator" },
+];
+
 export const SIDEBAR_TRANSLATIONS = {
   tr: {
     menu: "Menü",

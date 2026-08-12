@@ -24,7 +24,7 @@
             type="button"
             aria-haspopup="menu"
             :aria-expanded="languageMenuOpen ? 'true' : 'false'"
-            @click="toggleLanguageMenu"
+             @click="toggleLanguageMenu"
           >
             <IconLucideGlobe2 class="h-4 w-4 text-slate-500" />
             <span>{{ currentLanguageLabel }}</span>
@@ -103,21 +103,58 @@ const localeItems = computed(() => [
 const currentLanguageLabel = computed(() => localeItems.value.find((item) => item.locale === authStore.locale)?.label || t("english"));
 
 function toggleLanguageMenu() {
-  languageMenuOpen.value = !languageMenuOpen.value;
+  if (languageMenuOpen.value) {
+    closeLanguageMenu(true);
+    return;
+  }
+  languageMenuOpen.value = true;
+  nextTick(focusFirstLanguageItem);
 }
 
 async function setLocale(locale) {
   await persistLocale(locale);
+  closeLanguageMenu(true);
+}
+
+function focusTrigger() {
+  languageMenuRef.value?.querySelector('[data-testid="topbar-language-trigger"]')?.focus();
+}
+
+function closeLanguageMenu(restoreFocus = false) {
   languageMenuOpen.value = false;
-  await nextTick();
+  if (restoreFocus) focusTrigger();
+}
+
+function focusFirstLanguageItem() {
+  languageMenuRef.value?.querySelector('[role="menuitem"]')?.focus();
 }
 
 function handleDocumentClick(event) {
-  if (languageMenuOpen.value && !languageMenuRef.value?.contains(event.target)) languageMenuOpen.value = false;
+  if (languageMenuOpen.value && !languageMenuRef.value?.contains(event.target)) closeLanguageMenu();
 }
 
 function handleKeydown(event) {
-  if (event.key === "Escape" && languageMenuOpen.value) languageMenuOpen.value = false;
+  if (!languageMenuOpen.value) return;
+  if (event.key === "Escape") {
+    closeLanguageMenu(true);
+    return;
+  }
+
+  const items = [...languageMenuRef.value.querySelectorAll('[role="menuitem"]')];
+  const current = items.indexOf(document.activeElement);
+  if (!items.length || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+  event.preventDefault();
+  if (event.key === "Home") {
+    items[0].focus();
+    return;
+  }
+  if (event.key === "End") {
+    items[items.length - 1].focus();
+    return;
+  }
+  const direction = event.key === "ArrowDown" ? 1 : -1;
+  const next = current < 0 ? (direction === 1 ? 0 : items.length - 1) : (current + direction + items.length) % items.length;
+  items[next].focus();
 }
 
 onMounted(() => {

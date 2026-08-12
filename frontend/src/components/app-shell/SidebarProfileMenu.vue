@@ -94,6 +94,7 @@ import { translateText } from "@/platform/i18n";
 import { useLocalePreference } from "../../platform/composables/useLocalePreference";
 import { useAuthStore } from "../../platform/state/authStore";
 import { useBranchStore } from "../../platform/state/branchStore";
+import { SIDEBAR_ROLE_PRIORITY } from "../../platform/i18n/sidebar";
 
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
@@ -124,17 +125,9 @@ const userInitials = computed(() => {
   return authStore.locale === "tr" ? raw.toLocaleUpperCase("tr-TR") : raw.toUpperCase();
 });
 const roleLabel = computed(() => {
-  const roleLabels = [
-    ["AT System Manager", "roleATSystemManager"],
-    ["AT Manager", "roleATManager"],
-    ["AT Accountant", "roleATAccountant"],
-    ["AT Agent", "roleATAgent"],
-    ["System Manager", "roleSystemManager"],
-    ["Administrator", "roleAdministrator"],
-  ];
   const normalizedRoles = new Set((authStore.roles || []).map((role) => String(role).trim().toLowerCase()));
-  const match = roleLabels.find(([role]) => normalizedRoles.has(role.toLowerCase()));
-  return match ? t(match[1]) : t("role");
+  const match = SIDEBAR_ROLE_PRIORITY.find(({ role }) => normalizedRoles.has(role.toLowerCase()));
+  return match ? t(match.labelKey) : t("role");
 });
 const branchLabel = computed(() => {
   if (branchStore.canAccessAll && !branchStore.requestBranch) return t("allBranches");

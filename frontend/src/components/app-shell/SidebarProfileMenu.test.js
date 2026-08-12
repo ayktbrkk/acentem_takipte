@@ -139,6 +139,8 @@ describe("Sidebar profile menu contract", () => {
 
   it.each([
     [["AT Agent", "AT Manager"], "AT Yönetici", "AT Manager"],
+    [["System Manager", "AT Manager"], "AT Yönetici", "AT Manager"],
+    [["Administrator", "AT Manager"], "AT Yönetici", "AT Manager"],
     [["Administrator"], "Yönetici", "Administrator"],
     [["Unknown Role"], "Rol", "Role"],
   ])("uses the highest-priority localized business role", async (roles, trExpected, enExpected) => {
