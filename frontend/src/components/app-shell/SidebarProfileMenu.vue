@@ -32,8 +32,12 @@
     >
       <div class="border-b border-slate-100 px-4 pb-3 pt-2">
         <p class="truncate text-sm font-semibold text-slate-900" :title="displayUser">{{ displayUser }}</p>
-        <p class="truncate text-xs text-slate-500" :title="roleLabel">{{ roleLabel }}</p>
-        <p class="truncate text-xs text-slate-500" :title="branchLabel">{{ branchLabel }}</p>
+        <p class="truncate text-xs text-slate-500" :title="`${t('role')}: ${roleLabel}`">
+          <span class="font-medium text-slate-400">{{ t("role") }}:</span> {{ roleLabel }}
+        </p>
+        <p class="truncate text-xs text-slate-500" :title="`${t('activeBranch')}: ${branchLabel}`">
+          <span class="font-medium text-slate-400">{{ t("activeBranch") }}:</span> {{ branchLabel }}
+        </p>
       </div>
 
       <div v-if="logoutError" class="border-b border-slate-100 px-4 py-3" role="alert" aria-live="polite">

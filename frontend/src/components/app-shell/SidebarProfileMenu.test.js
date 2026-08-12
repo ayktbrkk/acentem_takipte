@@ -115,12 +115,26 @@ describe("Sidebar profile menu contract", () => {
 
     expect(wrapper.find('[role="menu"]').exists()).toBe(true);
     expect(wrapper.text()).toContain("Aykut Yılmaz");
+    expect(wrapper.text()).toContain("Rol");
     expect(wrapper.text()).toContain("AT Yönetici");
+    expect(wrapper.text()).toContain("Aktif şube");
     expect(wrapper.text()).toContain("AT Sigorta");
     expect(wrapper.find('[data-testid="profile-mobile-language"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="profile-mobile-language"]').text()).toContain("Türkçe");
     expect(wrapper.find('[data-testid="profile-mobile-language"]').text()).toContain("English");
     expect(wrapper.text()).toContain("Çıkış Yap");
+  });
+
+  it("renders localized role and active-branch labels in English", async () => {
+    const authStore = useAuthStore();
+    authStore.setLocale("en");
+    const wrapper = mountSidebar();
+    await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
+
+    expect(wrapper.text()).toContain("Role");
+    expect(wrapper.text()).toContain("AT Manager");
+    expect(wrapper.text()).toContain("Active branch");
+    expect(wrapper.text()).toContain("AT Sigorta");
   });
 
   it.each([

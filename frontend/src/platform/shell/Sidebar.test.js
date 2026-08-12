@@ -83,6 +83,7 @@ describe("Sidebar localization", () => {
     expect(wrapper.text()).toContain("Acentem Takipte");
     expect(wrapper.find('p[title="Acentem Takipte"]').exists()).toBe(true);
     expect(wrapper.text()).not.toContain("Fırsat, poliçe, hasar ve tahsilat operasyonları");
+    expect(wrapper.findAll("p").filter((node) => node.classes().includes("mt-0.5"))).toHaveLength(0);
     expect(wrapper.find("footer").findAll('button[aria-label="Menüyü daralt"]')).toHaveLength(0);
   });
 

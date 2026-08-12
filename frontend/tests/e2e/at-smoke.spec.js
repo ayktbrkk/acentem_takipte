@@ -681,6 +681,26 @@ test.describe("Acentem Takipte smoke", () => {
     expect(logoutRequest?.method()).toBe("POST");
   });
 
+  test("mobile profile menu exposes the segmented language control", async ({ page }) => {
+    await ensureAuthenticated(page);
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/at/", { waitUntil: "domcontentloaded" });
+
+    const aside = page.locator("aside").first();
+    await page.getByRole("button", { name: /Menü|Menu/i }).first().click();
+    await expect(aside).toHaveClass(/translate-x-0/);
+
+    const profileTrigger = page.getByTestId("sidebar-profile-trigger");
+    await profileTrigger.click();
+    const profileMenu = page.getByRole("menu");
+    const mobileLanguage = page.getByTestId("profile-mobile-language");
+
+    await expect(profileMenu).toBeVisible();
+    await expect(mobileLanguage).toBeVisible();
+    await expect(mobileLanguage.getByRole("menuitem", { name: "Türkçe", exact: true })).toBeVisible();
+    await expect(mobileLanguage.getByRole("menuitem", { name: "English", exact: true })).toBeVisible();
+  });
+
   test("anonim smoke: /at route ve session endpoint auth duvari", async ({ page, context }) => {
     await context.clearCookies();
 

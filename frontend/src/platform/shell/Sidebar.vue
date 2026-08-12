@@ -23,9 +23,6 @@
             <p v-if="!effectiveCollapsed" class="truncate text-sm font-medium text-slate-900" :title="t('brand')">
               {{ t("brand") }}
             </p>
-            <template v-if="!effectiveCollapsed">
-              <p class="mt-0.5 truncate text-xs text-slate-400">{{ t("subtitle") }}</p>
-            </template>
             <template v-else>
               <p
                 data-testid="sidebar-brand-monogram"
