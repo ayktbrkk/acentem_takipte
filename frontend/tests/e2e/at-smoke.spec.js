@@ -473,6 +473,11 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(collapseToggle).toHaveCount(1);
     await expect(aside.locator('footer [data-testid="sidebar-desktop-collapse-toggle"]')).toHaveCount(0);
 
+    const profileTrigger = page.getByTestId("sidebar-profile-trigger");
+    const activeBranchLabel = profileTrigger.getByTestId("profile-trigger-active-branch");
+    await expect(activeBranchLabel).toHaveText(/\S/);
+    const activeBranchText = (await activeBranchLabel.innerText()).trim();
+
     await collapseToggle.click();
     await expect(aside).toHaveClass(/lg:w-24/);
     await expect(aside.locator('[data-testid="sidebar-brand-monogram"]')).toHaveText("AT");
@@ -480,7 +485,6 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(iconLinks).not.toHaveCount(0);
     expect(await iconLinks.evaluateAll((links) => links.every((link) => Boolean(link.getAttribute("title"))))).toBe(true);
 
-    const profileTrigger = page.getByTestId("sidebar-profile-trigger");
     await expect(profileTrigger).toHaveAttribute("aria-haspopup", "menu");
     await expect(profileTrigger).toHaveAttribute("aria-expanded", "false");
     await profileTrigger.click();
@@ -490,7 +494,7 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(profileMenu.getByRole("menuitem").first()).toBeFocused();
     await expect(profileMenu.getByTestId("profile-summary-user")).toHaveText(/\S/);
     await expect(profileMenu.getByTestId("profile-summary-role")).toHaveText(/\S/);
-    await expect(profileMenu.getByTestId("profile-summary-active-branch")).toHaveText(/\S/);
+    await expect(profileMenu.getByTestId("profile-summary-active-branch")).toContainText(activeBranchText);
     await expect(profileMenu.getByTestId("profile-mobile-language")).toHaveCount(0);
     await expect(profileMenu.getByRole("menuitem", { name: /Hesabım|My Account/ })).toBeVisible();
     await expect(profileMenu.getByRole("menuitem", { name: /Desk'i Aç|Open Desk/ })).toBeVisible();
@@ -633,6 +637,9 @@ test.describe("Acentem Takipte smoke", () => {
     await closeDrawerButton.focus();
     await expect(closeDrawerButton).toBeFocused();
 
+    await aside.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
     await profileTrigger.scrollIntoViewIfNeeded();
     await profileTrigger.click();
     await expect(profileMenu).toBeVisible();
@@ -688,6 +695,9 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(aside).toHaveClass(/translate-x-0/);
 
     const profileTrigger = page.getByTestId("sidebar-profile-trigger");
+    await aside.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
     await profileTrigger.scrollIntoViewIfNeeded();
     await profileTrigger.click();
     const profileMenu = page.getByTestId("sidebar-profile-menu");
