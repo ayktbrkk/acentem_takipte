@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const smokeSource = fs.readFileSync(
   path.resolve(process.cwd(), "tests/e2e/at-smoke.spec.js"),
   "utf8",
-);
+).replace(/\r\n?/g, "\n");
 
 describe("sidebar diagnostics route privacy", () => {
   it("sanitizes pathname before storing it in a snapshot", () => {
