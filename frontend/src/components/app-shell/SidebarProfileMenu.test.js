@@ -143,6 +143,29 @@ describe("Sidebar profile menu contract", () => {
     expect(wrapper.text()).not.toContain("AT Sigorta");
   });
 
+  it.each([
+    ["tr", "Belirtilmedi"],
+    ["en", "Not provided"],
+  ])("localizes a missing non-global branch in %s", async (locale, expectedFallback) => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      locale,
+      user: "Aykut Yılmaz",
+      userId: "aykut",
+      roles: ["AT Manager"],
+      default_office_branch: null,
+      office_branches: [],
+      can_access_all_office_branches: false,
+    });
+    useBranchStore().hydrateFromSession();
+
+    const wrapper = mountSidebar();
+    await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
+
+    expect(wrapper.text()).toContain(expectedFallback);
+    expect(wrapper.text()).not.toContain("-");
+  });
+
   it("closes with Escape and outside click", async () => {
     const wrapper = mountSidebar();
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');

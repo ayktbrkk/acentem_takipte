@@ -120,7 +120,7 @@ const branchLabel = computed(() => {
   const branch = branchStore.selectedBranch;
   const selected = branch?.office_branch_name || branch?.name || branchStore.requestBranch;
   if (selected) return String(selected).trim();
-  return branchStore.canAccessAll ? t("allBranches") : "-";
+  return branchStore.canAccessAll ? t("allBranches") : t("notProvided");
 });
 const localeItems = computed(() => [
   { locale: "tr", label: t("turkish") },
