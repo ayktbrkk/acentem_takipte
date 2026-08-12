@@ -26,6 +26,7 @@
 
     <div
       v-if="menuOpen"
+      data-testid="sidebar-profile-menu"
       class="absolute bottom-[calc(100%+0.75rem)] left-0 z-40 w-[min(18rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-lg shadow-slate-900/10"
       role="menu"
       :aria-label="t('profileMenu')"

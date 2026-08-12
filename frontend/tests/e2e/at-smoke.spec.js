@@ -484,10 +484,10 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(profileTrigger).toHaveAttribute("aria-haspopup", "menu");
     await expect(profileTrigger).toHaveAttribute("aria-expanded", "false");
     await profileTrigger.click();
-    const profileMenu = page.getByRole("menu");
+    const profileMenu = page.getByTestId("sidebar-profile-menu");
     await expect(profileMenu).toBeVisible();
     await expect(profileTrigger).toHaveAttribute("aria-expanded", "true");
-    await expect(page.locator('[role="menuitem"]').first()).toBeFocused();
+    await expect(profileMenu.getByRole("menuitem").first()).toBeFocused();
     await expect(profileMenu.getByTestId("profile-summary-user")).toHaveText(/\S/);
     await expect(profileMenu.getByTestId("profile-summary-role")).toHaveText(/\S/);
     await expect(profileMenu.getByTestId("profile-summary-active-branch")).toHaveText(/\S/);
@@ -533,7 +533,7 @@ test.describe("Acentem Takipte smoke", () => {
     await page.getByTestId("topbar-language-menu").getByRole("menuitem", { name: "English", exact: true }).click();
     await expect(page).toHaveURL(routeBeforeLocaleChange);
     await profileTrigger.click();
-    await expect(page.getByRole("menu")).toBeVisible();
+    await expect(profileMenu).toBeVisible();
 
     const scopeTrigger = page.getByTestId("branch-scope-trigger");
     await expect(scopeTrigger).toBeVisible();
@@ -633,6 +633,7 @@ test.describe("Acentem Takipte smoke", () => {
     await closeDrawerButton.focus();
     await expect(closeDrawerButton).toBeFocused();
 
+    await profileTrigger.scrollIntoViewIfNeeded();
     await profileTrigger.click();
     await expect(profileMenu).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
@@ -687,10 +688,12 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(aside).toHaveClass(/translate-x-0/);
 
     const profileTrigger = page.getByTestId("sidebar-profile-trigger");
+    await profileTrigger.scrollIntoViewIfNeeded();
     await profileTrigger.click();
-    const profileMenu = page.getByRole("menu");
-    const mobileLanguage = page.getByTestId("profile-mobile-language");
+    const profileMenu = page.getByTestId("sidebar-profile-menu");
+    const mobileLanguage = profileMenu.getByTestId("profile-mobile-language");
 
+    await expect(aside).toHaveClass(/translate-x-0/);
     await expect(profileMenu).toBeVisible();
     await expect(mobileLanguage).toBeVisible();
     await expect(mobileLanguage.getByRole("menuitem", { name: "Türkçe", exact: true })).toBeVisible();
