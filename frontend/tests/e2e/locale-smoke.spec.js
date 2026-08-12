@@ -8,19 +8,20 @@ async function gotoWithFallback(page, url) {
 }
 
 test.describe("Locale smoke", () => {
-  test("switches TR/EN in topbar and quick-create labels", async ({ page }) => {
+  test("switches Türkçe/English in the desktop chip and quick-create labels", async ({ page }) => {
     const authenticated = await ensureAuthenticated(page);
     expect(authenticated).toBe(true);
 
     await gotoWithFallback(page, "/at/customers");
 
-    const localeButton = page.locator("header button").filter({ hasText: /^(TR|EN)$/ }).first();
+    const localeButton = page.getByTestId("topbar-language-trigger");
     await expect(localeButton).toBeVisible();
 
-    // Default flow is TR on this environment; verify TR labels first.
-    if ((await localeButton.textContent())?.trim() !== "TR") {
+    // Default flow is Türkçe on this environment; verify Türkçe labels first.
+    if (!(await localeButton.textContent())?.includes("Türkçe")) {
       await localeButton.click();
-      await expect(localeButton).toHaveText("TR");
+      await page.getByTestId("topbar-language-menu").getByRole("menuitem", { name: "Türkçe", exact: true }).click();
+      await expect(localeButton).toContainText("Türkçe");
     }
 
     const newButton = page
@@ -37,7 +38,8 @@ test.describe("Locale smoke", () => {
     await expect(quickCreateTitle).toBeHidden();
 
     await localeButton.click();
-    await expect(localeButton).toHaveText("EN");
+    await page.getByTestId("topbar-language-menu").getByRole("menuitem", { name: "English", exact: true }).click();
+    await expect(localeButton).toContainText("English");
 
     await newButton.click();
     await expect(quickCreateTitle).toBeVisible();
@@ -46,13 +48,14 @@ test.describe("Locale smoke", () => {
     await enCancelButton.click();
     await expect(quickCreateTitle).toBeHidden();
 
-    const accountMenuButton = page.locator('button[aria-haspopup="menu"]').first();
+    const accountMenuButton = page.getByTestId("sidebar-profile-trigger");
     await accountMenuButton.click();
     await expect(page.locator('button[role="menuitem"]:has-text("Logout")')).toBeVisible();
     await page.keyboard.press("Escape");
 
     // Return to TR for deterministic next runs.
     await localeButton.click();
-    await expect(localeButton).toHaveText("TR");
+    await page.getByTestId("topbar-language-menu").getByRole("menuitem", { name: "Türkçe", exact: true }).click();
+    await expect(localeButton).toContainText("Türkçe");
   });
 });

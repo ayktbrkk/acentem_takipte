@@ -125,7 +125,7 @@
       </nav>
 
       <footer class="mt-auto border-t border-slate-100 px-3 py-3">
-        <SidebarProfileMenu :collapsed="effectiveCollapsed" />
+        <SidebarProfileMenu :collapsed="effectiveCollapsed" :mobile="!isDesktopViewport" />
       </footer>
     </aside>
   </div>

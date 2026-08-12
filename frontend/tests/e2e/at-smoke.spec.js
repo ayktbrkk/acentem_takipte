@@ -493,7 +493,7 @@ test.describe("Acentem Takipte smoke", () => {
     const profileSummary = profileMenu.locator("p");
     await expect(profileSummary).toHaveCount(3);
     expect((await profileSummary.allTextContents()).every((text) => text.trim().length > 0)).toBe(true);
-    await expect(profileMenu.getByRole("menuitem", { name: /Türkçe|English/ })).toHaveCount(2);
+    await expect(profileMenu.getByTestId("profile-mobile-language")).toHaveCount(0);
     await expect(profileMenu.getByRole("menuitem", { name: /Hesabım|My Account/ })).toBeVisible();
     await expect(profileMenu.getByRole("menuitem", { name: /Desk'i Aç|Open Desk/ })).toBeVisible();
     await expect(profileMenu.getByRole("menuitem", { name: /Çıkış Yap|Logout/ })).toBeVisible();
@@ -529,7 +529,10 @@ test.describe("Acentem Takipte smoke", () => {
 
     const routeBeforeLocaleChange = page.url();
     await profileTrigger.click();
-    await profileMenu.getByRole("menuitem", { name: "English", exact: true }).click();
+    const desktopLanguageTrigger = page.getByTestId("topbar-language-trigger");
+    await expect(desktopLanguageTrigger).toBeVisible();
+    await desktopLanguageTrigger.click();
+    await page.getByTestId("topbar-language-menu").getByRole("menuitem", { name: "English", exact: true }).click();
     await expect(page).toHaveURL(routeBeforeLocaleChange);
     await profileTrigger.click();
     await expect(page.getByRole("menu")).toBeVisible();

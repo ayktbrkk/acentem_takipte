@@ -54,7 +54,24 @@ describe("Topbar shell contract", () => {
     expect(wrapper.text()).toContain(sectionLabel);
     expect(wrapper.find('[data-testid="branch-scope-trigger"]').exists()).toBe(true);
 
-    expect(wrapper.find('button[aria-haspopup="menu"]').exists()).toBe(false);
+    expect(wrapper.find('button[aria-haspopup="menu"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
     expect(wrapper.findAll("button").some((button) => ["TR", "EN"].includes(button.text().trim()))).toBe(false);
+  });
+
+  it("owns the desktop language chip with the full current-language label", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({ locale: "tr", user: "Aykut", roles: ["AT Agent"] });
+
+    const wrapper = mountTopbar();
+    const trigger = wrapper.find('[data-testid="topbar-language-trigger"]');
+
+    expect(trigger.exists()).toBe(true);
+    expect(trigger.text()).toContain("Türkçe");
+    expect(trigger.attributes("aria-haspopup")).toBe("menu");
+    expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
+
+    await trigger.trigger("click");
+    expect(wrapper.find('[data-testid="topbar-language-menu"]').text()).toContain("English");
   });
 });

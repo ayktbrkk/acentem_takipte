@@ -102,7 +102,7 @@ describe("Sidebar profile menu contract", () => {
     }
   });
 
-  it("renders the user, role, branch, language, and logout actions", async () => {
+  it("renders the user, localized role, branch, mobile language, and logout actions", async () => {
     const wrapper = mountSidebar();
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
 
@@ -115,12 +115,28 @@ describe("Sidebar profile menu contract", () => {
 
     expect(wrapper.find('[role="menu"]').exists()).toBe(true);
     expect(wrapper.text()).toContain("Aykut Yılmaz");
-    expect(wrapper.text()).toContain("AT Manager");
+    expect(wrapper.text()).toContain("AT Yönetici");
     expect(wrapper.text()).toContain("AT Sigorta");
-    expect(wrapper.text()).toContain("Dil");
-    expect(wrapper.text()).toContain("Türkçe");
-    expect(wrapper.text()).toContain("English");
+    expect(wrapper.find('[data-testid="profile-mobile-language"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="profile-mobile-language"]').text()).toContain("Türkçe");
+    expect(wrapper.find('[data-testid="profile-mobile-language"]').text()).toContain("English");
     expect(wrapper.text()).toContain("Çıkış Yap");
+  });
+
+  it.each([
+    [["AT Agent", "AT Manager"], "AT Yönetici", "AT Manager"],
+    [["Administrator"], "Yönetici", "Administrator"],
+    [["Unknown Role"], "Rol", "Role"],
+  ])("uses the highest-priority localized business role", async (roles, trExpected, enExpected) => {
+    const authStore = useAuthStore();
+    authStore.applyContext({ locale: "tr", user: "Aykut", roles });
+    const wrapper = mountSidebar();
+    await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
+    expect(wrapper.text()).toContain(trExpected);
+
+    authStore.setLocale("en");
+    await wrapper.vm.$nextTick();
+    expect(wrapper.text()).toContain(enExpected);
   });
 
   it("shows all branches when access is global without an explicit request branch", async () => {
@@ -215,8 +231,8 @@ describe("Sidebar profile menu contract", () => {
     trigger.element.focus();
     await trigger.trigger("click");
 
-    const englishAction = wrapper
-      .findAll('[role="menuitem"]')
+     const englishAction = wrapper
+       .findAll('[data-testid="profile-mobile-language"] [role="menuitem"]')
       .find((item) => item.text().trim() === "English");
     expect(englishAction).toBeTruthy();
     await englishAction.trigger("click");
@@ -248,8 +264,8 @@ describe("Sidebar profile menu contract", () => {
     expect(trigger.exists()).toBe(true);
     await trigger.trigger("click");
 
-    const englishAction = wrapper
-      .findAll('[role="menuitem"]')
+     const englishAction = wrapper
+       .findAll('[data-testid="profile-mobile-language"] [role="menuitem"]')
       .find((item) => item.text().trim() === "English");
     expect(englishAction).toBeTruthy();
     await englishAction.trigger("click");
