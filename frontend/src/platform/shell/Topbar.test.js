@@ -55,6 +55,7 @@ describe("Topbar shell contract", () => {
     expect(wrapper.text()).toContain(pageTitle);
     expect(wrapper.text()).toContain(sectionLabel);
     expect(wrapper.find('[data-testid="branch-scope-trigger"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="mobile-sidebar-trigger"]').exists()).toBe(true);
 
     expect(wrapper.find('button[aria-haspopup="menu"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);

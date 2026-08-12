@@ -123,6 +123,9 @@ describe("Sidebar profile menu contract", () => {
     expect(wrapper.find('[data-testid="profile-mobile-language"]').text()).toContain("Türkçe");
     expect(wrapper.find('[data-testid="profile-mobile-language"]').text()).toContain("English");
     expect(wrapper.text()).toContain("Çıkış Yap");
+    expect(wrapper.find('[data-testid="profile-summary-user"]').text()).toBe("Aykut Yılmaz");
+    expect(wrapper.find('[data-testid="profile-summary-role"]').text()).toContain("AT Yönetici");
+    expect(wrapper.find('[data-testid="profile-summary-active-branch"]').text()).toContain("AT Sigorta");
   });
 
   it("renders localized role and active-branch labels in English", async () => {

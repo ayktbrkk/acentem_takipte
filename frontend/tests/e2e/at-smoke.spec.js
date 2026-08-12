@@ -42,19 +42,18 @@ function readSidebarSnapshot(page) {
       return "/at";
     }
 
-    const labelPattern = /Menüyü daralt|Menüyü genişlet|Collapse menu|Expand menu/;
     const aside = document.querySelector("aside");
     const asideRect = aside ? aside.getBoundingClientRect() : null;
     const asideCenterY = asideRect ? asideRect.y + asideRect.height / 2 : 0;
     const buttons = [];
-    for (const button of document.querySelectorAll("aside button[aria-label], aside button[title]")) {
+    for (const button of document.querySelectorAll('aside [data-testid="sidebar-desktop-collapse-toggle"]')) {
       const ariaLabel = button.getAttribute("aria-label") || "";
       const title = button.getAttribute("title") || "";
-      if (!labelPattern.test(ariaLabel) && !labelPattern.test(title)) continue;
       const rect = button.getBoundingClientRect();
       const style = window.getComputedStyle(button);
       buttons.push({
         index: buttons.length,
+        testId: button.getAttribute("data-testid"),
         ariaLabel,
         title,
         visible:
@@ -200,8 +199,8 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
     : "expand-button-visibility";
   const observedState = {
     collapsed: Boolean(immediateAfterClick.collapsed),
-    expandButtonVisible: immediateAfterClick.buttons.some(
-      (button) => button.visible && /Menüyü genişlet|Expand menu/.test(`${button.ariaLabel} ${button.title}`),
+      expandButtonVisible: immediateAfterClick.buttons.some(
+      (button) => button.testId === "sidebar-desktop-collapse-toggle" && button.visible,
     ),
   };
   const expected = assertionType === "aside-class"
@@ -419,18 +418,19 @@ test.describe("Acentem Takipte smoke", () => {
     // Sidebar collapse/expand + reload persistence (desktop)
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/at/", { waitUntil: "domcontentloaded" });
-    await expect(page.locator('button[aria-label="Menüyü daralt"]').first()).toBeVisible();
+    const desktopCollapseToggle = page.getByTestId("sidebar-desktop-collapse-toggle");
+    await expect(desktopCollapseToggle).toBeVisible();
     const beforeClick = await captureSidebarLabel(page, "before-click");
     const diagnosticsBaseline = {
       consoleErrorCount: consoleErrors.length,
       pageErrorCount: pageErrors.length,
       requestFailureCount: failedRequests.length,
     };
-    await page.locator('button[aria-label="Menüyü daralt"]').first().click();
+    await desktopCollapseToggle.click();
     const immediateAfterClick = await captureSidebarLabel(page, "immediate-after-click");
     try {
       await expect(page.locator("aside").first()).toHaveClass(/lg:w-24/);
-      await expect(page.locator('button[aria-label="Menüyü genişlet"]').first()).toBeVisible();
+      await expect(desktopCollapseToggle).toBeVisible();
     } catch (error) {
       await attachSidebarFailureDiagnostics(page, testInfo, {
         beforeClick,
@@ -445,8 +445,8 @@ test.describe("Acentem Takipte smoke", () => {
     }
     await page.reload({ waitUntil: "domcontentloaded" });
     await expect(page.locator("aside").first()).toHaveClass(/lg:w-24/);
-    await expect(page.locator('button[aria-label="Menüyü genişlet"]').first()).toBeVisible();
-    await page.locator('button[aria-label="Menüyü genişlet"]').first().click();
+    await expect(desktopCollapseToggle).toBeVisible();
+    await desktopCollapseToggle.click();
     await expect(page.locator("aside").first()).toHaveClass(/lg:w-\[220px\]/);
 
     // Mobile drawer behavior: off-canvas by default, opens via menu button,
@@ -455,7 +455,7 @@ test.describe("Acentem Takipte smoke", () => {
     await page.reload({ waitUntil: "domcontentloaded" });
     const aside = page.locator("aside").first();
     await expect(aside).toHaveClass(/-translate-x-full/);
-    await page.getByRole("button", { name: /Menü|Menu/i }).first().click();
+    await page.getByTestId("mobile-sidebar-trigger").click();
     await expect(aside).toHaveClass(/translate-x-0/);
     await page.goto("/at/payments", { waitUntil: "domcontentloaded" });
     await expect(aside).toHaveClass(/-translate-x-full/);
@@ -469,11 +469,9 @@ test.describe("Acentem Takipte smoke", () => {
     const aside = page.locator("aside").first();
     await expect(aside.getByText("Acentem Takipte", { exact: true })).toBeVisible();
 
-    const collapseToggle = aside.locator(
-      'button[aria-label="Menüyü daralt"], button[aria-label="Collapse menu"]',
-    );
+    const collapseToggle = page.getByTestId("sidebar-desktop-collapse-toggle");
     await expect(collapseToggle).toHaveCount(1);
-    await expect(aside.locator("footer button[aria-label*='Menü'], footer button[aria-label*='menu']")).toHaveCount(0);
+    await expect(aside.locator('footer [data-testid="sidebar-desktop-collapse-toggle"]')).toHaveCount(0);
 
     await collapseToggle.click();
     await expect(aside).toHaveClass(/lg:w-24/);
@@ -490,9 +488,9 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(profileMenu).toBeVisible();
     await expect(profileTrigger).toHaveAttribute("aria-expanded", "true");
     await expect(page.locator('[role="menuitem"]').first()).toBeFocused();
-    const profileSummary = profileMenu.locator("p");
-    await expect(profileSummary).toHaveCount(3);
-    expect((await profileSummary.allTextContents()).every((text) => text.trim().length > 0)).toBe(true);
+    await expect(profileMenu.getByTestId("profile-summary-user")).toHaveText(/\S/);
+    await expect(profileMenu.getByTestId("profile-summary-role")).toHaveText(/\S/);
+    await expect(profileMenu.getByTestId("profile-summary-active-branch")).toHaveText(/\S/);
     await expect(profileMenu.getByTestId("profile-mobile-language")).toHaveCount(0);
     await expect(profileMenu.getByRole("menuitem", { name: /Hesabım|My Account/ })).toBeVisible();
     await expect(profileMenu.getByRole("menuitem", { name: /Desk'i Aç|Open Desk/ })).toBeVisible();
@@ -606,9 +604,9 @@ test.describe("Acentem Takipte smoke", () => {
     await page.setViewportSize({ width: 768, height: 900 });
     await page.reload({ waitUntil: "domcontentloaded" });
     await expect(aside).toHaveClass(/-translate-x-full/);
-    await expect(page.getByRole("button", { name: /Menu|Menü/i }).first()).toBeVisible();
+    await expect(page.getByTestId("mobile-sidebar-trigger")).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
-    await page.getByRole("button", { name: /Menu|Menü/i }).first().click();
+    await page.getByTestId("mobile-sidebar-trigger").click();
     await expect(aside).toHaveClass(/translate-x-0/);
     await expect(aside.getByText("Acentem Takipte", { exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
@@ -618,13 +616,11 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(aside).toHaveClass(/-translate-x-full/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 
-    const menuButton = page.getByRole("button", { name: /Menu|Menü/i }).first();
+    const menuButton = page.getByTestId("mobile-sidebar-trigger");
     await expect(menuButton).toBeVisible();
     await menuButton.click();
     await expect(aside).toHaveClass(/translate-x-0/);
-    const desktopSidebarToggle = aside.locator(
-      'button[aria-label="Menüyü daralt"], button[aria-label="Collapse menu"], button[aria-label="Menüyü genişlet"], button[aria-label="Expand menu"]',
-    );
+    const desktopSidebarToggle = page.getByTestId("sidebar-desktop-collapse-toggle");
     await expect(desktopSidebarToggle).toHaveCount(1);
     await expect(desktopSidebarToggle).toBeHidden();
     await expect(aside.getByText("Acentem Takipte", { exact: true })).toBeVisible();
@@ -687,7 +683,7 @@ test.describe("Acentem Takipte smoke", () => {
     await page.goto("/at/", { waitUntil: "domcontentloaded" });
 
     const aside = page.locator("aside").first();
-    await page.getByRole("button", { name: /Menü|Menu/i }).first().click();
+    await page.getByTestId("mobile-sidebar-trigger").click();
     await expect(aside).toHaveClass(/translate-x-0/);
 
     const profileTrigger = page.getByTestId("sidebar-profile-trigger");

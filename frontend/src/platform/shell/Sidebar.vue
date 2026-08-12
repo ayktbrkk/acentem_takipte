@@ -37,6 +37,7 @@
           </div>
 
           <button
+            data-testid="sidebar-desktop-collapse-toggle"
             class="max-lg:hidden grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none lg:grid"
             type="button"
             :aria-label="effectiveCollapsed ? expandMenuLabel : collapseMenuLabel"
