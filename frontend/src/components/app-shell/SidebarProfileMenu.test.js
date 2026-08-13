@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { mount } from "@vue/test-utils";
+import { DOMWrapper, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 
 import SidebarProfileMenu from "./SidebarProfileMenu.vue";
@@ -65,6 +65,10 @@ function mountSidebar() {
   return wrapper;
 }
 
+function findProfileMenu() {
+  return new DOMWrapper(document.body.querySelector('[data-testid="sidebar-profile-menu"]'));
+}
+
 describe("Sidebar profile menu contract", () => {
   afterEach(() => {
     mountedWrappers.forEach((wrapper) => wrapper.unmount());
@@ -114,17 +118,17 @@ describe("Sidebar profile menu contract", () => {
     expect(trigger.find('[data-testid="profile-trigger-active-branch"]').text()).toContain("AT Sigorta");
     await trigger.trigger("click");
 
-    const profileMenu = wrapper.find('[data-testid="sidebar-profile-menu"]');
+    const profileMenu = findProfileMenu();
     expect(profileMenu.exists()).toBe(true);
     expect(profileMenu.attributes("role")).toBe("menu");
-    expect(wrapper.text()).toContain("Aykut Yılmaz");
-    expect(wrapper.text()).toContain("Rol");
-    expect(wrapper.text()).toContain("AT Yönetici");
-    expect(wrapper.text()).toContain("Aktif şube");
-    expect(wrapper.text()).toContain("AT Sigorta");
+    expect(profileMenu.text()).toContain("Aykut Yılmaz");
+    expect(profileMenu.text()).toContain("Rol");
+    expect(profileMenu.text()).toContain("AT Yönetici");
+    expect(profileMenu.text()).toContain("Aktif şube");
+    expect(profileMenu.text()).toContain("AT Sigorta");
     expect(profileMenu.find('[data-testid="profile-mobile-language"]').exists()).toBe(false);
     expect(profileMenu.find('[data-testid="branch-scope-trigger"]').exists()).toBe(false);
-    expect(wrapper.text()).toContain("Çıkış Yap");
+    expect(profileMenu.text()).toContain("Çıkış Yap");
     expect(profileMenu.find('[data-testid="profile-summary-user"]').text()).toBe("Aykut Yılmaz");
     expect(profileMenu.find('[data-testid="profile-summary-role"]').text()).toContain("AT Yönetici");
     const activeBranchSummary = profileMenu.find('[data-testid="profile-summary-active-branch"]');
@@ -141,10 +145,10 @@ describe("Sidebar profile menu contract", () => {
     const wrapper = mountSidebar();
     await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
 
-    expect(wrapper.text()).toContain("Role");
-    expect(wrapper.text()).toContain("AT Manager");
-    expect(wrapper.text()).toContain("Active branch");
-    expect(wrapper.text()).toContain("AT Sigorta");
+    expect(findProfileMenu().text()).toContain("Role");
+    expect(findProfileMenu().text()).toContain("AT Manager");
+    expect(findProfileMenu().text()).toContain("Active branch");
+    expect(findProfileMenu().text()).toContain("AT Sigorta");
   });
 
   it.each([
@@ -158,11 +162,11 @@ describe("Sidebar profile menu contract", () => {
     authStore.applyContext({ locale: "tr", user: "Aykut", roles });
     const wrapper = mountSidebar();
     await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
-    expect(wrapper.text()).toContain(trExpected);
+    expect(findProfileMenu().text()).toContain(trExpected);
 
     authStore.setLocale("en");
     await wrapper.vm.$nextTick();
-    expect(wrapper.text()).toContain(enExpected);
+    expect(findProfileMenu().text()).toContain(enExpected);
   });
 
   it("shows all branches when access is global without an explicit request branch", async () => {
@@ -184,8 +188,8 @@ describe("Sidebar profile menu contract", () => {
     const wrapper = mountSidebar();
     await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
 
-    expect(wrapper.text()).toContain("Tüm Şubeler");
-    expect(wrapper.text()).not.toContain("AT Sigorta");
+    expect(findProfileMenu().text()).toContain("Tüm Şubeler");
+    expect(findProfileMenu().text()).not.toContain("AT Sigorta");
   });
 
   it.each([
@@ -208,9 +212,9 @@ describe("Sidebar profile menu contract", () => {
     const wrapper = mountSidebar();
     await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
 
-    expect(wrapper.text()).toContain(expectedFallback);
+    expect(findProfileMenu().text()).toContain(expectedFallback);
     expect(wrapper.find('[data-testid="profile-trigger-active-branch"]').text()).toContain(expectedFallback);
-    expect(wrapper.text()).not.toContain("-");
+    expect(findProfileMenu().text()).not.toContain("-");
   });
 
   it("closes with Escape and outside click", async () => {
@@ -220,18 +224,18 @@ describe("Sidebar profile menu contract", () => {
     expect(trigger.exists()).toBe(true);
 
     await trigger.trigger("click");
-    const profileMenu = wrapper.find('[data-testid="sidebar-profile-menu"]');
+    const profileMenu = findProfileMenu();
     expect(profileMenu.exists()).toBe(true);
     expect(document.activeElement).toBe(profileMenu.find('[role="menuitem"]').element);
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     await wrapper.vm.$nextTick();
-    expect(wrapper.find('[data-testid="sidebar-profile-menu"]').exists()).toBe(false);
+    expect(findProfileMenu().exists()).toBe(false);
     expect(document.activeElement).toBe(trigger.element);
 
     await trigger.trigger("click");
     document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await wrapper.vm.$nextTick();
-    expect(wrapper.find('[data-testid="sidebar-profile-menu"]').exists()).toBe(false);
+    expect(findProfileMenu().exists()).toBe(false);
   });
 
   it("moves focus through the menu when no item is currently focused", async () => {
@@ -242,7 +246,7 @@ describe("Sidebar profile menu contract", () => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
     await wrapper.vm.$nextTick();
 
-    const items = wrapper.findAll('[role="menuitem"]');
+    const items = findProfileMenu().findAll('[role="menuitem"]');
     expect(document.activeElement).toBe(items[items.length - 1].element);
   });
 
@@ -259,7 +263,7 @@ describe("Sidebar profile menu contract", () => {
     trigger.element.focus();
     await trigger.trigger("click");
 
-     const englishAction = wrapper
+    const englishAction = findProfileMenu()
        .findAll('[data-testid="profile-mobile-language"] [role="menuitem"]')
       .find((item) => item.text().trim() === "English");
     expect(englishAction).toBeTruthy();
@@ -292,7 +296,7 @@ describe("Sidebar profile menu contract", () => {
     expect(trigger.exists()).toBe(true);
     await trigger.trigger("click");
 
-     const englishAction = wrapper
+    const englishAction = findProfileMenu()
        .findAll('[data-testid="profile-mobile-language"] [role="menuitem"]')
       .find((item) => item.text().trim() === "English");
     expect(englishAction).toBeTruthy();
@@ -329,7 +333,7 @@ describe("Sidebar profile menu contract", () => {
 
     const wrapper = mountSidebar();
     await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
-    await wrapper
+    await findProfileMenu()
       .findAll('[role="menuitem"]')
       .find((item) => item.text().trim() === "Logout")
       .trigger("click");
@@ -343,8 +347,8 @@ describe("Sidebar profile menu contract", () => {
         headers: expect.objectContaining({ "X-Frappe-CSRF-Token": "" }),
       }),
     );
-    expect(wrapper.find('[role="alert"]').text()).toContain("Logout failed");
-    expect(wrapper.find('button[role="menuitem"]').text()).toContain("Retry");
+    expect(findProfileMenu().find('[role="alert"]').text()).toContain("Logout failed");
+    expect(findProfileMenu().find('button[role="menuitem"]').text()).toContain("Retry");
   });
 
   it("keeps successful logout free of an error state", async () => {
@@ -353,13 +357,13 @@ describe("Sidebar profile menu contract", () => {
 
     const wrapper = mountSidebar();
     await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
-    await wrapper
+    await findProfileMenu()
       .findAll('[role="menuitem"]')
       .find((item) => item.text().trim() === "Çıkış Yap")
       .trigger("click");
     await Promise.resolve();
 
     expect(fetchMock).toHaveBeenCalledWith("/api/method/logout", expect.any(Object));
-    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+    expect(document.body.querySelector('[role="alert"]')).toBe(null);
   });
 });

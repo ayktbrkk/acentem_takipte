@@ -28,16 +28,17 @@
       </span>
     </button>
 
-    <div
-      v-if="menuOpen"
-      ref="menuSurfaceRef"
-      data-testid="sidebar-profile-menu"
-      :data-placement="menuPlacement"
-      class="fixed z-40 w-[min(18rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-lg shadow-slate-900/10"
-      :style="menuStyle"
-      role="menu"
-      :aria-label="t('profileMenu')"
-    >
+    <Teleport to="body">
+      <div
+        v-if="menuOpen"
+        ref="menuSurfaceRef"
+        data-testid="sidebar-profile-menu"
+        :data-placement="menuPlacement"
+        class="fixed z-40 max-h-[calc(100vh-1rem)] w-[min(18rem,calc(100vw-1rem))] overflow-y-auto rounded-2xl border border-slate-200 bg-white py-2 shadow-lg shadow-slate-900/10"
+        :style="menuStyle"
+        role="menu"
+        :aria-label="t('profileMenu')"
+      >
       <div class="border-b border-slate-100 px-4 pb-3 pt-2">
         <p data-testid="profile-summary-user" class="truncate text-sm font-semibold text-slate-900" :title="displayUser">
           {{ displayUser }}
@@ -98,7 +99,8 @@
           {{ item.label }}
         </button>
       </div>
-    </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -132,6 +134,7 @@ const menuStyle = ref({});
 const menuPlacement = ref("upward");
 const VIEWPORT_INSET = 8;
 const MENU_GAP = 12;
+let placementFrame = null;
 
 function t(key) {
   return translateText(key, authStore.locale);
@@ -175,7 +178,7 @@ function toggleMenu() {
   logoutError.value = "";
   menuOpen.value = true;
   nextTick(() => {
-    updateMenuPlacement();
+    scheduleMenuPlacement();
     focusFirstMenuItem();
   });
   addPlacementListeners();
@@ -189,6 +192,7 @@ function closeMenu(restoreFocus = false) {
   menuOpen.value = false;
   menuStyle.value = {};
   menuPlacement.value = "upward";
+  cancelMenuPlacement();
   removePlacementListeners();
   if (restoreFocus) focusTrigger();
 }
@@ -235,11 +239,28 @@ function updateMenuPlacement() {
   menuStyle.value = {
     left: `${clamp(left, minLeft, maxLeft)}px`,
     top: `${clamp(top, minTop, maxTop)}px`,
+    maxHeight: `${Math.max(0, viewport.height - VIEWPORT_INSET * 2)}px`,
   };
 }
 
 function handleViewportChange() {
-  if (menuOpen.value) updateMenuPlacement();
+  scheduleMenuPlacement();
+}
+
+function scheduleMenuPlacement() {
+  if (!menuOpen.value || placementFrame !== null) return;
+  const requestFrame = window.requestAnimationFrame || ((callback) => window.setTimeout(callback, 0));
+  placementFrame = requestFrame(() => {
+    placementFrame = null;
+    updateMenuPlacement();
+  });
+}
+
+function cancelMenuPlacement() {
+  if (placementFrame === null) return;
+  const cancelFrame = window.cancelAnimationFrame || window.clearTimeout;
+  cancelFrame(placementFrame);
+  placementFrame = null;
 }
 
 function addPlacementListeners() {
@@ -299,11 +320,15 @@ async function setLocale(locale) {
 }
 
 function focusFirstMenuItem() {
-  menuRef.value?.querySelector('[role="menuitem"]')?.focus();
+  menuSurfaceRef.value?.querySelector('[role="menuitem"]')?.focus();
 }
 
 function handleDocumentClick(event) {
-  if (menuOpen.value && !menuRef.value?.contains(event.target)) closeMenu();
+  if (
+    menuOpen.value
+    && !menuRef.value?.contains(event.target)
+    && !menuSurfaceRef.value?.contains(event.target)
+  ) closeMenu();
 }
 
 function handleKeydown(event) {
@@ -313,7 +338,7 @@ function handleKeydown(event) {
     return;
   }
 
-  const items = [...menuRef.value.querySelectorAll('[role="menuitem"]')];
+  const items = [...menuSurfaceRef.value.querySelectorAll('[role="menuitem"]')];
   const current = items.indexOf(document.activeElement);
   if (!items.length || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
   event.preventDefault();
@@ -338,6 +363,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleDocumentClick);
   document.removeEventListener("keydown", handleKeydown);
+  cancelMenuPlacement();
   removePlacementListeners();
 });
 </script>
