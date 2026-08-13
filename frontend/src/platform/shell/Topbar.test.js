@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 
@@ -34,6 +34,10 @@ function mountTopbar(options = {}) {
 }
 
 describe("Topbar shell contract", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   beforeEach(() => {
     setActivePinia(createPinia());
   });
@@ -84,7 +88,7 @@ describe("Topbar shell contract", () => {
     expect(menu.attributes("id")).toBe("topbar-language-menu");
     expect(trigger.attributes("aria-expanded")).toBe("true");
     expect(menu.text()).toContain("English");
-    expect(menu.find('[role="menuitem"][aria-selected="true"]').exists()).toBe(true);
+    expect(menu.find('[role="menuitemradio"][aria-checked="true"]').exists()).toBe(true);
   });
 
   it("keeps language-menu keyboard focus and close behavior consistent", async () => {
@@ -97,7 +101,7 @@ describe("Topbar shell contract", () => {
     await trigger.trigger("click");
     await wrapper.vm.$nextTick();
 
-    const items = wrapper.findAll('[data-testid="topbar-language-menu"] [role="menuitem"]');
+    const items = wrapper.findAll('[data-testid="topbar-language-menu"] [role="menuitemradio"]');
     expect(trigger.attributes("aria-expanded")).toBe("true");
     expect(document.activeElement).toBe(items[0].element);
 
@@ -118,16 +122,20 @@ describe("Topbar shell contract", () => {
 
     await trigger.trigger("click");
     await wrapper.vm.$nextTick();
-    await wrapper.findAll('[data-testid="topbar-language-menu"] [role="menuitem"]')[1].trigger("click");
+    await wrapper.findAll('[data-testid="topbar-language-menu"] [role="menuitemradio"]')[1].trigger("click");
     expect(authStore.locale).toBe("en");
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
     expect(document.activeElement).toBe(trigger.element);
 
     await trigger.trigger("click");
+    const externalButton = document.createElement("button");
+    document.body.appendChild(externalButton);
+    externalButton.focus();
     document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await wrapper.vm.$nextTick();
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
-    expect(document.activeElement).toBe(trigger.element);
+    expect(document.activeElement).toBe(externalButton);
+    externalButton.remove();
     wrapper.unmount();
   });
 
@@ -149,9 +157,9 @@ describe("Topbar shell contract", () => {
     expect(menu.attributes("role")).toBe("menu");
     expect(menu.attributes("id")).toBe("mobile-language-menu");
     expect(trigger.attributes("aria-expanded")).toBe("true");
-    expect(menu.find('[role="menuitem"][aria-selected="true"]').text()).toContain("Türkçe");
+    expect(menu.find('[role="menuitemradio"][aria-checked="true"]').text()).toContain("Türkçe");
 
-    await menu.find('[role="menuitem"][aria-selected="false"]').trigger("click");
+    await menu.find('[role="menuitemradio"][aria-checked="false"]').trigger("click");
     expect(authStore.locale).toBe("en");
     expect(wrapper.text()).toContain("Dashboard");
     expect(wrapper.text()).toContain("OVERVIEW");
@@ -167,11 +175,15 @@ describe("Topbar shell contract", () => {
     const wrapper = mountTopbar({ attachTo: document.body });
     const trigger = wrapper.find('[data-testid="mobile-language-trigger"]');
     await trigger.trigger("click");
+    const externalButton = document.createElement("button");
+    document.body.appendChild(externalButton);
+    externalButton.focus();
     document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await wrapper.vm.$nextTick();
 
     expect(wrapper.find('[data-testid="mobile-language-menu"]').exists()).toBe(false);
-    expect(document.activeElement).toBe(trigger.element);
+    expect(document.activeElement).toBe(externalButton);
+    externalButton.remove();
     wrapper.unmount();
   });
 
@@ -185,7 +197,7 @@ describe("Topbar shell contract", () => {
     await wrapper.vm.$nextTick();
 
     const menu = wrapper.find('[data-testid="mobile-language-menu"]');
-    const items = menu.findAll('[role="menuitem"]');
+    const items = menu.findAll('[role="menuitemradio"]');
     expect(trigger.attributes("aria-expanded")).toBe("true");
     expect(document.activeElement).toBe(items[0].element);
 
@@ -204,5 +216,57 @@ describe("Topbar shell contract", () => {
     expect(trigger.attributes("aria-expanded")).toBe("false");
     expect(document.activeElement).toBe(trigger.element);
     wrapper.unmount();
+  });
+
+  it("closes the desktop language menu when the viewport crosses to mobile", async () => {
+    const mediaQuery = {
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    vi.stubGlobal("matchMedia", vi.fn(() => mediaQuery));
+    const authStore = useAuthStore();
+    authStore.applyContext({ locale: "tr", user: "Aykut", roles: ["AT Agent"] });
+
+    const wrapper = mountTopbar({ attachTo: document.body });
+    const trigger = wrapper.find('[data-testid="topbar-language-trigger"]');
+    await trigger.trigger("click");
+    const listener = mediaQuery.addEventListener.mock.calls[0][1];
+
+    listener({ matches: false });
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
+    expect(trigger.attributes("aria-expanded")).toBe("false");
+    await wrapper.find('[data-testid="mobile-language-trigger"]').trigger("click");
+    expect(wrapper.find('[data-testid="mobile-language-menu"]').exists()).toBe(true);
+    wrapper.unmount();
+    expect(mediaQuery.removeEventListener).toHaveBeenCalledWith("change", listener);
+  });
+
+  it("closes the mobile language menu when the viewport crosses to desktop", async () => {
+    const mediaQuery = {
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    vi.stubGlobal("matchMedia", vi.fn(() => mediaQuery));
+    const authStore = useAuthStore();
+    authStore.applyContext({ locale: "tr", user: "Aykut", roles: ["AT Agent"] });
+
+    const wrapper = mountTopbar({ attachTo: document.body });
+    const trigger = wrapper.find('[data-testid="mobile-language-trigger"]');
+    await trigger.trigger("click");
+    const listener = mediaQuery.addEventListener.mock.calls[0][1];
+
+    listener({ matches: true });
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('[data-testid="mobile-language-menu"]').exists()).toBe(false);
+    expect(trigger.attributes("aria-expanded")).toBe("false");
+    await wrapper.find('[data-testid="topbar-language-trigger"]').trigger("click");
+    expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(true);
+    wrapper.unmount();
+    expect(mediaQuery.removeEventListener).toHaveBeenCalledWith("change", listener);
   });
 });

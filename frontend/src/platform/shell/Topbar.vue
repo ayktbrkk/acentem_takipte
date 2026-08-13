@@ -45,8 +45,8 @@
               :key="item.locale"
               class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-slate-800 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               type="button"
-              role="menuitem"
-              :aria-selected="authStore.locale === item.locale ? 'true' : 'false'"
+              role="menuitemradio"
+              :aria-checked="authStore.locale === item.locale ? 'true' : 'false'"
               @click="setLocale(item.locale)"
             >
               <span>{{ item.label }}</span>
@@ -81,8 +81,8 @@
               :key="item.locale"
               class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-slate-800 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               type="button"
-              role="menuitem"
-              :aria-selected="authStore.locale === item.locale ? 'true' : 'false'"
+              role="menuitemradio"
+              :aria-checked="authStore.locale === item.locale ? 'true' : 'false'"
               @click="setLocale(item.locale)"
             >
               <span>{{ item.label }}</span>
@@ -114,6 +114,8 @@ const activeLanguageSurface = ref(null);
 const desktopLanguageMenuRef = ref(null);
 const mobileLanguageMenuRef = ref(null);
 const { setLocale: persistLocale } = useLocalePreference();
+const LG_BREAKPOINT_QUERY = "(min-width: 1024px)";
+let languageBreakpointMediaQuery = null;
 
 function t(key) {
   return translateText(key, authStore.locale);
@@ -174,11 +176,37 @@ function closeLanguageMenu(restoreFocus = false) {
 }
 
 function focusFirstLanguageItem(surface) {
-  languageMenuRef(surface)?.querySelector('[role="menuitem"]')?.focus();
+  languageMenuRef(surface)?.querySelector('[role="menuitemradio"]')?.focus();
 }
 
 function handleDocumentClick(event) {
-  if (languageMenuOpen.value && !languageMenuRef()?.contains(event.target)) closeLanguageMenu(true);
+  if (languageMenuOpen.value && !languageMenuRef()?.contains(event.target)) closeLanguageMenu();
+}
+
+function handleBreakpointChange() {
+  closeLanguageMenu();
+  activeLanguageSurface.value = null;
+}
+
+function addBreakpointListener() {
+  const mediaQuery = window.matchMedia?.(LG_BREAKPOINT_QUERY);
+  if (!mediaQuery) return;
+  languageBreakpointMediaQuery = mediaQuery;
+  if (typeof mediaQuery.addEventListener === "function") {
+    mediaQuery.addEventListener("change", handleBreakpointChange);
+    return;
+  }
+  mediaQuery.addListener?.(handleBreakpointChange);
+}
+
+function removeBreakpointListener() {
+  if (!languageBreakpointMediaQuery) return;
+  if (typeof languageBreakpointMediaQuery.removeEventListener === "function") {
+    languageBreakpointMediaQuery.removeEventListener("change", handleBreakpointChange);
+  } else {
+    languageBreakpointMediaQuery.removeListener?.(handleBreakpointChange);
+  }
+  languageBreakpointMediaQuery = null;
 }
 
 function handleKeydown(event) {
@@ -188,7 +216,7 @@ function handleKeydown(event) {
     return;
   }
 
-  const items = [...languageMenuRef().querySelectorAll('[role="menuitem"]')];
+  const items = [...languageMenuRef().querySelectorAll('[role="menuitemradio"]')];
   const current = items.indexOf(document.activeElement);
   if (!items.length || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
   event.preventDefault();
@@ -208,11 +236,13 @@ function handleKeydown(event) {
 onMounted(() => {
   document.addEventListener("click", handleDocumentClick);
   document.addEventListener("keydown", handleKeydown);
+  addBreakpointListener();
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleDocumentClick);
   document.removeEventListener("keydown", handleKeydown);
+  removeBreakpointListener();
 });
 
 </script>
