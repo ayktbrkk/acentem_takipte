@@ -189,7 +189,7 @@ async function readBranchStoreState(page) {
   });
 }
 
-async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState = null) {
+async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState = null, testInfo) {
   const trigger = page.getByTestId(triggerTestId);
   await expect(trigger).toBeVisible();
   await trigger.click();
@@ -254,35 +254,68 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState 
     primaryError = error;
     throw error;
   } finally {
-    try {
-      if (!(await menu.isVisible().catch(() => false))) await trigger.click();
-      await expect(menu).toBeVisible();
-      const restoreResponsePromise = page.waitForResponse(
-        (response) => response.url().includes("set_session_locale"),
-        { timeout: 3000 },
-      ).catch(() => null);
-      await menu.locator("[role='menuitemradio']", { hasText: initialLocaleLabel }).click();
-      const restoreResponse = await restoreResponsePromise;
-      await assertLocaleResponse(restoreResponse, initialLocale);
-      await expect(menu).toBeHidden();
-      await expect(trigger).toContainText(initialLocaleLabel);
-      if (triggerTestId === "mobile-language-trigger") {
-        const drawer = page.locator("aside");
-        const drawerWasOpen = await drawer.evaluate((element) => element.classList.contains("translate-x-0"));
+    const drawer = page.locator("aside");
+    const drawerWasOpen = triggerTestId === "mobile-language-trigger"
+      ? await drawer.evaluate((element) => element.classList.contains("translate-x-0")).catch(() => false)
+      : false;
+    let restorationError = null;
+    let restorationAttempts = 0;
+    let observedAfterRestoration = null;
+    let restored = false;
+    for (let attempt = 1; attempt <= 2 && !restored; attempt += 1) {
+      restorationAttempts = attempt;
+      try {
+        if (attempt > 1) {
+          await page.reload({ waitUntil: "domcontentloaded" });
+          if (drawerWasOpen) await page.getByTestId("mobile-sidebar-trigger").click();
+        }
+        if (!(await menu.isVisible().catch(() => false))) await trigger.click();
+        await expect(menu).toBeVisible();
+        const restoreResponsePromise = page.waitForResponse(
+          (response) => response.url().includes("set_session_locale"),
+          { timeout: 3000 },
+        ).catch(() => null);
+        await menu.locator("[role='menuitemradio']", { hasText: initialLocaleLabel }).click();
+        const restoreResponse = await restoreResponsePromise;
+        await assertLocaleResponse(restoreResponse, initialLocale);
+        await expect(menu).toBeHidden();
+        await expect(trigger).toContainText(initialLocaleLabel);
         await page.reload({ waitUntil: "domcontentloaded" });
         if (drawerWasOpen) await page.getByTestId("mobile-sidebar-trigger").click();
-      } else {
-        await page.reload({ waitUntil: "domcontentloaded" });
+        await expect(page.getByTestId(triggerTestId)).toContainText(initialLocaleLabel);
+        observedAfterRestoration = await readObservedLocale(page);
+        expect(observedAfterRestoration).toBe(initialLocale);
+        if (initialState) {
+          const restoredState = await readShellLocaleState(page, Boolean(initialState.profileRole));
+          expect(restoredState).toEqual(initialState);
+        }
+        restored = true;
+      } catch (error) {
+        restorationError = error;
       }
-      await expect(page.getByTestId(triggerTestId)).toContainText(initialLocaleLabel);
-      expect(await readObservedLocale(page)).toBe(initialLocale);
-      if (initialState) {
-        const restoredState = await readShellLocaleState(page, Boolean(initialState.profileRole));
-        expect(restoredState).toEqual(initialState);
-      }
-    } catch (restoreError) {
-      if (!primaryError) throw restoreError;
-      console.log("shell-utility-locale-restore-failed");
+    }
+    const stateMarker = {
+      expectedLocale: initialLocale,
+      observedLocale: observedAfterRestoration,
+      restored,
+      restorationAttempts,
+      primaryAssertionFailed: Boolean(primaryError),
+      restorationFailed: Boolean(restorationError),
+    };
+    try {
+      await testInfo?.attach("shell-utility-locale-restoration", {
+        body: JSON.stringify(stateMarker),
+        contentType: "application/json",
+      });
+    } catch {
+      console.log("shell-utility-locale-state-attachment-failed");
+    }
+    if (!restored) {
+      const dedicatedError = new Error("Locale restoration failed after two attempts.");
+      dedicatedError.cause = primaryError
+        ? new AggregateError([primaryError, restorationError], "Primary assertion and locale restoration both failed.")
+        : restorationError;
+      throw dedicatedError;
     }
   }
 }
@@ -368,7 +401,7 @@ async function assertBranchListbox(page) {
   await expect(trigger).toBeFocused();
 }
 
-async function assertIndependentTabletUtilities(page) {
+async function assertIndependentTabletUtilities(page, testInfo) {
   const languageTrigger = page.getByTestId("mobile-language-trigger");
   const languageMenu = page.getByTestId("mobile-language-menu");
   const branchTrigger = page.getByTestId("branch-scope-trigger");
@@ -388,7 +421,7 @@ async function assertIndependentTabletUtilities(page) {
   }
   await page.keyboard.press("Escape");
   await expect(languageMenu).toBeHidden();
-  await assertLanguageMenu(page, "mobile-language-trigger", "mobile-language-menu");
+  await assertLanguageMenu(page, "mobile-language-trigger", "mobile-language-menu", null, testInfo);
   await assertBranchListbox(page);
 }
 
@@ -415,6 +448,26 @@ async function assertTabletUtilityGeometry(page) {
       || branchBox.y + branchBox.height <= languageBox.y
       || languageBox.y + languageBox.height <= branchBox.y,
   ).toBe(true);
+}
+
+async function assertTabletTopbarRowContract(page) {
+  const layout = await page.evaluate(() => {
+    const topbar = document.querySelector("header.at-shell-topbar");
+    const branch = document.querySelector('[data-testid="branch-scope-trigger"]');
+    const language = document.querySelector('[data-testid="mobile-language-trigger"]');
+    if (!topbar || !branch || !language) return null;
+    const box = (element) => {
+      const rect = element.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    };
+    return { topbar: box(topbar), branch: box(branch), language: box(language) };
+  });
+  expect(layout, "Expected the tablet topbar and both utility controls to render.").not.toBeNull();
+  if (!layout) throw new Error("Tablet topbar utility layout is unavailable.");
+  expect(layout.topbar.height).toBeGreaterThanOrEqual(Math.max(layout.branch.height, layout.language.height) + 20);
+  expect(Math.abs(layout.branch.y - layout.language.y)).toBeLessThanOrEqual(4);
+  expect(layout.branch.y).toBeGreaterThanOrEqual(layout.topbar.y);
+  expect(layout.language.y + layout.language.height).toBeLessThanOrEqual(layout.topbar.y + layout.topbar.height);
 }
 
 async function assertProfileMenuInViewport(page) {
@@ -504,7 +557,7 @@ test.describe("shell utility redesign audit", () => {
     await page.keyboard.press("Escape");
 
     const initialLocaleState = await readShellLocaleState(page, true);
-    await assertLanguageMenu(page, "topbar-language-trigger", "topbar-language-menu", initialLocaleState);
+    await assertLanguageMenu(page, "topbar-language-trigger", "topbar-language-menu", initialLocaleState, test.info());
     await assertBranchListbox(page);
     await expect(page.getByTestId("mobile-language-trigger")).toBeHidden();
   });
@@ -515,8 +568,9 @@ test.describe("shell utility redesign audit", () => {
     await assertNoHorizontalOverflow(page, 768);
     await expect(page.getByTestId("mobile-sidebar-trigger")).toBeVisible();
     await expect(page.getByTestId("topbar-language-trigger")).toBeHidden();
-    await assertIndependentTabletUtilities(page);
+    await assertIndependentTabletUtilities(page, test.info());
     await assertTabletUtilityGeometry(page);
+    await assertTabletTopbarRowContract(page);
     await page.getByTestId("mobile-sidebar-trigger").click();
     const tabletProfileTrigger = page.getByTestId("sidebar-profile-trigger");
     await tabletProfileTrigger.click();
@@ -602,7 +656,7 @@ test.describe("shell utility redesign audit", () => {
     expect(await profileMenu.getByTestId("profile-summary-active-branch").evaluate((element) => !element.closest("button,a,[role]"))).toBe(true);
     await page.keyboard.press("Escape");
     await expect(profileMenu).toBeHidden();
-    await assertLanguageMenu(page, "mobile-language-trigger", "mobile-language-menu");
+    await assertLanguageMenu(page, "mobile-language-trigger", "mobile-language-menu", null, test.info());
     await assertBranchListbox(page);
 
     const closeButton = aside.getByTestId("mobile-sidebar-close");
