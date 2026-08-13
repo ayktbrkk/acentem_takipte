@@ -51,8 +51,18 @@ function mountSidebar(options) {
   return wrapper;
 }
 
+function findLatestProfileMenu() {
+  const menus = document.body.querySelectorAll('[data-testid="sidebar-profile-menu"]');
+  return menus[menus.length - 1] || null;
+}
+
+function cleanupTeleportedMenus() {
+  document.querySelectorAll('[data-testid="sidebar-profile-menu"]').forEach((menu) => menu.remove());
+}
+
 describe("Sidebar localization", () => {
   beforeEach(() => {
+    cleanupTeleportedMenus();
     setActivePinia(createPinia());
     useUiStore().setCollapsed(false);
     vi.stubGlobal("matchMedia", (query) => ({
@@ -66,7 +76,7 @@ describe("Sidebar localization", () => {
   afterEach(() => {
     mountedWrappers.forEach((wrapper) => wrapper.unmount());
     mountedWrappers = [];
-    document.querySelectorAll('[data-testid="sidebar-profile-menu"]').forEach((menu) => menu.remove());
+    cleanupTeleportedMenus();
     vi.unstubAllGlobals();
   });
 
@@ -104,10 +114,9 @@ describe("Sidebar localization", () => {
     expect(collapseToggles[0].attributes("title")).toBe("Menüyü daralt");
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     await wrapper.find('footer [data-testid="sidebar-profile-trigger"]').trigger("click");
-    const profileMenus = wrapper.findAll('[data-testid="sidebar-profile-menu"]');
-    expect(profileMenus).toHaveLength(1);
-    const profileMenu = profileMenus[0];
-    expect(profileMenu.find('[data-testid="profile-mobile-language"]').exists()).toBe(false);
+    const profileMenu = findLatestProfileMenu();
+    expect(profileMenu).not.toBe(null);
+    expect(profileMenu.querySelector('[data-testid="profile-mobile-language"]')).toBe(null);
     expect(wrapper.find('footer [data-testid="profile-mobile-language"]').exists()).toBe(false);
     expect(wrapper.text()).toContain("Acentem Takipte");
     expect(wrapper.find('p[title="Acentem Takipte"]').exists()).toBe(true);
@@ -152,8 +161,7 @@ describe("Sidebar localization", () => {
     expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     await wrapper.find('footer [data-testid="sidebar-profile-trigger"]').trigger("click");
-    const profileMenus = wrapper.findAll('[data-testid="sidebar-profile-menu"]');
-    expect(profileMenus).toHaveLength(1);
+    expect(findLatestProfileMenu()).not.toBe(null);
     expect(wrapper.find('footer [data-testid="profile-mobile-language"]').exists()).toBe(false);
   });
 
@@ -324,7 +332,7 @@ describe("Sidebar localization", () => {
   });
 
   it("keeps the desktop toggle, navigation scroll region, and profile footer outside that region", () => {
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: { mobileOpen: false },
       global: {
         directives: { prefetch: {} },
@@ -347,7 +355,7 @@ describe("Sidebar localization", () => {
       removeEventListener: vi.fn(),
     }));
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: { mobileOpen: true },
       global: {
         directives: { prefetch: {} },
@@ -384,7 +392,7 @@ describe("Sidebar localization", () => {
       roles: ["System Manager"],
     });
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: { mobileOpen: false },
       global: {
         directives: { prefetch: {} },
