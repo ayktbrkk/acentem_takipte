@@ -59,26 +59,33 @@ const PROFILE_MENU_TRANSLATIONS = {
 
 let mountedWrappers = [];
 
-function mountSidebar() {
-  const wrapper = mount(SidebarProfileMenu, { attachTo: document.body });
+function mountSidebar(options = {}) {
+  const wrapper = mount(SidebarProfileMenu, { attachTo: document.body, ...options });
   mountedWrappers.push(wrapper);
   return wrapper;
 }
 
 function findProfileMenu() {
-  return new DOMWrapper(document.body.querySelector('[data-testid="sidebar-profile-menu"]'));
+  const menus = document.body.querySelectorAll('[data-testid="sidebar-profile-menu"]');
+  return new DOMWrapper(menus[menus.length - 1] || null);
+}
+
+function removeTeleportedMenus() {
+  document.querySelectorAll('[data-testid="sidebar-profile-menu"]').forEach((menu) => menu.remove());
 }
 
 describe("Sidebar profile menu contract", () => {
   afterEach(() => {
     mountedWrappers.forEach((wrapper) => wrapper.unmount());
     mountedWrappers = [];
+    removeTeleportedMenus();
     setPreferredLocale("en");
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
   beforeEach(() => {
+    removeTeleportedMenus();
     setActivePinia(createPinia());
     resourceMock.createResource.mockClear();
     resourceMock.localeResource.submit.mockReset();
@@ -107,7 +114,7 @@ describe("Sidebar profile menu contract", () => {
   });
 
   it("renders the user, localized role, informational branch, and logout actions", async () => {
-    const wrapper = mountSidebar();
+    const wrapper = mountSidebar({ props: { mobile: false } });
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
 
     expect(trigger.exists()).toBe(true);
@@ -127,7 +134,7 @@ describe("Sidebar profile menu contract", () => {
     expect(profileMenu.text()).toContain("Aktif şube");
     expect(profileMenu.text()).toContain("AT Sigorta");
     expect(profileMenu.find('[data-testid="profile-mobile-language"]').exists()).toBe(false);
-    expect(profileMenu.find('[data-testid="branch-scope-trigger"]').exists()).toBe(false);
+    expect(profileMenu.element.querySelector('[data-testid="branch-scope-trigger"]')).toBe(null);
     expect(profileMenu.text()).toContain("Çıkış Yap");
     expect(profileMenu.find('[data-testid="profile-summary-user"]').text()).toBe("Aykut Yılmaz");
     expect(profileMenu.find('[data-testid="profile-summary-role"]').text()).toContain("AT Yönetici");
@@ -137,6 +144,34 @@ describe("Sidebar profile menu contract", () => {
       activeBranchSummary.attributes("role"),
     );
     expect(activeBranchSummary.element.closest("button, a, input, select, textarea")).toBe(null);
+  });
+
+  it("clamps the teleported menu to the mobile viewport and applies a usable max-height", async () => {
+    vi.stubGlobal("requestAnimationFrame", (callback) => {
+      callback();
+      return 1;
+    });
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    vi.spyOn(window, "innerWidth", "get").mockReturnValue(390);
+    vi.spyOn(window, "innerHeight", "get").mockReturnValue(844);
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function () {
+      if (this.matches('[data-testid="sidebar-profile-trigger"]')) {
+        return { left: 380, right: 412, top: 700, bottom: 732, width: 32, height: 32 };
+      }
+      if (this.matches('[data-testid="sidebar-profile-menu"]')) {
+        return { left: 0, right: 288, top: 0, bottom: 400, width: 288, height: 400 };
+      }
+      return { left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0 };
+    });
+
+    const wrapper = mountSidebar({ props: { mobile: false } });
+    await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
+    const menu = findProfileMenu();
+
+    expect(menu.attributes("style")).toContain("left: 94px");
+    expect(menu.attributes("style")).toContain("top: 288px");
+    expect(menu.attributes("style")).toContain("max-height: 828px");
+    expect(menu.classes()).toContain("overflow-y-auto");
   });
 
   it("renders localized role and active-branch labels in English", async () => {
