@@ -23,18 +23,29 @@ const OfficeBranchSelectStub = {
   template: `<div data-testid="branch-scope-trigger">Branch scope control</div>`,
 };
 
+const mountedWrappers = [];
+
 function mountTopbar(options = {}) {
-  return mount(Topbar, {
+  const wrapper = mount(Topbar, {
     ...options,
     global: {
       ...options.global,
       stubs: { OfficeBranchSelect: OfficeBranchSelectStub },
     },
   });
+  mountedWrappers.push(wrapper);
+  return wrapper;
+}
+
+function unmountTopbar(wrapper) {
+  const index = mountedWrappers.indexOf(wrapper);
+  if (index >= 0) mountedWrappers.splice(index, 1);
+  wrapper.unmount();
 }
 
 describe("Topbar shell contract", () => {
   afterEach(() => {
+    mountedWrappers.splice(0).forEach((wrapper) => wrapper.unmount());
     vi.unstubAllGlobals();
   });
 
@@ -136,7 +147,6 @@ describe("Topbar shell contract", () => {
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
     expect(document.activeElement).toBe(externalButton);
     externalButton.remove();
-    wrapper.unmount();
   });
 
   it("keeps the mobile language surface independent from branch scope and profile content", async () => {
@@ -165,10 +175,9 @@ describe("Topbar shell contract", () => {
     expect(wrapper.text()).toContain("OVERVIEW");
     expect(trigger.text()).toContain("English");
     expect(document.activeElement).toBe(trigger.element);
-    wrapper.unmount();
   });
 
-  it("restores focus to the mobile language trigger after an outside click", async () => {
+  it("preserves external focus when clicking outside the mobile language menu", async () => {
     const authStore = useAuthStore();
     authStore.applyContext({ locale: "tr", user: "Aykut", roles: ["AT Agent"] });
 
@@ -184,7 +193,6 @@ describe("Topbar shell contract", () => {
     expect(wrapper.find('[data-testid="mobile-language-menu"]').exists()).toBe(false);
     expect(document.activeElement).toBe(externalButton);
     externalButton.remove();
-    wrapper.unmount();
   });
 
   it("supports complete keyboard navigation on the separate mobile language surface", async () => {
@@ -215,7 +223,6 @@ describe("Topbar shell contract", () => {
     expect(wrapper.find('[data-testid="mobile-language-menu"]').exists()).toBe(false);
     expect(trigger.attributes("aria-expanded")).toBe("false");
     expect(document.activeElement).toBe(trigger.element);
-    wrapper.unmount();
   });
 
   it("closes the desktop language menu when the viewport crosses to mobile", async () => {
@@ -240,7 +247,7 @@ describe("Topbar shell contract", () => {
     expect(trigger.attributes("aria-expanded")).toBe("false");
     await wrapper.find('[data-testid="mobile-language-trigger"]').trigger("click");
     expect(wrapper.find('[data-testid="mobile-language-menu"]').exists()).toBe(true);
-    wrapper.unmount();
+    unmountTopbar(wrapper);
     expect(mediaQuery.removeEventListener).toHaveBeenCalledWith("change", listener);
   });
 
@@ -266,7 +273,53 @@ describe("Topbar shell contract", () => {
     expect(trigger.attributes("aria-expanded")).toBe("false");
     await wrapper.find('[data-testid="topbar-language-trigger"]').trigger("click");
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(true);
-    wrapper.unmount();
+    unmountTopbar(wrapper);
     expect(mediaQuery.removeEventListener).toHaveBeenCalledWith("change", listener);
+  });
+
+  it("removes a legacy matchMedia listener with the matching API", () => {
+    const mediaQuery = {
+      matches: false,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    };
+    vi.stubGlobal("matchMedia", vi.fn(() => mediaQuery));
+
+    mountTopbar();
+    const listener = mediaQuery.addListener.mock.calls[0][0];
+
+    expect(mediaQuery.addListener).toHaveBeenCalledWith(listener);
+    expect(mediaQuery.removeListener).not.toHaveBeenCalled();
+    unmountTopbar(mountedWrappers[0]);
+
+    expect(mediaQuery.removeListener).toHaveBeenCalledWith(listener);
+  });
+
+  it("uses roving tabindex for language radios and leaves the menu on Tab", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({ locale: "tr", user: "Aykut", roles: ["AT Agent"] });
+
+    const wrapper = mountTopbar({ attachTo: document.body });
+    const trigger = wrapper.find('[data-testid="mobile-language-trigger"]');
+    await trigger.trigger("click");
+    await wrapper.vm.$nextTick();
+
+    const menu = wrapper.find('[data-testid="mobile-language-menu"]');
+    const items = () => menu.findAll('[role="menuitemradio"]');
+    expect(items().map((item) => item.attributes("tabindex"))).toEqual(["0", "-1"]);
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+    await wrapper.vm.$nextTick();
+    expect(items().map((item) => item.attributes("tabindex"))).toEqual(["-1", "0"]);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Home" }));
+    await wrapper.vm.$nextTick();
+    expect(items().map((item) => item.attributes("tabindex"))).toEqual(["0", "-1"]);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "End" }));
+    await wrapper.vm.$nextTick();
+    expect(items().map((item) => item.attributes("tabindex"))).toEqual(["-1", "0"]);
+
+    const tabEvent = new KeyboardEvent("keydown", { key: "Tab", cancelable: true });
+    document.dispatchEvent(tabEvent);
+    expect(tabEvent.defaultPrevented).toBe(false);
   });
 });

@@ -41,12 +41,14 @@
             :aria-label="t('language')"
           >
             <button
-              v-for="item in localeItems"
+              v-for="(item, index) in localeItems"
               :key="item.locale"
               class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-slate-800 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               type="button"
               role="menuitemradio"
+              :tabindex="languageFocusIndex === index ? 0 : -1"
               :aria-checked="authStore.locale === item.locale ? 'true' : 'false'"
+              @focus="languageFocusIndex = index"
               @click="setLocale(item.locale)"
             >
               <span>{{ item.label }}</span>
@@ -77,12 +79,14 @@
             :aria-label="t('language')"
           >
             <button
-              v-for="item in localeItems"
+              v-for="(item, index) in localeItems"
               :key="item.locale"
               class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-slate-800 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               type="button"
               role="menuitemradio"
+              :tabindex="languageFocusIndex === index ? 0 : -1"
               :aria-checked="authStore.locale === item.locale ? 'true' : 'false'"
+              @focus="languageFocusIndex = index"
               @click="setLocale(item.locale)"
             >
               <span>{{ item.label }}</span>
@@ -111,11 +115,13 @@ const route = useRoute();
 const authStore = useAuthStore();
 const languageMenuOpen = ref(false);
 const activeLanguageSurface = ref(null);
+const languageFocusIndex = ref(0);
 const desktopLanguageMenuRef = ref(null);
 const mobileLanguageMenuRef = ref(null);
 const { setLocale: persistLocale } = useLocalePreference();
 const LG_BREAKPOINT_QUERY = "(min-width: 1024px)";
 let languageBreakpointMediaQuery = null;
+let languageBreakpointListenerApi = null;
 
 function t(key) {
   return translateText(key, authStore.locale);
@@ -156,6 +162,7 @@ function toggleLanguageMenu(surface) {
     return;
   }
   activeLanguageSurface.value = surface;
+  languageFocusIndex.value = 0;
   languageMenuOpen.value = true;
   nextTick(() => focusFirstLanguageItem(surface));
 }
@@ -176,7 +183,14 @@ function closeLanguageMenu(restoreFocus = false) {
 }
 
 function focusFirstLanguageItem(surface) {
-  languageMenuRef(surface)?.querySelector('[role="menuitemradio"]')?.focus();
+  focusLanguageItem(surface, languageFocusIndex.value);
+}
+
+function focusLanguageItem(surface, index) {
+  const items = [...(languageMenuRef(surface)?.querySelectorAll('[role="menuitemradio"]') || [])];
+  if (!items[index]) return;
+  languageFocusIndex.value = index;
+  items[index].focus();
 }
 
 function handleDocumentClick(event) {
@@ -193,20 +207,23 @@ function addBreakpointListener() {
   if (!mediaQuery) return;
   languageBreakpointMediaQuery = mediaQuery;
   if (typeof mediaQuery.addEventListener === "function") {
+    languageBreakpointListenerApi = "eventListener";
     mediaQuery.addEventListener("change", handleBreakpointChange);
     return;
   }
+  languageBreakpointListenerApi = "listener";
   mediaQuery.addListener?.(handleBreakpointChange);
 }
 
 function removeBreakpointListener() {
   if (!languageBreakpointMediaQuery) return;
-  if (typeof languageBreakpointMediaQuery.removeEventListener === "function") {
+  if (languageBreakpointListenerApi === "eventListener") {
     languageBreakpointMediaQuery.removeEventListener("change", handleBreakpointChange);
-  } else {
+  } else if (languageBreakpointListenerApi === "listener") {
     languageBreakpointMediaQuery.removeListener?.(handleBreakpointChange);
   }
   languageBreakpointMediaQuery = null;
+  languageBreakpointListenerApi = null;
 }
 
 function handleKeydown(event) {
@@ -221,16 +238,16 @@ function handleKeydown(event) {
   if (!items.length || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
   event.preventDefault();
   if (event.key === "Home") {
-    items[0].focus();
+    focusLanguageItem(activeLanguageSurface.value, 0);
     return;
   }
   if (event.key === "End") {
-    items[items.length - 1].focus();
+    focusLanguageItem(activeLanguageSurface.value, items.length - 1);
     return;
   }
   const direction = event.key === "ArrowDown" ? 1 : -1;
   const next = current < 0 ? (direction === 1 ? 0 : items.length - 1) : (current + direction + items.length) % items.length;
-  items[next].focus();
+  focusLanguageItem(activeLanguageSurface.value, next);
 }
 
 onMounted(() => {
