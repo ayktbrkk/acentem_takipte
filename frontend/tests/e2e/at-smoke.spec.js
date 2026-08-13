@@ -685,7 +685,7 @@ test.describe("Acentem Takipte smoke", () => {
     expect(logoutRequest?.method()).toBe("POST");
   });
 
-  test("mobile profile menu exposes the segmented language control", async ({ page }) => {
+  test("mobile profile keeps language control independent and reachable", async ({ page }) => {
     await ensureAuthenticated(page);
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("/at/", { waitUntil: "domcontentloaded" });
@@ -701,13 +701,21 @@ test.describe("Acentem Takipte smoke", () => {
     await profileTrigger.scrollIntoViewIfNeeded();
     await profileTrigger.click();
     const profileMenu = page.getByTestId("sidebar-profile-menu");
-    const mobileLanguage = profileMenu.getByTestId("profile-mobile-language");
 
     await expect(aside).toHaveClass(/translate-x-0/);
     await expect(profileMenu).toBeVisible();
-    await expect(mobileLanguage).toBeVisible();
-    await expect(mobileLanguage.getByRole("menuitem", { name: "Türkçe", exact: true })).toBeVisible();
-    await expect(mobileLanguage.getByRole("menuitem", { name: "English", exact: true })).toBeVisible();
+    await expect(profileMenu.getByTestId("profile-mobile-language")).toHaveCount(0);
+    await expect(profileMenu.getByTestId("profile-summary-active-branch")).toHaveText(/\S/);
+    await expect(profileMenu.getByRole("menuitem", { name: /Hesabım|My Account/ })).toBeVisible();
+    await expect(profileMenu.getByRole("menuitem", { name: /Desk'i Aç|Open Desk/ })).toBeVisible();
+    await expect(profileMenu.getByRole("menuitem", { name: /Çıkış Yap|Logout/ })).toBeVisible();
+
+    const mobileLanguageTrigger = page.getByTestId("mobile-language-trigger");
+    await expect(mobileLanguageTrigger).toBeVisible();
+    await expect(profileMenu.getByTestId("mobile-language-trigger")).toHaveCount(0);
+    await mobileLanguageTrigger.click();
+    await expect(page.getByTestId("mobile-language-menu")).toBeVisible();
+    await expect(page.getByTestId("mobile-language-menu").getByRole("menuitemradio")).toHaveCount(2);
   });
 
   test("anonim smoke: /at route ve session endpoint auth duvari", async ({ page, context }) => {

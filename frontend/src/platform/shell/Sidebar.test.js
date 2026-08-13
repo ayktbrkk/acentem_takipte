@@ -322,6 +322,43 @@ describe("Sidebar localization", () => {
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
   });
 
+  it("keeps the mobile profile reachable after nav scrolling and teleports its menu outside the drawer", async () => {
+    vi.stubGlobal("matchMedia", () => ({
+      matches: false,
+      media: "(min-width: 1024px)",
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+
+    const wrapper = mount(Sidebar, {
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const nav = wrapper.find("nav");
+    const footer = wrapper.find("footer");
+    const profileTrigger = footer.find('[data-testid="sidebar-profile-trigger"]');
+    nav.element.scrollTop = 320;
+
+    expect(nav.element.scrollTop).toBe(320);
+    expect(nav.element.contains(profileTrigger.element)).toBe(false);
+    expect(footer.element.contains(profileTrigger.element)).toBe(true);
+    expect(profileTrigger.isVisible()).toBe(true);
+    expect(profileTrigger.element.disabled).toBe(false);
+
+    await profileTrigger.trigger("click");
+    const profileMenu = document.body.querySelector('[data-testid="sidebar-profile-menu"]');
+    expect(profileMenu).not.toBe(null);
+    expect(profileMenu.parentElement).toBe(document.body);
+    expect(profileMenu.closest("aside")).toBe(null);
+    expect(profileMenu.classList.contains("fixed")).toBe(true);
+    expect(profileMenu.parentElement.classList.contains("overflow-y-auto")).toBe(false);
+
+    wrapper.unmount();
+  });
+
   it("uses the 240px expanded and 76px collapsed rail contracts while preserving navigation", async () => {
     useAuthStore().applyContext({
       locale: "en",

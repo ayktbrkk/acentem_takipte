@@ -281,16 +281,22 @@ describe("Sidebar profile menu contract", () => {
     externalControl.remove();
   });
 
-  it("moves focus through the menu when no item is currently focused", async () => {
+  it("supports ArrowUp, ArrowDown, Home, and End menu navigation", async () => {
     const wrapper = mountSidebar();
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
 
     await trigger.trigger("click");
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
-    await wrapper.vm.$nextTick();
-
     const items = findProfileMenu().findAll('[role="menuitem"]');
+    expect(document.activeElement).toBe(items[0].element);
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+    expect(document.activeElement).toBe(items[1].element);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true }));
+    expect(document.activeElement).toBe(items[0].element);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true }));
     expect(document.activeElement).toBe(items[items.length - 1].element);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
+    expect(document.activeElement).toBe(items[items.length - 2].element);
   });
 
   it("keeps the profile surface free of duplicate language controls", async () => {
