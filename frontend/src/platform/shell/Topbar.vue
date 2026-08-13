@@ -16,22 +16,24 @@
         </div>
       </div>
 
-      <div class="flex w-full items-center justify-end gap-2 md:w-auto md:gap-3">
+      <div class="flex w-full flex-wrap items-center justify-end gap-2 md:w-auto md:gap-3">
         <OfficeBranchSelect v-if="authStore.officeBranches.length || authStore.canAccessAllOfficeBranches" />
-        <div ref="languageMenuRef" class="relative hidden lg:block">
+        <div ref="desktopLanguageMenuRef" class="relative hidden lg:block">
           <button
             data-testid="topbar-language-trigger"
             class="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             type="button"
             aria-haspopup="menu"
-            :aria-expanded="languageMenuOpen ? 'true' : 'false'"
-             @click="toggleLanguageMenu"
+            aria-controls="topbar-language-menu"
+            :aria-expanded="languageMenuOpen && activeLanguageSurface === 'desktop' ? 'true' : 'false'"
+            :aria-label="languageMenuOpen && activeLanguageSurface === 'desktop' ? t('closeLanguageMenu') : t('openLanguageMenu')"
+            @click="toggleLanguageMenu('desktop')"
           >
             <IconLucideGlobe2 class="h-4 w-4 text-slate-500" />
             <span>{{ currentLanguageLabel }}</span>
           </button>
           <div
-            v-if="languageMenuOpen"
+            v-if="languageMenuOpen && activeLanguageSurface === 'desktop'"
             data-testid="topbar-language-menu"
             class="absolute right-0 top-[calc(100%+0.5rem)] z-40 w-36 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-900/10"
             role="menu"
@@ -43,7 +45,42 @@
               class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-slate-800 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               type="button"
               role="menuitem"
-              :aria-current="authStore.locale === item.locale ? 'true' : undefined"
+              :aria-selected="authStore.locale === item.locale ? 'true' : 'false'"
+              @click="setLocale(item.locale)"
+            >
+              <span>{{ item.label }}</span>
+              <span v-if="authStore.locale === item.locale" aria-hidden="true">✓</span>
+            </button>
+          </div>
+        </div>
+        <div ref="mobileLanguageMenuRef" class="relative ml-auto lg:hidden">
+          <button
+            data-testid="mobile-language-trigger"
+            class="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            type="button"
+            aria-haspopup="menu"
+            aria-controls="mobile-language-menu"
+            :aria-expanded="languageMenuOpen && activeLanguageSurface === 'mobile' ? 'true' : 'false'"
+            :aria-label="languageMenuOpen && activeLanguageSurface === 'mobile' ? t('closeLanguageMenu') : t('openLanguageMenu')"
+            @click="toggleLanguageMenu('mobile')"
+          >
+            <IconLucideGlobe2 class="h-4 w-4 text-slate-500" />
+            <span>{{ currentLanguageLabel }}</span>
+          </button>
+          <div
+            v-if="languageMenuOpen && activeLanguageSurface === 'mobile'"
+            data-testid="mobile-language-menu"
+            class="absolute right-0 top-[calc(100%+0.5rem)] z-40 w-36 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-900/10"
+            role="menu"
+            :aria-label="t('language')"
+          >
+            <button
+              v-for="item in localeItems"
+              :key="item.locale"
+              class="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-slate-800 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              type="button"
+              role="menuitem"
+              :aria-selected="authStore.locale === item.locale ? 'true' : 'false'"
               @click="setLocale(item.locale)"
             >
               <span>{{ item.label }}</span>
@@ -71,7 +108,9 @@ defineEmits(["toggle-sidebar"]);
 const route = useRoute();
 const authStore = useAuthStore();
 const languageMenuOpen = ref(false);
-const languageMenuRef = ref(null);
+const activeLanguageSurface = ref(null);
+const desktopLanguageMenuRef = ref(null);
+const mobileLanguageMenuRef = ref(null);
 const { setLocale: persistLocale } = useLocalePreference();
 
 function t(key) {
@@ -103,13 +142,18 @@ const localeItems = computed(() => [
 ]);
 const currentLanguageLabel = computed(() => localeItems.value.find((item) => item.locale === authStore.locale)?.label || t("english"));
 
-function toggleLanguageMenu() {
-  if (languageMenuOpen.value) {
+function languageMenuRef(surface = activeLanguageSurface.value) {
+  return surface === "mobile" ? mobileLanguageMenuRef.value : desktopLanguageMenuRef.value;
+}
+
+function toggleLanguageMenu(surface) {
+  if (languageMenuOpen.value && activeLanguageSurface.value === surface) {
     closeLanguageMenu(true);
     return;
   }
+  activeLanguageSurface.value = surface;
   languageMenuOpen.value = true;
-  nextTick(focusFirstLanguageItem);
+  nextTick(() => focusFirstLanguageItem(surface));
 }
 
 async function setLocale(locale) {
@@ -118,7 +162,8 @@ async function setLocale(locale) {
 }
 
 function focusTrigger() {
-  languageMenuRef.value?.querySelector('[data-testid="topbar-language-trigger"]')?.focus();
+  const testId = activeLanguageSurface.value === "mobile" ? "mobile-language-trigger" : "topbar-language-trigger";
+  languageMenuRef(activeLanguageSurface.value)?.querySelector(`[data-testid="${testId}"]`)?.focus();
 }
 
 function closeLanguageMenu(restoreFocus = false) {
@@ -126,12 +171,12 @@ function closeLanguageMenu(restoreFocus = false) {
   if (restoreFocus) focusTrigger();
 }
 
-function focusFirstLanguageItem() {
-  languageMenuRef.value?.querySelector('[role="menuitem"]')?.focus();
+function focusFirstLanguageItem(surface) {
+  languageMenuRef(surface)?.querySelector('[role="menuitem"]')?.focus();
 }
 
 function handleDocumentClick(event) {
-  if (languageMenuOpen.value && !languageMenuRef.value?.contains(event.target)) closeLanguageMenu();
+  if (languageMenuOpen.value && !languageMenuRef()?.contains(event.target)) closeLanguageMenu(true);
 }
 
 function handleKeydown(event) {
@@ -141,7 +186,7 @@ function handleKeydown(event) {
     return;
   }
 
-  const items = [...languageMenuRef.value.querySelectorAll('[role="menuitem"]')];
+  const items = [...languageMenuRef().querySelectorAll('[role="menuitem"]')];
   const current = items.indexOf(document.activeElement);
   if (!items.length || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
   event.preventDefault();

@@ -75,6 +75,7 @@ describe("Topbar shell contract", () => {
     expect(trigger.exists()).toBe(true);
     expect(trigger.text()).toContain("Türkçe");
     expect(trigger.attributes("aria-haspopup")).toBe("menu");
+    expect(trigger.attributes("aria-controls")).toBe("topbar-language-menu");
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
 
     await trigger.trigger("click");
@@ -125,6 +126,49 @@ describe("Topbar shell contract", () => {
     document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await wrapper.vm.$nextTick();
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it("keeps the mobile language surface independent from branch scope and profile content", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({ locale: "tr", user: "Aykut", roles: ["AT Agent"], office_branches: [{ name: "HQ" }] });
+
+    const wrapper = mountTopbar({ attachTo: document.body });
+    const trigger = wrapper.find('[data-testid="mobile-language-trigger"]');
+
+    expect(trigger.exists()).toBe(true);
+    expect(trigger.text()).toContain("Türkçe");
+    expect(trigger.attributes("aria-controls")).toBe("mobile-language-menu");
+    expect(trigger.element.contains(wrapper.find('[data-testid="branch-scope-trigger"]').element)).toBe(false);
+    expect(wrapper.find('[data-testid="sidebar-profile-menu"]').exists()).toBe(false);
+
+    await trigger.trigger("click");
+    const menu = wrapper.find('[data-testid="mobile-language-menu"]');
+    expect(menu.attributes("role")).toBe("menu");
+    expect(trigger.attributes("aria-expanded")).toBe("true");
+    expect(menu.find('[role="menuitem"][aria-selected="true"]').text()).toContain("Türkçe");
+
+    await menu.find('[role="menuitem"][aria-selected="false"]').trigger("click");
+    expect(authStore.locale).toBe("en");
+    expect(wrapper.text()).toContain("Dashboard");
+    expect(wrapper.text()).toContain("OVERVIEW");
+    expect(trigger.text()).toContain("English");
+    expect(document.activeElement).toBe(trigger.element);
+    wrapper.unmount();
+  });
+
+  it("restores focus to the mobile language trigger after an outside click", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({ locale: "tr", user: "Aykut", roles: ["AT Agent"] });
+
+    const wrapper = mountTopbar({ attachTo: document.body });
+    const trigger = wrapper.find('[data-testid="mobile-language-trigger"]');
+    await trigger.trigger("click");
+    document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('[data-testid="mobile-language-menu"]').exists()).toBe(false);
+    expect(document.activeElement).toBe(trigger.element);
     wrapper.unmount();
   });
 });
