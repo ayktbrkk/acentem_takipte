@@ -56,7 +56,7 @@ describe("Topbar shell contract", () => {
   it.each([
     ["tr", "Pano", "GENEL GÖRÜNÜM"],
     ["en", "Dashboard", "OVERVIEW"],
-  ])("keeps page context and branch scope while controls move to the profile menu in %s", (locale, pageTitle, sectionLabel) => {
+  ])("keeps branch and language controls independent from profile content in %s", (locale, pageTitle, sectionLabel) => {
     const authStore = useAuthStore();
     authStore.applyContext({
       locale,
@@ -295,31 +295,44 @@ describe("Topbar shell contract", () => {
     expect(mediaQuery.removeListener).toHaveBeenCalledWith(listener);
   });
 
-  it("uses roving tabindex for language radios and leaves the menu on Tab", async () => {
+  it.each(["desktop", "mobile"])("uses roving tabindex and leaves the %s language menu on Tab", async (surface) => {
     const authStore = useAuthStore();
     authStore.applyContext({ locale: "tr", user: "Aykut", roles: ["AT Agent"] });
 
     const wrapper = mountTopbar({ attachTo: document.body });
-    const trigger = wrapper.find('[data-testid="mobile-language-trigger"]');
+    const trigger = wrapper.find(`[data-testid="${surface === "desktop" ? "topbar" : "mobile"}-language-trigger"]`);
     await trigger.trigger("click");
     await wrapper.vm.$nextTick();
 
-    const menu = wrapper.find('[data-testid="mobile-language-menu"]');
+    const menu = wrapper.find(`[data-testid="${surface === "desktop" ? "topbar" : "mobile"}-language-menu"]`);
     const items = () => menu.findAll('[role="menuitemradio"]');
     expect(items().map((item) => item.attributes("tabindex"))).toEqual(["0", "-1"]);
 
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
     await wrapper.vm.$nextTick();
     expect(items().map((item) => item.attributes("tabindex"))).toEqual(["-1", "0"]);
+    expect(document.activeElement).toBe(items()[1].element);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp" }));
+    await wrapper.vm.$nextTick();
+    expect(items().map((item) => item.attributes("tabindex"))).toEqual(["0", "-1"]);
+    expect(document.activeElement).toBe(items()[0].element);
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Home" }));
     await wrapper.vm.$nextTick();
     expect(items().map((item) => item.attributes("tabindex"))).toEqual(["0", "-1"]);
+    expect(document.activeElement).toBe(items()[0].element);
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "End" }));
     await wrapper.vm.$nextTick();
     expect(items().map((item) => item.attributes("tabindex"))).toEqual(["-1", "0"]);
+    expect(document.activeElement).toBe(items()[1].element);
 
-    const tabEvent = new KeyboardEvent("keydown", { key: "Tab", cancelable: true });
-    document.dispatchEvent(tabEvent);
+    const nextFocusTarget = document.createElement("button");
+    document.body.appendChild(nextFocusTarget);
+    items()[1].element.focus();
+    const tabEvent = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    items()[1].element.dispatchEvent(tabEvent);
     expect(tabEvent.defaultPrevented).toBe(false);
+    if (document.activeElement !== nextFocusTarget) nextFocusTarget.focus();
+    expect(document.activeElement).toBe(nextFocusTarget);
+    nextFocusTarget.remove();
   });
 });
