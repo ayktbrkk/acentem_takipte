@@ -7,8 +7,8 @@
       @click="$emit('close')"
     />
     <aside
-      class="fixed inset-y-0 left-0 z-40 flex h-screen w-[220px] shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white transition-all duration-200 lg:static lg:z-0"
-      :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', effectiveCollapsed ? 'lg:w-24' : 'lg:w-[220px]']"
+      class="fixed inset-y-0 left-0 z-40 flex h-screen w-[220px] shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 motion-reduce:transition-none lg:static lg:z-0"
+      :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', effectiveCollapsed ? 'lg:w-[76px]' : 'lg:w-[240px]']"
     >
       <div class="border-b border-slate-100 px-4 py-4">
         <div class="mb-4 flex items-center justify-between lg:hidden">
@@ -49,7 +49,7 @@
         </div>
       </div>
 
-      <nav class="flex-1 overflow-y-auto pb-4">
+      <nav class="flex-1 min-h-0 overflow-y-auto pb-4">
         <div v-for="section in navSections" :key="section.title" class="mb-4">
           <p
             v-if="!effectiveCollapsed"
@@ -122,8 +122,8 @@
         </div>
       </nav>
 
-      <footer class="mt-auto border-t border-slate-100 px-3 py-3">
-        <SidebarProfileMenu :collapsed="effectiveCollapsed" :mobile="!isDesktopViewport" />
+      <footer class="mt-auto shrink-0 border-t border-slate-100 px-3 py-3">
+        <SidebarProfileMenu :collapsed="effectiveCollapsed" :mobile="false" />
       </footer>
     </aside>
   </div>

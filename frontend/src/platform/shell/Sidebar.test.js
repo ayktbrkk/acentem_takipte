@@ -323,6 +323,13 @@ describe("Sidebar localization", () => {
   });
 
   it("uses the 240px expanded and 76px collapsed rail contracts while preserving navigation", async () => {
+    useAuthStore().applyContext({
+      locale: "en",
+      user: "Aykut",
+      userId: "aykut",
+      roles: ["System Manager"],
+    });
+
     const wrapper = mount(Sidebar, {
       props: { mobileOpen: false },
       global: {
