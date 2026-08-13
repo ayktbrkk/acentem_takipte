@@ -175,8 +175,9 @@ function restoreMobileSidebarTriggerFocus() {
 watch(
   () => props.mobileOpen,
   (isOpen, wasOpen) => {
-    if (isOpen === wasOpen) return;
+    if (isOpen === wasOpen || isDesktopViewport.value) return;
     nextTick(() => {
+      if (isDesktopViewport.value) return;
       if (isOpen) focusMobileCloseControl();
       else restoreMobileSidebarTriggerFocus();
     });

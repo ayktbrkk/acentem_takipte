@@ -67,6 +67,20 @@ function addMobileSidebarTrigger() {
   return trigger;
 }
 
+function addFocusTarget() {
+  const target = document.createElement("button");
+  document.body.appendChild(target);
+  return target;
+}
+
+function stubMobileViewport() {
+  vi.stubGlobal("matchMedia", () => ({
+    matches: false,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }));
+}
+
 describe("Sidebar localization", () => {
   beforeEach(() => {
     cleanupTeleportedMenus();
@@ -88,6 +102,7 @@ describe("Sidebar localization", () => {
   });
 
   it("moves focus to the close control when the mobile drawer opens", async () => {
+    stubMobileViewport();
     const trigger = addMobileSidebarTrigger();
     useAuthStore().applyContext({ roles: ["AT Agent"] });
     const wrapper = mountSidebar({
@@ -112,6 +127,7 @@ describe("Sidebar localization", () => {
     ["the overlay", (wrapper) => wrapper.find("button.fixed.inset-0")],
     ["navigation", (wrapper) => wrapper.find("nav a")],
   ])("restores focus to the trigger after closing via %s", async (_source, findSource) => {
+    stubMobileViewport();
     const trigger = addMobileSidebarTrigger();
     useAuthStore().applyContext({ roles: ["AT Agent"] });
     const wrapper = mountSidebar({
@@ -133,6 +149,67 @@ describe("Sidebar localization", () => {
     await wrapper.vm.$nextTick();
     expect(document.activeElement).toBe(trigger);
     trigger.remove();
+  });
+
+  it("does not steal focus for desktop open or close transitions", async () => {
+    vi.stubGlobal("matchMedia", () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    const focusTarget = addFocusTarget();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    focusTarget.focus();
+    await wrapper.setProps({ mobileOpen: true });
+    await wrapper.vm.$nextTick();
+    expect(document.activeElement).toBe(focusTarget);
+
+    await wrapper.setProps({ mobileOpen: false });
+    await wrapper.vm.$nextTick();
+    expect(document.activeElement).toBe(focusTarget);
+    focusTarget.remove();
+  });
+
+  it("preserves focus when an open mobile drawer crosses to desktop", async () => {
+    const mediaQuery = {
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    vi.stubGlobal("matchMedia", () => mediaQuery);
+    const trigger = addMobileSidebarTrigger();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    await wrapper.setProps({ mobileOpen: true });
+    await wrapper.vm.$nextTick();
+    const currentFocus = addFocusTarget();
+    currentFocus.focus();
+
+    mediaQuery.matches = true;
+    mediaQuery.addEventListener.mock.calls[0][1]({ matches: true });
+    await wrapper.vm.$nextTick();
+    expect(document.activeElement).toBe(currentFocus);
+
+    await wrapper.setProps({ mobileOpen: false });
+    await wrapper.vm.$nextTick();
+    expect(document.activeElement).toBe(currentFocus);
+    trigger.remove();
+    currentFocus.remove();
   });
 
   it("renders Turkish chrome labels when the locale is tr", async () => {
