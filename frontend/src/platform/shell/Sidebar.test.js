@@ -122,6 +122,24 @@ describe("Sidebar localization", () => {
     trigger.remove();
   });
 
+  it("keeps the mobile backdrop out of the tab order and gives it a localized label", async () => {
+    stubMobileViewport();
+    useAuthStore().applyContext({ locale: "tr", roles: ["AT Agent"] });
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    const backdrop = wrapper.find("button.fixed.inset-0");
+    expect(backdrop.attributes("aria-label")).toBe("Kapat");
+    expect(backdrop.attributes("tabindex")).toBe("-1");
+    expect(backdrop.classes()).toContain("focus-visible:ring-2");
+  });
+
   it.each([
     ["the close control", (wrapper) => wrapper.find('[data-testid="mobile-sidebar-close"]')],
     ["the overlay", (wrapper) => wrapper.find("button.fixed.inset-0")],

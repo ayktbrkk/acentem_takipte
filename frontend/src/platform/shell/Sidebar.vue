@@ -2,8 +2,10 @@
   <div>
     <button
       v-if="mobileOpen"
-      class="fixed inset-0 z-30 bg-brand-600/40 backdrop-blur-[1px] lg:hidden"
+      class="fixed inset-0 z-30 bg-brand-600/40 backdrop-blur-[1px] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 lg:hidden"
       type="button"
+      tabindex="-1"
+      :aria-label="t('close')"
       @click="$emit('close')"
     />
     <aside

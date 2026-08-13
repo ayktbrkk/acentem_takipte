@@ -4,7 +4,7 @@
       <div class="flex items-center gap-3">
         <button
           data-testid="mobile-sidebar-trigger"
-          class="rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-700 hover:bg-slate-100 lg:hidden"
+          class="rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-700 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 lg:hidden"
           type="button"
           @click="$emit('toggle-sidebar')"
         >
@@ -172,14 +172,16 @@ async function setLocale(locale) {
   closeLanguageMenu(true);
 }
 
-function focusTrigger() {
-  const testId = activeLanguageSurface.value === "mobile" ? "mobile-language-trigger" : "topbar-language-trigger";
-  languageMenuRef(activeLanguageSurface.value)?.querySelector(`[data-testid="${testId}"]`)?.focus();
+function focusTrigger(surface = activeLanguageSurface.value) {
+  const testId = surface === "mobile" ? "mobile-language-trigger" : "topbar-language-trigger";
+  languageMenuRef(surface)?.querySelector(`[data-testid="${testId}"]`)?.focus();
 }
 
 function closeLanguageMenu(restoreFocus = false) {
+  const surface = activeLanguageSurface.value;
   languageMenuOpen.value = false;
-  if (restoreFocus) focusTrigger();
+  activeLanguageSurface.value = null;
+  if (restoreFocus) focusTrigger(surface);
 }
 
 function focusFirstLanguageItem(surface) {

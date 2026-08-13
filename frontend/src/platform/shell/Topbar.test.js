@@ -245,6 +245,7 @@ describe("Topbar shell contract", () => {
 
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
     expect(trigger.attributes("aria-expanded")).toBe("false");
+    expect(wrapper.vm.activeLanguageSurface).toBe(null);
     await wrapper.find('[data-testid="mobile-language-trigger"]').trigger("click");
     expect(wrapper.find('[data-testid="mobile-language-menu"]').exists()).toBe(true);
     unmountTopbar(wrapper);
@@ -271,10 +272,17 @@ describe("Topbar shell contract", () => {
 
     expect(wrapper.find('[data-testid="mobile-language-menu"]').exists()).toBe(false);
     expect(trigger.attributes("aria-expanded")).toBe("false");
+    expect(wrapper.vm.activeLanguageSurface).toBe(null);
     await wrapper.find('[data-testid="topbar-language-trigger"]').trigger("click");
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(true);
     unmountTopbar(wrapper);
     expect(mediaQuery.removeEventListener).toHaveBeenCalledWith("change", listener);
+  });
+
+  it("exposes a visible focus ring on the mobile sidebar trigger", () => {
+    const wrapper = mountTopbar();
+
+    expect(wrapper.find('[data-testid="mobile-sidebar-trigger"]').classes()).toContain("focus-visible:ring-2");
   });
 
   it("removes a legacy matchMedia listener with the matching API", () => {

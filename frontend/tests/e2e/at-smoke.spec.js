@@ -100,7 +100,8 @@ function readSidebarSnapshot(page) {
       route: sanitizeDiagnosticRoute(window.location.pathname),
       viewport: { width: window.innerWidth, height: window.innerHeight },
       sidebarClass: aside ? aside.className : null,
-      collapsed: aside ? /lg:w-24/.test(aside.className) : null,
+      sidebarWidth: aside ? Math.round(asideRect?.width || 0) : null,
+      collapsed: aside ? Math.round(asideRect?.width || 0) === 76 : null,
       localStorageCollapsed,
       storeCollapsed,
       buttons,
@@ -194,20 +195,21 @@ async function attachSidebarFailureDiagnostics(page, testInfo, options) {
   const newConsoleErrors = consoleErrors.slice(baseline.consoleErrorCount);
   const newPageErrors = pageErrors.slice(baseline.pageErrorCount);
   const newFailedRequests = failedRequests.slice(baseline.requestFailureCount);
-  const assertionType = /toHaveClass/.test(String(assertionError || ""))
+  const assertionType = /toHaveClass|toBe\(76\)/.test(String(assertionError || ""))
     ? "aside-class"
     : "expand-button-visibility";
   const observedState = {
+    sidebarWidth: immediateAfterClick.sidebarWidth,
     collapsed: Boolean(immediateAfterClick.collapsed),
-      expandButtonVisible: immediateAfterClick.buttons.some(
+    expandButtonVisible: immediateAfterClick.buttons.some(
       (button) => button.testId === "sidebar-desktop-collapse-toggle" && button.visible,
     ),
   };
   const expected = assertionType === "aside-class"
-    ? { sidebarClass: "lg:w-24" }
+    ? { sidebarWidth: 76 }
     : { expandButtonVisible: true };
-  const expectedLabel = assertionType === "aside-class" ? "lg:w-24" : "Menüyü genişlet";
-  const found = assertionType === "aside-class" ? observedState.collapsed : observedState.expandButtonVisible;
+  const expectedLabel = assertionType === "aside-class" ? "76px" : "Menüyü genişlet";
+  const found = assertionType === "aside-class" ? observedState.sidebarWidth : observedState.expandButtonVisible;
   const diagnostics = {
     test: "sidebar-collapse-expand",
     route: beforeClick.route,
@@ -429,7 +431,7 @@ test.describe("Acentem Takipte smoke", () => {
     await desktopCollapseToggle.click();
     const immediateAfterClick = await captureSidebarLabel(page, "immediate-after-click");
     try {
-      await expect(page.locator("aside").first()).toHaveClass(/lg:w-24/);
+      await expect.poll(() => page.locator("aside").first().evaluate((element) => Math.round(element.getBoundingClientRect().width))).toBe(76);
       await expect(desktopCollapseToggle).toBeVisible();
     } catch (error) {
       await attachSidebarFailureDiagnostics(page, testInfo, {
@@ -444,10 +446,10 @@ test.describe("Acentem Takipte smoke", () => {
       throw error;
     }
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page.locator("aside").first()).toHaveClass(/lg:w-24/);
+    await expect.poll(() => page.locator("aside").first().evaluate((element) => Math.round(element.getBoundingClientRect().width))).toBe(76);
     await expect(desktopCollapseToggle).toBeVisible();
     await desktopCollapseToggle.click();
-    await expect(page.locator("aside").first()).toHaveClass(/lg:w-\[220px\]/);
+    await expect.poll(() => page.locator("aside").first().evaluate((element) => Math.round(element.getBoundingClientRect().width))).toBe(240);
 
     // Mobile drawer behavior: off-canvas by default, opens via menu button,
     // closes on navigation.
@@ -479,7 +481,7 @@ test.describe("Acentem Takipte smoke", () => {
     const activeBranchText = (await activeBranchLabel.innerText()).trim();
 
     await collapseToggle.click();
-    await expect(aside).toHaveClass(/lg:w-24/);
+    await expect.poll(() => aside.evaluate((element) => Math.round(element.getBoundingClientRect().width))).toBe(76);
     await expect(aside.locator('[data-testid="sidebar-brand-monogram"]')).toHaveText("AT");
     const iconLinks = aside.locator("nav a");
     await expect(iconLinks).not.toHaveCount(0);
