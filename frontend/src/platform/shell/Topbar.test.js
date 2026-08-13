@@ -81,6 +81,7 @@ describe("Topbar shell contract", () => {
     await trigger.trigger("click");
     const menu = wrapper.find('[data-testid="topbar-language-menu"]');
     expect(menu.attributes("role")).toBe("menu");
+    expect(menu.attributes("id")).toBe("topbar-language-menu");
     expect(trigger.attributes("aria-expanded")).toBe("true");
     expect(menu.text()).toContain("English");
     expect(menu.find('[role="menuitem"][aria-selected="true"]').exists()).toBe(true);
@@ -126,6 +127,7 @@ describe("Topbar shell contract", () => {
     document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await wrapper.vm.$nextTick();
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
+    expect(document.activeElement).toBe(trigger.element);
     wrapper.unmount();
   });
 
@@ -145,6 +147,7 @@ describe("Topbar shell contract", () => {
     await trigger.trigger("click");
     const menu = wrapper.find('[data-testid="mobile-language-menu"]');
     expect(menu.attributes("role")).toBe("menu");
+    expect(menu.attributes("id")).toBe("mobile-language-menu");
     expect(trigger.attributes("aria-expanded")).toBe("true");
     expect(menu.find('[role="menuitem"][aria-selected="true"]').text()).toContain("Türkçe");
 

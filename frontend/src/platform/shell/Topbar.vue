@@ -35,6 +35,7 @@
           <div
             v-if="languageMenuOpen && activeLanguageSurface === 'desktop'"
             data-testid="topbar-language-menu"
+            id="topbar-language-menu"
             class="absolute right-0 top-[calc(100%+0.5rem)] z-40 w-36 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-900/10"
             role="menu"
             :aria-label="t('language')"
@@ -70,6 +71,7 @@
           <div
             v-if="languageMenuOpen && activeLanguageSurface === 'mobile'"
             data-testid="mobile-language-menu"
+            id="mobile-language-menu"
             class="absolute right-0 top-[calc(100%+0.5rem)] z-40 w-36 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-900/10"
             role="menu"
             :aria-label="t('language')"
