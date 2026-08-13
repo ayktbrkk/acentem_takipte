@@ -10,15 +10,18 @@ vi.mock("frappe-ui", () => ({
   createResource: () => ({ submit: vi.fn() }),
 }));
 
+const routerRoute = {
+  path: "/dashboard",
+  meta: {
+    title: "Dashboard",
+    section: "Overview",
+  },
+};
+
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
   createWebHistory: vi.fn(() => ({})),
-  useRoute: () => ({
-    meta: {
-      title: "Dashboard",
-      section: "Overview",
-    },
-  }),
+  useRoute: () => routerRoute,
 }));
 
 const RouterLinkStub = {
@@ -26,9 +29,14 @@ const RouterLinkStub = {
   template: `<a
     :href="typeof to === 'string' ? to : to?.path || '/'"
     :title="title"
-    :class="{ 'router-link-active': to === '/dashboard' }"
-    :aria-current="to === '/dashboard' ? 'page' : undefined"
+    :class="{ 'router-link-active': isActive }"
+    :aria-current="isActive ? 'page' : undefined"
   ><slot /></a>`,
+  setup(props) {
+    return {
+      isActive: typeof props.to === "string" && props.to === routerRoute.path,
+    };
+  },
 };
 
 const OfficeBranchSelectStub = {

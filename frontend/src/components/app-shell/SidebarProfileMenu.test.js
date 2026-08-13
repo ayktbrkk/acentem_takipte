@@ -127,9 +127,12 @@ describe("Sidebar profile menu contract", () => {
     expect(wrapper.text()).toContain("Çıkış Yap");
     expect(profileMenu.find('[data-testid="profile-summary-user"]').text()).toBe("Aykut Yılmaz");
     expect(profileMenu.find('[data-testid="profile-summary-role"]').text()).toContain("AT Yönetici");
-    expect(profileMenu.find('[data-testid="profile-summary-active-branch"]').text()).toContain("AT Sigorta");
-    expect(profileMenu.find('[data-testid="profile-summary-active-branch"]').element.tagName).toBe("P");
-    expect(profileMenu.find('[data-testid="profile-summary-active-branch"]').attributes("role")).toBeUndefined();
+    const activeBranchSummary = profileMenu.find('[data-testid="profile-summary-active-branch"]');
+    expect(activeBranchSummary.text()).toContain("AT Sigorta");
+    expect(["menuitem", "button", "link", "option", "combobox", "listbox"]).not.toContain(
+      activeBranchSummary.attributes("role"),
+    );
+    expect(activeBranchSummary.element.closest("button, a, input, select, textarea")).toBe(null);
   });
 
   it("renders localized role and active-branch labels in English", async () => {
