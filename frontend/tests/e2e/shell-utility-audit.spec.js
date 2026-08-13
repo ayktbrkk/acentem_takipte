@@ -205,6 +205,41 @@ async function readBranchRoute(page) {
   return page.evaluate(() => new URL(window.location.href).searchParams.get("office_branch"));
 }
 
+async function waitForRestoredBranchState(page, expectedState, expectedRoute) {
+  await expect(page.locator("header.at-shell-topbar"), "Expected the shell to be ready before reading restored branch state.").toBeVisible();
+  await expect.poll(
+    () => page.evaluate(({ expectedSelected, expectedRequestBranch, expectedRouteValue }) => {
+      const pinia = document.querySelector("#app")?.__vue_app__?.config?.globalProperties?.$pinia;
+      const branch = pinia?._s?.get("branch");
+      return {
+        present: Boolean(branch),
+        selected: branch?.selected ?? null,
+        requestBranch: branch?.requestBranch ?? null,
+        route: new URL(window.location.href).searchParams.get("office_branch"),
+        consistent: Boolean(branch)
+          && branch.selected === expectedSelected
+          && branch.requestBranch === expectedRequestBranch
+          && new URL(window.location.href).searchParams.get("office_branch") === expectedRouteValue,
+      };
+    }, {
+      expectedSelected: expectedState.selected,
+      expectedRequestBranch: expectedState.requestBranch,
+      expectedRouteValue: expectedRoute,
+    }),
+    {
+      timeout: 10_000,
+      intervals: [100, 250, 500],
+      message: "Timed out waiting for the hydrated branch store and route query to match the initial state.",
+    },
+  ).toEqual({
+    present: true,
+    selected: expectedState.selected,
+    requestBranch: expectedState.requestBranch,
+    route: expectedRoute,
+    consistent: true,
+  });
+}
+
 async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState = null, testInfo) {
   const trigger = page.getByTestId(triggerTestId);
   await expect(trigger).toBeVisible();
@@ -347,7 +382,10 @@ async function assertBranchListbox(page) {
   const initialOptionTestId = await initialSelectedOption.getAttribute("data-testid");
   expect(initialOptionTestId, "Expected the initial branch selection to expose a stable option test id.").toBeTruthy();
   const initialBranchRoute = await readBranchRoute(page);
-  const initialBranchUrl = await page.evaluate(() => window.location.pathname + window.location.search);
+  const initialBranchUrl = await page.evaluate(() => {
+    const url = new URL(window.location.href);
+    return url.pathname + url.search + url.hash;
+  });
   const listboxBox = await listbox.boundingBox();
   expect(listboxBox).not.toBeNull();
   if (!listboxBox) throw new Error("Branch listbox has no rendered bounding box.");
@@ -417,9 +455,22 @@ async function assertBranchListbox(page) {
   await expect(initialOption, "Expected the initial branch option to remain available for restoration.").toHaveCount(1);
   await initialOption.click();
   await expect(listbox).toBeHidden();
-  if ((await readBranchRoute(page)) !== initialBranchRoute) {
+  const restoredBranchUrl = await page.evaluate(() => {
+    const url = new URL(window.location.href);
+    return url.pathname + url.search + url.hash;
+  });
+  if (restoredBranchUrl !== initialBranchUrl) {
     await page.goto(initialBranchUrl, { waitUntil: "domcontentloaded" });
   }
+  await waitForRestoredBranchState(page, initialBranchState, initialBranchRoute);
+  const restoredUrl = await page.evaluate(() => {
+    const url = new URL(window.location.href);
+    return { pathname: url.pathname, search: url.search, hash: url.hash };
+  });
+  const initialUrlParts = new URL(`http://origin.invalid${initialBranchUrl}`);
+  expect(restoredUrl.pathname).toBe(initialUrlParts.pathname);
+  expect(restoredUrl.search).toBe(initialUrlParts.search);
+  expect(restoredUrl.hash).toBe(initialUrlParts.hash);
   const restoredBranchState = await readBranchStoreState(page);
   expect(restoredBranchState.present).toBe(initialBranchState.present);
   expect(restoredBranchState.selected).toBe(initialBranchState.selected);
