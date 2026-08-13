@@ -4,6 +4,8 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { ensureAuthenticated, pageRequest } from "./helpers/auth.js";
 
+test.use({ trace: "off" });
+
 function safePath(value) {
   const pathname = String(value || "").split(/[?#]/, 1)[0];
   return pathname.startsWith("/at") ? "/at" : pathname.startsWith("/login") ? "/login" : "/redacted";
