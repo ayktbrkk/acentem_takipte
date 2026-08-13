@@ -4,17 +4,9 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { ensureAuthenticated } from "./helpers/auth.js";
 
-const hasExplicitCredentials = Boolean(
-  process.env.E2E_BASE_URL && process.env.E2E_USER && process.env.E2E_PASSWORD,
-);
-
 function safePath(value) {
   const pathname = String(value || "").split(/[?#]/, 1)[0];
   return pathname.startsWith("/at") ? "/at" : pathname.startsWith("/login") ? "/login" : "/redacted";
-}
-
-function isKnownNoise(value) {
-  return /favicon|google-analytics|googletagmanager|analytics\./i.test(String(value || ""));
 }
 
 function diagnostics(page, testInfo) {
@@ -22,18 +14,60 @@ function diagnostics(page, testInfo) {
   const pageErrors = [];
   const failedRequests = [];
   const onConsole = (message) => {
-    if (message.type() === "error" && !isKnownNoise(message.text())) consoleErrors.push("console-error");
+    if (message.type() === "error") consoleErrors.push("console-error");
   };
   const onPageError = () => pageErrors.push("page-error");
   const onRequestFailed = (request) => {
     const failure = request.failure()?.errorText || "request-failed";
-    if (failure === "net::ERR_ABORTED" || isKnownNoise(request.url())) return;
+    if (failure === "net::ERR_ABORTED" && (request.resourceType() === "document" || request.isNavigationRequest())) return;
     failedRequests.push({ resourceType: request.resourceType(), pathname: safePath(request.url()), failure });
   };
 
   page.on("console", onConsole);
   page.on("pageerror", onPageError);
   page.on("requestfailed", onRequestFailed);
+
+  async function captureRedactedShell(page, outputPath) {
+    await page.evaluate(() => {
+      const sourceNodes = [
+        document.querySelector("header.at-shell-topbar"),
+        document.querySelector("aside"),
+        document.querySelector("main"),
+      ].filter(Boolean);
+      const sandbox = document.createElement("div");
+      sandbox.setAttribute("data-shell-redacted-capture", "true");
+      sandbox.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:#fff;overflow:hidden";
+
+      for (const source of sourceNodes) {
+        const sourceRect = source.getBoundingClientRect();
+        const clone = source.cloneNode(true);
+        clone.style.cssText = `position:fixed;left:${sourceRect.left}px;top:${sourceRect.top}px;width:${sourceRect.width}px;height:${sourceRect.height}px;overflow:hidden;background:#fff;color:#111;box-sizing:border-box`;
+        const sourceElements = [source, ...source.querySelectorAll("*")];
+        const cloneElements = [clone, ...clone.querySelectorAll("*")];
+        for (let index = 0; index < cloneElements.length; index += 1) {
+          const original = sourceElements[index];
+          const current = cloneElements[index];
+          if (!original || !current) continue;
+          for (const attribute of [...current.attributes]) current.removeAttribute(attribute.name);
+          const rect = original.getBoundingClientRect();
+          current.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px;overflow:hidden;background:#fff;background-image:none;color:#111;box-sizing:border-box;border:1px solid #e5e7eb`;
+          if (current.tagName === "IMG" || current.tagName === "SVG" || current.tagName === "PICTURE") current.remove();
+        }
+        const textWalker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT);
+        const textNodes = [];
+        while (textWalker.nextNode()) textNodes.push(textWalker.currentNode);
+        for (const textNode of textNodes) textNode.nodeValue = "REDACTED";
+        for (const element of clone.querySelectorAll("script,style,link,img,svg,picture")) element.remove();
+        sandbox.appendChild(clone);
+      }
+      document.body.appendChild(sandbox);
+    });
+    try {
+      await page.locator('[data-shell-redacted-capture="true"]').screenshot({ path: outputPath, animations: "disabled" });
+    } finally {
+      await page.locator('[data-shell-redacted-capture="true"]').evaluate((element) => element.remove()).catch(() => {});
+    }
+  }
 
   return async () => {
     page.off("console", onConsole);
@@ -57,7 +91,7 @@ function diagnostics(page, testInfo) {
     fs.mkdirSync(path.dirname(reportPath), { recursive: true });
     fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), "utf8");
     await testInfo.attach("shell-utility-diagnostics", { path: reportPath, contentType: "application/json" });
-    await page.screenshot({ path: testInfo.outputPath("shell-utility-failure.png"), fullPage: false });
+    await captureRedactedShell(page, testInfo.outputPath("shell-utility-failure.png"));
   };
 }
 
@@ -92,6 +126,22 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId) {
   await expect(items.last()).toBeFocused();
   await page.keyboard.press("ArrowUp");
   await expect(items.first()).toBeFocused();
+  const focusOrder = await page.evaluate(() => {
+    const visible = (element) => {
+      const style = getComputedStyle(element);
+      return style.display !== "none" && style.visibility !== "hidden" && element.getClientRects().length > 0;
+    };
+    const focusables = [...document.querySelectorAll("button:not([disabled]),a[href],input:not([disabled])")].filter(visible);
+    const current = focusables.indexOf(document.activeElement);
+    return { current, next: current + 1 < focusables.length ? current + 1 : null };
+  });
+  await page.keyboard.press("Tab");
+  const activeAfterTab = await page.evaluate(() => {
+    const visible = (element) => getComputedStyle(element).display !== "none" && element.getClientRects().length > 0;
+    return [...document.querySelectorAll("button:not([disabled]),a[href],input:not([disabled])")].filter(visible).indexOf(document.activeElement);
+  });
+  if (focusOrder.next === null) expect(activeAfterTab).not.toBe(focusOrder.current);
+  else expect(activeAfterTab).toBe(focusOrder.next);
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
   await expect(trigger).toBeFocused();
@@ -125,12 +175,42 @@ async function assertBranchListbox(page) {
   await expect(trigger).toBeFocused();
 }
 
+async function assertIndependentTabletUtilities(page) {
+  const languageTrigger = page.getByTestId("mobile-language-trigger");
+  const languageMenu = page.getByTestId("mobile-language-menu");
+  const branchTrigger = page.getByTestId("branch-scope-trigger");
+  await languageTrigger.click();
+  await expect(languageMenu).toBeVisible();
+  await expect(branchTrigger).toBeVisible();
+  if (await branchTrigger.isDisabled()) {
+    await expect(page.getByTestId("branch-scope-lock-status")).toBeVisible();
+  } else {
+    await branchTrigger.click();
+    await expect(page.getByRole("listbox")).toBeVisible();
+    await expect(languageTrigger).toBeVisible();
+    await expect(languageMenu).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("listbox")).toBeHidden();
+    await expect(languageMenu).toBeVisible();
+  }
+  await page.keyboard.press("Escape");
+  await expect(languageMenu).toBeHidden();
+  await assertLanguageMenu(page, "mobile-language-trigger", "mobile-language-menu");
+  await assertBranchListbox(page);
+}
+
 test.describe("shell utility redesign audit", () => {
   test.describe.configure({ mode: "serial" });
 
   test.beforeEach(async ({ page }) => {
-    test.skip(!hasExplicitCredentials, "Set E2E_BASE_URL, E2E_USER, and E2E_PASSWORD for authenticated shell audit.");
-    await ensureAuthenticated(page);
+    try {
+      await ensureAuthenticated(page);
+    } catch (error) {
+      if (!process.env.E2E_USER && /ERR_CONNECTION|ECONNREFUSED|ERR_FAILED|net::/.test(String(error))) {
+        test.skip(true, "No local E2E server is available for the helper's localhost fallback.");
+      }
+      throw error;
+    }
   });
 
   test.afterEach(async ({ page }) => {
@@ -175,6 +255,9 @@ test.describe("shell utility redesign audit", () => {
     await expect(menuItems.nth(1)).toBeFocused();
     await page.keyboard.press("ArrowUp");
     await expect(menuItems.first()).toBeFocused();
+    for (let index = 0; index <= await menuItems.count(); index += 1) await page.keyboard.press("Tab");
+    await expect(profileMenu.locator(":focus")).toHaveCount(0);
+    await expect(profileTrigger).not.toBeFocused();
     await page.keyboard.press("Escape");
     await expect(profileMenu).toBeHidden();
     await expect(profileTrigger).toBeFocused();
@@ -193,8 +276,7 @@ test.describe("shell utility redesign audit", () => {
     await assertNoHorizontalOverflow(page, 768);
     await expect(page.getByTestId("mobile-sidebar-trigger")).toBeVisible();
     await expect(page.getByTestId("topbar-language-trigger")).toBeHidden();
-    await assertLanguageMenu(page, "mobile-language-trigger", "mobile-language-menu");
-    await assertBranchListbox(page);
+    await assertIndependentTabletUtilities(page);
     await assertNoHorizontalOverflow(page, 768);
   });
 
@@ -207,18 +289,34 @@ test.describe("shell utility redesign audit", () => {
     await expect(aside).toHaveClass(/translate-x-0/);
     await assertNoHorizontalOverflow(page, 390);
 
-    await aside.evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
+    const nav = aside.locator("nav");
+    const beforeScroll = await nav.evaluate((element) => ({
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+      scrollTop: element.scrollTop,
+    }));
+    if (beforeScroll.scrollHeight > beforeScroll.clientHeight) {
+      await nav.evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+      });
+      const afterScroll = await nav.evaluate((element) => element.scrollTop);
+      expect(afterScroll).toBeGreaterThan(beforeScroll.scrollTop);
+    } else {
+      expect(await nav.locator("a").count()).toBeGreaterThan(0);
+    }
     const profileTrigger = page.getByTestId("sidebar-profile-trigger");
     await profileTrigger.scrollIntoViewIfNeeded();
+    await expect(profileTrigger).toBeVisible();
     await profileTrigger.click();
     const profileMenu = page.getByTestId("sidebar-profile-menu");
     await expect(profileMenu).toBeVisible();
     await expect(profileMenu).toHaveCSS("position", "fixed");
     await expect(profileMenu.locator("xpath=ancestor::aside")).toHaveCount(0);
     await expect(profileMenu.getByTestId("profile-mobile-language")).toHaveCount(0);
+    await expect(profileMenu.getByTestId("branch-scope-trigger")).toHaveCount(0);
+    await expect(profileMenu.getByRole("listbox")).toHaveCount(0);
     await expect(profileMenu.getByTestId("profile-summary-active-branch")).toHaveText(/\S/);
+    expect(await profileMenu.getByTestId("profile-summary-active-branch").evaluate((element) => !element.closest("button,a,[role]"))).toBe(true);
     await page.keyboard.press("Escape");
     await expect(profileMenu).toBeHidden();
     await assertLanguageMenu(page, "mobile-language-trigger", "mobile-language-menu");
