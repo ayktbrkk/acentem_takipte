@@ -130,6 +130,30 @@ async function readShellLocaleState(page, includeProfile = false) {
   return state;
 }
 
+function localeCodeFromLabel(label) {
+  return /english|ingiliz/i.test(label) ? "en" : "tr";
+}
+
+async function assertLocaleResponse(response, expectedLocale) {
+  expect(response).not.toBeNull();
+  expect(response.ok()).toBe(true);
+  const payload = await response.json();
+  const persistedLocale = payload?.message?.locale || payload?.locale || payload?.message;
+  expect(String(persistedLocale).toLowerCase()).toBe(expectedLocale);
+}
+
+async function readBranchStoreState(page) {
+  return page.evaluate(() => {
+    const pinia = document.querySelector("#app")?.__vue_app__?.config?.globalProperties?.$pinia;
+    const branch = pinia?._s?.get("branch");
+    return {
+      present: Boolean(branch),
+      selected: branch?.selected ?? null,
+      requestBranch: branch?.requestBranch ?? null,
+    };
+  });
+}
+
 async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState = null) {
   const trigger = page.getByTestId(triggerTestId);
   await expect(trigger).toBeVisible();
@@ -167,14 +191,16 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState 
   const initialLocaleLabel = (await menu.locator("[role='menuitemradio'][aria-checked='true']").innerText()).trim();
   const alternateItem = menu.locator("[role='menuitemradio'][aria-checked='false']").first();
   const alternateLocaleLabel = (await alternateItem.innerText()).trim();
+  const initialLocale = localeCodeFromLabel(initialLocaleLabel);
+  const alternateLocale = localeCodeFromLabel(alternateLocaleLabel);
+  expect(alternateLocale).not.toBe(initialLocale);
   const localeResponsePromise = page.waitForResponse(
     (response) => response.url().includes("set_session_locale"),
     { timeout: 3000 },
   ).catch(() => null);
   await alternateItem.click();
   const localeResponse = await localeResponsePromise;
-  expect(localeResponse).not.toBeNull();
-  expect(localeResponse.ok()).toBe(true);
+  await assertLocaleResponse(localeResponse, alternateLocale);
   await expect(menu).toBeHidden();
   await expect(trigger).toContainText(alternateLocaleLabel);
   await expect(page.locator("header.at-shell-topbar")).toContainText(alternateLocaleLabel);
@@ -184,7 +210,7 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState 
     const auth = pinia?._s?.get("auth");
     return auth?.locale?.value || auth?.locale || null;
   });
-  expect(localeResponse || observedLocale).toBeTruthy();
+  expect(String(observedLocale).toLowerCase()).toBe(alternateLocale);
   if (initialState) {
     const alternateState = await readShellLocaleState(page, Boolean(initialState.profileRole));
     expect(alternateState.section).not.toBe(initialState.section);
@@ -201,12 +227,17 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState 
   ).catch(() => null);
   await menu.locator("[role='menuitemradio']", { hasText: initialLocaleLabel }).click();
   const restoreResponse = await restoreResponsePromise;
-  expect(restoreResponse).not.toBeNull();
-  expect(restoreResponse.ok()).toBe(true);
+  await assertLocaleResponse(restoreResponse, initialLocale);
   await expect(menu).toBeHidden();
   await expect(trigger).toContainText(initialLocaleLabel);
   await page.reload({ waitUntil: "domcontentloaded" });
   await expect(page.getByTestId(triggerTestId)).toContainText(initialLocaleLabel);
+  const restoredLocale = await page.evaluate(() => {
+    const pinia = document.querySelector("#app")?.__vue_app__?.config?.globalProperties?.$pinia;
+    const auth = pinia?._s?.get("auth");
+    return auth?.locale?.value || auth?.locale || null;
+  });
+  expect(String(restoredLocale).toLowerCase()).toBe(initialLocale);
   if (initialState) {
     const restoredState = await readShellLocaleState(page, Boolean(initialState.profileRole));
     expect(restoredState).toEqual(initialState);
@@ -249,8 +280,8 @@ async function assertBranchListbox(page) {
   await page.keyboard.press("ArrowUp");
   await expect(options.first()).toBeFocused();
 
-  const alternative = await options.evaluateAll((elements) => elements.find((element) => element.getAttribute("aria-selected") === "false")?.textContent?.trim() || "");
-  expect(alternative).toBeTruthy();
+  const alternative = await options.evaluateAll((elements) => elements.find((element) => element.getAttribute("aria-selected") === "false" && element.getAttribute("data-testid") !== "branch-option-all")?.textContent?.trim() || "");
+  expect(alternative, "Expected at least one non-All-Branches option in the branch listbox.").toBeTruthy();
   const searchTerm = alternative.split(/\s+/).find((part) => part.length > 1) || alternative;
   const searchInput = page.getByTestId("branch-search-input");
   await searchInput.fill(searchTerm);
@@ -260,6 +291,9 @@ async function assertBranchListbox(page) {
   const selectedOptionName = (await selectedOption.getAttribute("aria-label")) || (await selectedOption.locator(".branch-option-label").innerText()).trim();
   const selectedOptionValue = await selectedOption.getAttribute("data-testid");
   expect(selectedOptionName).toBeTruthy();
+  expect(selectedOptionValue).toBeTruthy();
+  const selectedBranchValue = selectedOptionValue.replace(/^branch-option-/, "");
+  expect(selectedBranchValue).not.toBe("all");
   await selectedOption.click();
   await expect(listbox).toBeHidden();
   const updatedValue = await value.getAttribute("title");
@@ -271,23 +305,21 @@ async function assertBranchListbox(page) {
   await expect(listbox).toBeVisible();
   const selectedOptionState = listbox.getByTestId(selectedOptionValue);
   await expect(selectedOptionState).toHaveAttribute("aria-selected", "true");
-  const branchState = await page.evaluate(() => {
-    const pinia = document.querySelector("#app")?.__vue_app__?.config?.globalProperties?.$pinia;
-    const branch = pinia?._s?.get("branch");
-    return {
-      present: Boolean(branch),
-      selected: branch?.selected ?? null,
-      requestBranch: branch?.requestBranch ?? null,
-    };
-  });
-  if (branchState.present) {
-    if (selectedOptionValue === "branch-option-all") {
-      expect(branchState.selected === null || branchState.requestBranch === null).toBe(true);
-    } else {
-      const branchName = selectedOptionValue.replace(/^branch-option-/, "");
-      expect(String(branchState.selected || branchState.requestBranch)).toBe(branchName);
-    }
-  }
+  const selectedBranchState = await readBranchStoreState(page);
+  expect(selectedBranchState.present, "Expected the rendered branch store to be available after branch selection.").toBe(true);
+  expect(String(selectedBranchState.selected)).toBe(selectedBranchValue);
+  expect(String(selectedBranchState.requestBranch)).toBe(selectedBranchValue);
+  const allOption = listbox.getByTestId("branch-option-all");
+  await expect(allOption, "Expected an explicit All Branches option for the branch state audit.").toHaveCount(1);
+  await allOption.click();
+  await expect(listbox).toBeHidden();
+  const allBranchState = await readBranchStoreState(page);
+  expect(allBranchState.present).toBe(true);
+  expect(allBranchState.selected).toBeNull();
+  expect(allBranchState.requestBranch).toBeNull();
+  await trigger.click();
+  await expect(listbox).toBeVisible();
+  await expect(listbox.getByTestId("branch-option-all")).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("Escape");
   await expect(listbox).toBeHidden();
   await expect(trigger).toBeFocused();
