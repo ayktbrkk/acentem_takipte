@@ -15,6 +15,7 @@
       :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', effectiveCollapsed ? 'lg:w-[76px]' : 'lg:w-[240px]']"
       :role="mobileOpen && !isDesktopViewport ? 'dialog' : undefined"
       :aria-label="mobileOpen && !isDesktopViewport ? t('menu') : undefined"
+      :aria-owns="mobileOpen && !isDesktopViewport ? 'sidebar-profile-menu-surface' : undefined"
       :aria-modal="mobileOpen && !isDesktopViewport ? 'true' : undefined"
     >
       <div class="border-b border-slate-100 px-4 py-4">
@@ -213,7 +214,11 @@ function handleMobileDrawerKeydown(event) {
   const tabbables = getMobileDrawerTabbables();
   if (!tabbables.length) return;
   const currentIndex = tabbables.indexOf(document.activeElement);
-  if (currentIndex === -1) return;
+  if (currentIndex === -1) {
+    event.preventDefault();
+    tabbables[event.shiftKey ? tabbables.length - 1 : 0].focus();
+    return;
+  }
   if (!event.shiftKey && currentIndex === tabbables.length - 1) {
     event.preventDefault();
     tabbables[0].focus();

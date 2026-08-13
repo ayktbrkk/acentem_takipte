@@ -139,6 +139,7 @@ describe("Sidebar localization", () => {
     expect(wrapper.find("aside").attributes("id")).toBe("mobile-sidebar-drawer");
     expect(wrapper.find("aside").attributes("role")).toBe("dialog");
     expect(wrapper.find("aside").attributes("aria-label")).toBe("Menu");
+    expect(wrapper.find("aside").attributes("aria-owns")).toBe("sidebar-profile-menu-surface");
     trigger.remove();
   });
 
@@ -280,6 +281,35 @@ describe("Sidebar localization", () => {
     expect(wrapper.find("aside").attributes("role")).toBeUndefined();
     expect(wrapper.find("aside").attributes("aria-modal")).toBeUndefined();
     focusTarget.remove();
+  });
+
+  it("redirects outside focus back into the open mobile drawer", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const controls = wrapper.findAll("aside button, aside a[href]");
+    const outside = addFocusTarget();
+    const first = controls[0].element;
+    const last = controls.at(-1).element;
+
+    outside.focus();
+    const forwardEvent = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(forwardEvent);
+    expect(document.activeElement).toBe(first);
+    expect(forwardEvent.defaultPrevented).toBe(true);
+
+    outside.focus();
+    const backwardEvent = new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true });
+    document.dispatchEvent(backwardEvent);
+    expect(document.activeElement).toBe(last);
+    expect(backwardEvent.defaultPrevented).toBe(true);
+    outside.remove();
   });
 
   it("cleans up drawer listeners when it closes and unmounts", async () => {
