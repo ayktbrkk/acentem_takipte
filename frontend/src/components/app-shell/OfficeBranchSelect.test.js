@@ -50,7 +50,7 @@ describe("OfficeBranchSelect", () => {
     const wrapper = mount(OfficeBranchSelect);
 
     const trigger = wrapper.get('[data-testid="branch-scope-trigger"]');
-    expect(trigger.attributes("aria-label")).toBe("Şube Kapsamı");
+    expect(trigger.attributes("aria-label")).toBe("Şube Kapsamı: AT Sigorta");
     expect(trigger.text()).toContain("AT Sigorta");
     expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
 
@@ -116,7 +116,7 @@ describe("OfficeBranchSelect", () => {
     const wrapper = mount(OfficeBranchSelect);
     const trigger = wrapper.get('[data-testid="branch-scope-trigger"]');
 
-    expect(trigger.attributes("aria-label")).toBe("Branch Scope");
+    expect(trigger.attributes("aria-label")).toBe("Branch Scope: All Branches");
     expect(trigger.text()).toContain("All Branches");
   });
 
@@ -280,7 +280,7 @@ describe("OfficeBranchSelect", () => {
 
     const wrapper = mount(OfficeBranchSelect);
     const trigger = wrapper.get('[data-testid="branch-scope-trigger"]');
-    expect(trigger.attributes("aria-label")).toBe("Şube Kapsamı");
+    expect(trigger.attributes("aria-label")).toBe("Şube Kapsamı: Tüm Şubeler");
     expect(trigger.text()).toContain("Tüm Şubeler");
     expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
     await wrapper.get('[data-testid="branch-scope-trigger"]').trigger("click");

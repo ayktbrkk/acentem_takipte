@@ -60,7 +60,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
-import OfficeBranchSelect from "../ui/shell/OfficeBranchSelect.vue";
+import OfficeBranchSelect from "../../components/app-shell/OfficeBranchSelect.vue";
 import IconLucideGlobe2 from '~icons/lucide/globe-2';
 import { useLocalePreference } from "../composables/useLocalePreference";
 import { useAuthStore } from "../state/authStore";

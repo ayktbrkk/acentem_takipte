@@ -13,7 +13,7 @@
         :class="isLocked
           ? 'cursor-not-allowed opacity-80'
           : 'focus:outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-brand-400'"
-        :aria-label="t('scope')"
+        :aria-label="[t('scope'), selectedLabel].filter(Boolean).join(': ')"
         :aria-haspopup="isLocked ? undefined : 'listbox'"
         :aria-expanded="isOpen ? 'true' : 'false'"
         :aria-controls="isOpen ? listboxId : undefined"
