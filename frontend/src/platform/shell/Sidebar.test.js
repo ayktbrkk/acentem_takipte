@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
+import { ref } from "vue";
 
 import Sidebar from "./Sidebar.vue";
 import { useAuthStore } from "../state/authStore";
@@ -10,28 +11,89 @@ vi.mock("frappe-ui", () => ({
   createResource: () => ({ submit: vi.fn() }),
 }));
 
+const routerRoute = {
+  path: "/dashboard",
+  meta: {
+    title: "Dashboard",
+    section: "Overview",
+  },
+};
+
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
   createWebHistory: vi.fn(() => ({})),
-  useRoute: () => ({
-    meta: {
-      title: "Dashboard",
-      section: "Overview",
-    },
-  }),
+  useRoute: () => routerRoute,
 }));
 
 const RouterLinkStub = {
   props: ["to", "title"],
-  template: `<a :href="typeof to === 'string' ? to : to?.path || '/'" :title="title"><slot /></a>`,
+  template: `<a
+    :href="typeof to === 'string' ? to : to?.path || '/'"
+    :title="title"
+    :class="{ 'router-link-active': isActive }"
+    :aria-current="isActive ? 'page' : undefined"
+  ><slot /></a>`,
+  setup(props) {
+    return {
+      isActive: typeof props.to === "string" && props.to === routerRoute.path,
+    };
+  },
 };
 
 const OfficeBranchSelectStub = {
   template: `<div class="office-branch-select-stub">Office Branch Select</div>`,
 };
 
+const MobileSidebarHost = {
+  components: { Sidebar },
+  template: `<button data-testid="mobile-sidebar-trigger" type="button" /><Sidebar :mobile-open="mobileOpen" @close="mobileOpen = false" />`,
+  setup() {
+    const mobileOpen = ref(true);
+    return { mobileOpen };
+  },
+};
+
+let mountedWrappers = [];
+
+function mountSidebar(options) {
+  const wrapper = mount(Sidebar, options);
+  mountedWrappers.push(wrapper);
+  return wrapper;
+}
+
+function findLatestProfileMenu() {
+  const menus = document.body.querySelectorAll('[data-testid="sidebar-profile-menu"]');
+  return menus[menus.length - 1] || null;
+}
+
+function cleanupTeleportedMenus() {
+  document.querySelectorAll('[data-testid="sidebar-profile-menu"]').forEach((menu) => menu.remove());
+}
+
+function addMobileSidebarTrigger() {
+  const trigger = document.createElement("button");
+  trigger.dataset.testid = "mobile-sidebar-trigger";
+  document.body.appendChild(trigger);
+  return trigger;
+}
+
+function addFocusTarget() {
+  const target = document.createElement("button");
+  document.body.appendChild(target);
+  return target;
+}
+
+function stubMobileViewport() {
+  vi.stubGlobal("matchMedia", () => ({
+    matches: false,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }));
+}
+
 describe("Sidebar localization", () => {
   beforeEach(() => {
+    cleanupTeleportedMenus();
     setActivePinia(createPinia());
     useUiStore().setCollapsed(false);
     vi.stubGlobal("matchMedia", (query) => ({
@@ -43,7 +105,387 @@ describe("Sidebar localization", () => {
   });
 
   afterEach(() => {
+    mountedWrappers.forEach((wrapper) => wrapper.unmount());
+    mountedWrappers = [];
+    cleanupTeleportedMenus();
     vi.unstubAllGlobals();
+  });
+
+  it("moves focus to the close control when the mobile drawer opens", async () => {
+    stubMobileViewport();
+    const trigger = addMobileSidebarTrigger();
+    useAuthStore().applyContext({ roles: ["AT Agent"] });
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    await wrapper.setProps({ mobileOpen: true });
+    await wrapper.vm.$nextTick();
+
+    expect(document.activeElement).toBe(wrapper.find('[data-testid="mobile-sidebar-close"]').element);
+    expect(document.activeElement).not.toBe(trigger);
+    trigger.remove();
+  });
+
+  it("focuses the close control when mounted open on mobile without dialog semantics on desktop", async () => {
+    stubMobileViewport();
+    const trigger = addMobileSidebarTrigger();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    await wrapper.vm.$nextTick();
+
+    expect(document.activeElement).toBe(wrapper.find('[data-testid="mobile-sidebar-close"]').element);
+    expect(wrapper.find("aside").attributes("id")).toBe("mobile-sidebar-drawer");
+    expect(wrapper.find("aside").attributes("role")).toBe("dialog");
+    expect(wrapper.find("aside").attributes("aria-label")).toBe("Menu");
+    expect(wrapper.find("aside").attributes("aria-owns")).toBeUndefined();
+    trigger.remove();
+  });
+
+  it("keeps the mobile backdrop out of the tab order and gives it a localized label", async () => {
+    stubMobileViewport();
+    useAuthStore().applyContext({ locale: "tr", roles: ["AT Agent"] });
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    const backdrop = wrapper.find("button.fixed.inset-0");
+    expect(backdrop.attributes("aria-label")).toBe("Kapat");
+    expect(backdrop.attributes("tabindex")).toBe("-1");
+    expect(backdrop.classes()).toContain("focus-visible:ring-2");
+    expect(wrapper.find("aside").attributes("aria-modal")).toBe("true");
+  });
+
+  it("emits close when Escape is pressed in the open mobile drawer", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    const event = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+
+    expect(wrapper.emitted("close")).toHaveLength(1);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("closes stacked profile menu before drawer and restores trigger focus", async () => {
+    stubMobileViewport();
+    const wrapper = mount(MobileSidebarHost, {
+      attachTo: document.body,
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    mountedWrappers.push(wrapper);
+    const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
+    await trigger.trigger("click");
+    const profileMenu = document.body.querySelector('[data-testid="sidebar-profile-menu"]');
+    const menuItem = profileMenu.querySelector('[role="menuitem"]');
+    menuItem.focus();
+
+    const event = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+    await wrapper.vm.$nextTick();
+
+    expect(document.body.querySelector('[data-testid="sidebar-profile-menu"]')).toBe(null);
+    expect(wrapper.find("aside").exists()).toBe(true);
+    expect(event.defaultPrevented).toBe(true);
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find("aside").exists()).toBe(true);
+    expect(wrapper.find("aside").classes()).toContain("-translate-x-full");
+    expect(document.activeElement).toBe(document.querySelector('[data-testid="mobile-sidebar-trigger"]'));
+  });
+
+  it("does not expose a dangling profile menu relationship while closed", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    expect(wrapper.find("aside").attributes("aria-owns")).toBeUndefined();
+    expect(document.getElementById("sidebar-profile-menu-surface")).toBe(null);
+
+    await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
+    expect(wrapper.find('[data-testid="sidebar-profile-trigger"]').attributes("aria-controls"))
+      .toBe("sidebar-profile-menu-surface");
+    expect(document.getElementById("sidebar-profile-menu-surface")).not.toBe(null);
+  });
+
+  it("wraps Tab from the last mobile drawer control to the first", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const controls = wrapper.findAll("aside button, aside a[href]");
+    const first = controls[0].element;
+    const last = controls[controls.length - 1].element;
+    last.focus();
+
+    const event = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+
+    expect(document.activeElement).toBe(first);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("wraps Shift+Tab from the first mobile drawer control to the last", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const controls = wrapper.findAll("aside button, aside a[href]");
+    const first = controls[0].element;
+    const last = controls[controls.length - 1].element;
+    first.focus();
+
+    const event = new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+
+    expect(document.activeElement).toBe(last);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("wraps focus between the mobile drawer and its teleported profile menu", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const drawerFirst = wrapper.find('[data-testid="mobile-sidebar-close"]').element;
+    const profileTrigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
+    await profileTrigger.trigger("click");
+    const profileMenu = document.body.querySelector('[data-testid="sidebar-profile-menu"]');
+    const profileItems = [...profileMenu.querySelectorAll('[role="menuitem"]')];
+    const profileLast = profileItems.at(-1);
+
+    profileLast.focus();
+    const forwardEvent = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(forwardEvent);
+    expect(document.activeElement).toBe(drawerFirst);
+    expect(forwardEvent.defaultPrevented).toBe(true);
+
+    drawerFirst.focus();
+    const backwardEvent = new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true });
+    document.dispatchEvent(backwardEvent);
+    expect(document.activeElement).toBe(profileLast);
+    expect(backwardEvent.defaultPrevented).toBe(true);
+  });
+
+  it("does not trap keyboard focus on desktop", async () => {
+    vi.stubGlobal("matchMedia", () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    const focusTarget = addFocusTarget();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    await wrapper.vm.$nextTick();
+    const last = wrapper.findAll("aside button, aside a[href]").at(-1).element;
+    last.focus();
+
+    const event = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+
+    expect(document.activeElement).toBe(last);
+    expect(event.defaultPrevented).toBe(false);
+    expect(wrapper.find("aside").attributes("role")).toBeUndefined();
+    expect(wrapper.find("aside").attributes("aria-modal")).toBeUndefined();
+    focusTarget.remove();
+  });
+
+  it("redirects outside focus back into the open mobile drawer", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const controls = wrapper.findAll("aside button, aside a[href]");
+    const outside = addFocusTarget();
+    const first = controls[0].element;
+    const last = controls.at(-1).element;
+
+    outside.focus();
+    const forwardEvent = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(forwardEvent);
+    expect(document.activeElement).toBe(first);
+    expect(forwardEvent.defaultPrevented).toBe(true);
+
+    outside.focus();
+    const backwardEvent = new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true });
+    document.dispatchEvent(backwardEvent);
+    expect(document.activeElement).toBe(last);
+    expect(backwardEvent.defaultPrevented).toBe(true);
+    outside.remove();
+  });
+
+  it("cleans up drawer listeners when it closes and unmounts", async () => {
+    stubMobileViewport();
+    const addEventListener = vi.spyOn(document, "addEventListener");
+    const removeEventListener = vi.spyOn(document, "removeEventListener");
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    await wrapper.setProps({ mobileOpen: true });
+    await wrapper.setProps({ mobileOpen: false });
+    wrapper.unmount();
+
+    expect(addEventListener.mock.calls.filter(([type, listener]) => type === "keydown" && listener.name === "handleMobileDrawerKeydown")).toHaveLength(1);
+    expect(removeEventListener.mock.calls.filter(([type, listener]) => type === "keydown" && listener.name === "handleMobileDrawerKeydown")).toHaveLength(1);
+    addEventListener.mockRestore();
+    removeEventListener.mockRestore();
+  });
+
+  it.each([
+    ["the close control", (wrapper) => wrapper.find('[data-testid="mobile-sidebar-close"]')],
+    ["the overlay", (wrapper) => wrapper.find("button.fixed.inset-0")],
+    ["navigation", (wrapper) => wrapper.find("nav a")],
+  ])("restores focus to the trigger after closing via %s", async (_source, findSource) => {
+    stubMobileViewport();
+    const trigger = addMobileSidebarTrigger();
+    useAuthStore().applyContext({ roles: ["AT Agent"] });
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    await wrapper.setProps({ mobileOpen: true });
+    await wrapper.vm.$nextTick();
+
+    await findSource(wrapper).trigger("click");
+    await wrapper.vm.$nextTick();
+    expect(wrapper.emitted("close") || wrapper.emitted("navigate")).toBeTruthy();
+
+    await wrapper.setProps({ mobileOpen: false });
+    await wrapper.vm.$nextTick();
+    expect(document.activeElement).toBe(trigger);
+    trigger.remove();
+  });
+
+  it("does not steal focus for desktop open or close transitions", async () => {
+    vi.stubGlobal("matchMedia", () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    const focusTarget = addFocusTarget();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    focusTarget.focus();
+    await wrapper.setProps({ mobileOpen: true });
+    await wrapper.vm.$nextTick();
+    expect(document.activeElement).toBe(focusTarget);
+
+    await wrapper.setProps({ mobileOpen: false });
+    await wrapper.vm.$nextTick();
+    expect(document.activeElement).toBe(focusTarget);
+    focusTarget.remove();
+  });
+
+  it("preserves focus when an open mobile drawer crosses to desktop", async () => {
+    const mediaQuery = {
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    vi.stubGlobal("matchMedia", () => mediaQuery);
+    const trigger = addMobileSidebarTrigger();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    await wrapper.setProps({ mobileOpen: true });
+    await wrapper.vm.$nextTick();
+    const currentFocus = addFocusTarget();
+    currentFocus.focus();
+
+    mediaQuery.matches = true;
+    mediaQuery.addEventListener.mock.calls[0][1]({ matches: true });
+    await wrapper.vm.$nextTick();
+    expect(document.activeElement).toBe(currentFocus);
+
+    await wrapper.setProps({ mobileOpen: false });
+    await wrapper.vm.$nextTick();
+    expect(document.activeElement).toBe(currentFocus);
+    trigger.remove();
+    currentFocus.remove();
   });
 
   it("renders Turkish chrome labels when the locale is tr", async () => {
@@ -55,7 +497,7 @@ describe("Sidebar localization", () => {
       roles: ["AT Agent"],
     });
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: {
         mobileOpen: false,
       },
@@ -80,6 +522,9 @@ describe("Sidebar localization", () => {
     expect(collapseToggles[0].attributes("title")).toBe("Menüyü daralt");
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     await wrapper.find('footer [data-testid="sidebar-profile-trigger"]').trigger("click");
+    const profileMenu = findLatestProfileMenu();
+    expect(profileMenu).not.toBe(null);
+    expect(profileMenu.querySelector('[data-testid="profile-mobile-language"]')).toBe(null);
     expect(wrapper.find('footer [data-testid="profile-mobile-language"]').exists()).toBe(false);
     expect(wrapper.text()).toContain("Acentem Takipte");
     expect(wrapper.find('p[title="Acentem Takipte"]').exists()).toBe(true);
@@ -104,7 +549,7 @@ describe("Sidebar localization", () => {
       removeEventListener: vi.fn(),
     }));
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: {
         mobileOpen: true,
       },
@@ -121,10 +566,12 @@ describe("Sidebar localization", () => {
 
     expect(wrapper.find('[data-testid="sidebar-brand-monogram"]').exists()).toBe(false);
     expect(wrapper.text()).toContain("Acentem Takipte");
+    expect(wrapper.find('[data-testid="mobile-sidebar-close"]').exists()).toBe(true);
     expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     await wrapper.find('footer [data-testid="sidebar-profile-trigger"]').trigger("click");
-    expect(wrapper.find('footer [data-testid="profile-mobile-language"]').exists()).toBe(true);
+    expect(findLatestProfileMenu()).not.toBe(null);
+    expect(wrapper.find('footer [data-testid="profile-mobile-language"]').exists()).toBe(false);
   });
 
   it("removes the modern media query listener with the matching API", () => {
@@ -137,7 +584,7 @@ describe("Sidebar localization", () => {
     };
     vi.stubGlobal("matchMedia", vi.fn(() => mediaQuery));
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: { mobileOpen: false },
       global: {
         directives: { prefetch: {} },
@@ -163,7 +610,7 @@ describe("Sidebar localization", () => {
     };
     vi.stubGlobal("matchMedia", vi.fn(() => mediaQuery));
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: { mobileOpen: false },
       global: {
         directives: { prefetch: {} },
@@ -188,7 +635,7 @@ describe("Sidebar localization", () => {
       roles: ["System Manager"],
     });
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: {
         mobileOpen: false,
       },
@@ -217,7 +664,7 @@ describe("Sidebar localization", () => {
       roles: ["AT Agent"],
     });
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: {
         mobileOpen: false,
       },
@@ -252,7 +699,7 @@ describe("Sidebar localization", () => {
       roles: ["AT Manager"],
     });
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: {
         mobileOpen: false,
       },
@@ -293,6 +740,102 @@ describe("Sidebar localization", () => {
     expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
   });
 
+  it("keeps the desktop toggle, navigation scroll region, and profile footer outside that region", () => {
+    const wrapper = mountSidebar({
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    expect(wrapper.findAll('[data-testid="sidebar-desktop-collapse-toggle"]')).toHaveLength(1);
+    expect(wrapper.findAll("nav.overflow-y-auto")).toHaveLength(1);
+    expect(wrapper.find("aside").classes()).not.toContain("overflow-y-auto");
+    expect(wrapper.find("nav").element.contains(wrapper.find("footer").element)).toBe(false);
+    expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
+  });
+
+  it("keeps the mobile profile reachable after nav scrolling and teleports its menu outside the drawer", async () => {
+    vi.stubGlobal("matchMedia", () => ({
+      matches: false,
+      media: "(min-width: 1024px)",
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+
+    const wrapper = mountSidebar({
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const nav = wrapper.find("nav");
+    const footer = wrapper.find("footer");
+    const profileTrigger = footer.find('[data-testid="sidebar-profile-trigger"]');
+    nav.element.scrollTop = 320;
+
+    expect(nav.element.scrollTop).toBe(320);
+    expect(nav.element.contains(profileTrigger.element)).toBe(false);
+    expect(footer.element.contains(profileTrigger.element)).toBe(true);
+    expect(profileTrigger.isVisible()).toBe(true);
+    expect(profileTrigger.element.disabled).toBe(false);
+
+    await profileTrigger.trigger("click");
+    const profileMenu = document.body.querySelector('[data-testid="sidebar-profile-menu"]');
+    expect(profileMenu).not.toBe(null);
+    expect(profileMenu.parentElement).toBe(document.body);
+    expect(profileMenu.closest("aside")).toBe(null);
+    expect(profileMenu.classList.contains("fixed")).toBe(true);
+    expect(profileMenu.parentElement.classList.contains("overflow-y-auto")).toBe(false);
+
+    wrapper.unmount();
+  });
+
+  it("uses the 240px expanded and 76px collapsed rail contracts while preserving navigation", async () => {
+    useAuthStore().applyContext({
+      locale: "en",
+      user: "Aykut",
+      userId: "aykut",
+      roles: ["System Manager"],
+    });
+
+    const wrapper = mountSidebar({
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    const aside = wrapper.find("aside");
+    expect(aside.classes()).toContain("lg:w-[240px]");
+    expect(wrapper.findAll("nav a").length).toBeGreaterThan(0);
+    const activeLink = wrapper.get('nav a[aria-current="page"]');
+    expect(activeLink.classes()).toContain("router-link-active");
+    const activeHref = activeLink.attributes("href");
+    const focusClasses = [
+      "focus-visible:ring-2",
+      "focus-visible:ring-brand-500",
+      "focus-visible:outline-none",
+    ];
+    for (const link of wrapper.findAll("nav a")) {
+      for (const className of focusClasses) expect(link.classes()).toContain(className);
+    }
+
+    await wrapper.find('[data-testid="sidebar-desktop-collapse-toggle"]').trigger("click");
+    expect(aside.classes()).toContain("lg:w-[76px]");
+    expect(wrapper.find('[data-testid="sidebar-brand-monogram"]').text()).toBe("AT");
+    expect(wrapper.findAll("nav a").length).toBeGreaterThan(0);
+    const collapsedActiveLink = wrapper.get('nav a[aria-current="page"]');
+    expect(collapsedActiveLink.classes()).toContain("router-link-active");
+    expect(collapsedActiveLink.attributes("href")).toBe(activeHref);
+    for (const link of wrapper.findAll("nav a")) {
+      for (const className of focusClasses) expect(link.classes()).toContain(className);
+    }
+  });
+
   it("renders nav icons when roles are present", () => {
     const authStore = useAuthStore();
     authStore.applyContext({
@@ -302,7 +845,7 @@ describe("Sidebar localization", () => {
       roles: ["AT Manager"],
     });
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: {
         mobileOpen: false,
       },

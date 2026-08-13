@@ -7,6 +7,7 @@
       :class="props.collapsed ? 'justify-center' : ''"
       type="button"
       aria-haspopup="menu"
+       :aria-controls="menuOpen ? 'sidebar-profile-menu-surface' : undefined"
       :aria-expanded="menuOpen ? 'true' : 'false'"
       :aria-label="menuOpen ? t('closeProfileMenu') : t('openProfileMenu')"
       @click="toggleMenu"
@@ -28,13 +29,18 @@
       </span>
     </button>
 
-    <div
-      v-if="menuOpen"
-      data-testid="sidebar-profile-menu"
-      class="absolute bottom-[calc(100%+0.75rem)] left-0 z-40 w-[min(18rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-lg shadow-slate-900/10"
-      role="menu"
-      :aria-label="t('profileMenu')"
-    >
+    <Teleport to="body">
+      <div
+        v-if="menuOpen"
+        ref="menuSurfaceRef"
+        data-testid="sidebar-profile-menu"
+        id="sidebar-profile-menu-surface"
+        :data-placement="menuPlacement"
+        class="fixed z-40 max-h-[calc(100vh-1rem)] w-[min(18rem,calc(100vw-1rem))] overflow-y-auto rounded-2xl border border-slate-200 bg-white py-2 shadow-lg shadow-slate-900/10"
+        :style="menuStyle"
+        role="menu"
+        :aria-label="t('profileMenu')"
+      >
       <div class="border-b border-slate-100 px-4 pb-3 pt-2">
         <p data-testid="profile-summary-user" class="truncate text-sm font-semibold text-slate-900" :title="displayUser">
           {{ displayUser }}
@@ -64,25 +70,7 @@
         </button>
       </div>
 
-      <div v-if="props.mobile" data-testid="profile-mobile-language" class="px-2 py-2" role="group" :aria-label="t('language')">
-        <p class="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ t("language") }}</p>
-        <div class="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1">
-          <button
-            v-for="item in localeItems"
-            :key="item.locale"
-            class="rounded-md px-2 py-1.5 text-center text-xs font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            :class="authStore.locale === item.locale ? 'bg-white text-brand-700 shadow-sm' : ''"
-            type="button"
-            role="menuitem"
-            :aria-current="authStore.locale === item.locale ? 'true' : undefined"
-            @click="setLocale(item.locale)"
-          >
-            {{ item.label }}
-          </button>
-        </div>
-      </div>
-
-      <div class="border-t border-slate-100 px-2 pt-2">
+      <div data-testid="profile-account-actions" class="border-t border-slate-100 px-2 pt-2">
         <button
           v-for="item in accountMenuItems"
           :key="item.key"
@@ -95,14 +83,26 @@
           {{ item.label }}
         </button>
       </div>
-    </div>
+      <div data-testid="profile-logout-actions" class="mt-1 border-t border-slate-100 px-2 pt-2">
+        <button
+          v-for="item in logoutMenuItems"
+          :key="item.key"
+          class="block w-full rounded-lg px-2 py-2 text-left text-sm text-at-red-700 transition hover:bg-at-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          type="button"
+          role="menuitem"
+          @click="runAccountAction(item.action)"
+        >
+          {{ item.label }}
+        </button>
+      </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { translateText } from "@/platform/i18n";
-import { useLocalePreference } from "../../platform/composables/useLocalePreference";
 import { useAuthStore } from "../../platform/state/authStore";
 import { useBranchStore } from "../../platform/state/branchStore";
 import { SIDEBAR_ROLE_PRIORITY } from "../../platform/i18n/sidebar";
@@ -122,8 +122,14 @@ const props = defineProps({
 const menuOpen = ref(false);
 const menuRef = ref(null);
 const triggerRef = ref(null);
+const menuSurfaceRef = ref(null);
 const retryRef = ref(null);
 const logoutError = ref("");
+const menuStyle = ref({});
+const menuPlacement = ref("upward");
+const VIEWPORT_INSET = 8;
+const MENU_GAP = 12;
+let placementFrame = null;
 
 function t(key) {
   return translateText(key, authStore.locale);
@@ -147,17 +153,13 @@ const branchLabel = computed(() => {
   if (selected) return String(selected).trim();
   return branchStore.canAccessAll ? t("allBranches") : t("notProvided");
 });
-const localeItems = computed(() => [
-  { locale: "tr", label: t("turkish") },
-  { locale: "en", label: t("english") },
-]);
 const accountMenuItems = computed(() => [
   { key: "account", label: t("account"), action: "account" },
   { key: "desk", label: t("desk"), action: "desk" },
+]);
+const logoutMenuItems = computed(() => [
   { key: "logout", label: t("logout"), action: "logout", destructive: true },
 ]);
-
-const { setLocale: persistLocale } = useLocalePreference();
 
 function toggleMenu() {
   if (menuOpen.value) {
@@ -166,7 +168,11 @@ function toggleMenu() {
   }
   logoutError.value = "";
   menuOpen.value = true;
-  nextTick(focusFirstMenuItem);
+  nextTick(() => {
+    scheduleMenuPlacement();
+    focusFirstMenuItem();
+  });
+  addPlacementListeners();
 }
 
 function focusTrigger() {
@@ -175,7 +181,91 @@ function focusTrigger() {
 
 function closeMenu(restoreFocus = false) {
   menuOpen.value = false;
+  menuStyle.value = {};
+  menuPlacement.value = "upward";
+  cancelMenuPlacement();
+  removePlacementListeners();
   if (restoreFocus) focusTrigger();
+}
+
+function viewportSize() {
+  const viewport = window.visualViewport;
+  return {
+    width: viewport?.width || window.innerWidth,
+    height: viewport?.height || window.innerHeight,
+    offsetLeft: viewport?.offsetLeft || 0,
+    offsetTop: viewport?.offsetTop || 0,
+  };
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), Math.max(min, max));
+}
+
+function updateMenuPlacement() {
+  if (!menuOpen.value || !triggerRef.value || !menuSurfaceRef.value) return;
+
+  const anchor = triggerRef.value.getBoundingClientRect();
+  const surface = menuSurfaceRef.value.getBoundingClientRect();
+  const viewport = viewportSize();
+  const minLeft = viewport.offsetLeft + VIEWPORT_INSET;
+  const maxLeft = viewport.offsetLeft + viewport.width - surface.width - VIEWPORT_INSET;
+  const minTop = viewport.offsetTop + VIEWPORT_INSET;
+  const maxTop = viewport.offsetTop + viewport.height - surface.height - VIEWPORT_INSET;
+  const isMobile = props.mobile || viewport.width < 768;
+  const placement = isMobile ? "mobile" : props.collapsed ? "lateral" : "upward";
+  menuPlacement.value = placement;
+
+  let left = anchor.left;
+  let top = anchor.top - surface.height - MENU_GAP;
+  if (placement === "lateral") {
+    left = anchor.right + MENU_GAP;
+    if (left > maxLeft) left = anchor.left - surface.width - MENU_GAP;
+    top = anchor.top;
+  } else if (placement === "mobile") {
+    top = anchor.bottom + MENU_GAP;
+    if (top > maxTop) top = anchor.top - surface.height - MENU_GAP;
+  }
+
+  menuStyle.value = {
+    left: `${clamp(left, minLeft, maxLeft)}px`,
+    top: `${clamp(top, minTop, maxTop)}px`,
+    maxHeight: `${Math.max(0, viewport.height - VIEWPORT_INSET * 2)}px`,
+  };
+}
+
+function handleViewportChange() {
+  scheduleMenuPlacement();
+}
+
+function scheduleMenuPlacement() {
+  if (!menuOpen.value || placementFrame !== null) return;
+  const requestFrame = window.requestAnimationFrame || ((callback) => window.setTimeout(callback, 0));
+  placementFrame = requestFrame(() => {
+    placementFrame = null;
+    updateMenuPlacement();
+  });
+}
+
+function cancelMenuPlacement() {
+  if (placementFrame === null) return;
+  const cancelFrame = window.cancelAnimationFrame || window.clearTimeout;
+  cancelFrame(placementFrame);
+  placementFrame = null;
+}
+
+function addPlacementListeners() {
+  window.addEventListener("resize", handleViewportChange);
+  window.addEventListener("scroll", handleViewportChange, true);
+  window.visualViewport?.addEventListener("resize", handleViewportChange);
+  window.visualViewport?.addEventListener("scroll", handleViewportChange);
+}
+
+function removePlacementListeners() {
+  window.removeEventListener("resize", handleViewportChange);
+  window.removeEventListener("scroll", handleViewportChange, true);
+  window.visualViewport?.removeEventListener("resize", handleViewportChange);
+  window.visualViewport?.removeEventListener("scroll", handleViewportChange);
 }
 
 function runAccountAction(action) {
@@ -215,17 +305,21 @@ async function logout() {
   }
 }
 
-async function setLocale(locale) {
-  await persistLocale(locale);
-  closeMenu(true);
+function focusFirstMenuItem() {
+  menuSurfaceRef.value?.querySelector('[role="menuitem"]')?.focus();
 }
 
-function focusFirstMenuItem() {
-  menuRef.value?.querySelector('[role="menuitem"]')?.focus();
+function isFocusableTarget(target) {
+  return target instanceof Element
+    && Boolean(target.closest("a,button,input,select,textarea,[tabindex]:not([tabindex='-1'])"));
 }
 
 function handleDocumentClick(event) {
-  if (menuOpen.value && !menuRef.value?.contains(event.target)) closeMenu();
+  if (
+    menuOpen.value
+    && !menuRef.value?.contains(event.target)
+    && !menuSurfaceRef.value?.contains(event.target)
+  ) closeMenu(!isFocusableTarget(event.target));
 }
 
 function handleKeydown(event) {
@@ -235,7 +329,7 @@ function handleKeydown(event) {
     return;
   }
 
-  const items = [...menuRef.value.querySelectorAll('[role="menuitem"]')];
+  const items = [...menuSurfaceRef.value.querySelectorAll('[role="menuitem"]')];
   const current = items.indexOf(document.activeElement);
   if (!items.length || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
   event.preventDefault();
@@ -260,5 +354,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleDocumentClick);
   document.removeEventListener("keydown", handleKeydown);
+  cancelMenuPlacement();
+  removePlacementListeners();
 });
 </script>

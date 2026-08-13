@@ -5,17 +5,18 @@
       class="fixed right-4 top-4 z-50 flex max-w-sm items-start gap-3 rounded-lg border border-at-amber/40 bg-status-waiting-bg px-4 py-3 text-sm font-medium text-status-waiting-text shadow"
       role="alert"
       aria-live="assertive"
+      :inert="uiStore.sidebarOpen"
     >
       <span class="flex-1">{{ scopeRefreshNotice }}</span>
       <button
         class="shrink-0 cursor-pointer rounded bg-at-amber px-2 py-1 text-xs font-semibold text-white transition-colors hover:brightness-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-at-amber"
         @click="confirmScopeRefresh"
       >
-        {{ locale === 'tr' ? 'Yenile' : 'Refresh' }}
+        {{ t("refresh") }}
       </button>
       <button
         class="shrink-0 cursor-pointer text-status-waiting-text hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-at-amber"
-        :aria-label="locale === 'tr' ? 'Kapat' : 'Dismiss'"
+        :aria-label="t('dismiss')"
         @click="dismissScopeNotice"
       >
         <FeatherIcon name="x" class="h-4 w-4" />
@@ -23,8 +24,8 @@
     </div>
     <div class="flex min-h-screen w-full">
       <Sidebar :mobile-open="uiStore.sidebarOpen" @close="uiStore.closeSidebar" @navigate="uiStore.closeSidebar" />
-      <div class="at-shell-content flex min-w-0 flex-1 flex-col overflow-x-hidden">
-        <Topbar @toggle-sidebar="uiStore.toggleSidebar" />
+      <div class="at-shell-content flex min-w-0 flex-1 flex-col overflow-x-hidden" :inert="uiStore.sidebarOpen">
+        <Topbar :mobile-sidebar-open="uiStore.sidebarOpen" @toggle-sidebar="uiStore.toggleSidebar" />
         <main class="at-shell-main flex-1 overflow-y-auto overflow-x-hidden p-5 lg:p-6 xl:p-8 2xl:p-10">
           <RouterView v-slot="{ Component, route }">
             <component
@@ -48,6 +49,7 @@ import { sessionState } from "../state/session";
 import { useUiStore } from "../state/uiStore";
 import { getAppPinia } from "../../pinia";
 import { useAuthStore } from "../state/authStore";
+import { translateText } from "../i18n";
 
 const uiStore = useUiStore();
 const authStore = useAuthStore(getAppPinia());
@@ -56,6 +58,15 @@ const scopeRefreshNotice = ref("");
 const locale = computed(() => unref(authStore.locale) || "en");
 
 let scopeChangeHandler = null;
+let emergencyAccessHandler = null;
+
+function t(key) {
+  return translateText(key, locale.value);
+}
+
+function interpolate(source, values) {
+  return source.replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
+}
 
 // - No auto-reload: if the user has an unsaved form open, a forced reload would
 //   discard their work. Instead we show a persistent notice and let the user
@@ -65,9 +76,7 @@ function handleScopeChanged(payload) {
   if (targetUser && sessionState.userId && targetUser !== sessionState.userId) {
     return;
   }
-  scopeRefreshNotice.value = locale.value === "tr"
-    ? "Erişim yetkileriniz güncellendi. Güncel yetkilerle devam etmek için sayfayı yenileyin."
-    : "Your access permissions have been updated. Refresh to continue with the latest permissions.";
+  scopeRefreshNotice.value = t("scopeRefreshNotice");
 }
 
 function handleEmergencyAccessGranted(payload) {
@@ -78,9 +87,7 @@ function handleEmergencyAccessGranted(payload) {
   }
 
   const { beneficiary, scope } = payload;
-  scopeRefreshNotice.value = locale.value === "tr"
-    ? `DİKKAT: ${beneficiary} kullanıcısına ${scope} için acil erişim yetkisi verildi.`
-    : `NOTICE: Emergency access granted to ${beneficiary} for ${scope}.`;
+  scopeRefreshNotice.value = interpolate(t("emergencyAccessNotice"), { beneficiary, scope });
 }
 
 function confirmScopeRefresh() {
@@ -102,21 +109,27 @@ function bindScopeRealtimeListener() {
     handleScopeChanged(payload || {});
   };
   
-  const emergencyHandler = (payload) => {
+  emergencyAccessHandler = (payload) => {
     handleEmergencyAccessGranted(payload || {});
   };
 
   realtime.on("at_scope_changed", scopeChangeHandler);
-  realtime.on("at_emergency_access_granted", emergencyHandler);
+  realtime.on("at_emergency_access_granted", emergencyAccessHandler);
 }
 
 function unbindScopeRealtimeListener() {
   const realtime = window?.frappe?.realtime;
-  if (!realtime || typeof realtime.off !== "function" || !scopeChangeHandler) {
+  if (!realtime || typeof realtime.off !== "function") {
     return;
   }
-  realtime.off("at_scope_changed", scopeChangeHandler);
-  scopeChangeHandler = null;
+  if (scopeChangeHandler) {
+    realtime.off("at_scope_changed", scopeChangeHandler);
+    scopeChangeHandler = null;
+  }
+  if (emergencyAccessHandler) {
+    realtime.off("at_emergency_access_granted", emergencyAccessHandler);
+    emergencyAccessHandler = null;
+  }
 }
 
 watch(

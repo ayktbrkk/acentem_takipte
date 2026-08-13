@@ -50,7 +50,7 @@ describe("OfficeBranchSelect", () => {
     const wrapper = mount(OfficeBranchSelect);
 
     const trigger = wrapper.get('[data-testid="branch-scope-trigger"]');
-    expect(trigger.attributes("aria-label")).toBe("Şube Kapsamı");
+    expect(trigger.attributes("aria-label")).toBe("Şube Kapsamı: AT Sigorta");
     expect(trigger.text()).toContain("AT Sigorta");
     expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
 
@@ -84,6 +84,24 @@ describe("OfficeBranchSelect", () => {
     expect(wrapper.get('[data-testid="branch-scope-trigger"]').attributes("disabled")).toBeDefined();
   });
 
+  it("retains long branch labels and locks the selection without losing the status text", () => {
+    const longLabel = "Istanbul Anadolu Yakasi Merkez Acenteler Operasyon Subesi";
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      locale: "tr",
+      office_branches: [{ name: "LONG", office_branch_name: longLabel, is_default: 1 }],
+      default_office_branch: "LONG",
+      can_access_all_office_branches: false,
+    });
+    useBranchStore().hydrateFromSession();
+
+    const wrapper = mount(OfficeBranchSelect);
+
+    expect(wrapper.get('[data-testid="branch-scope-trigger"]').text()).toContain(longLabel);
+    expect(wrapper.get('[data-testid="branch-scope-lock-status"]').text()).toContain("Sabit kapsam");
+    expect(wrapper.get('[data-testid="branch-scope-trigger"]').attributes("disabled")).toBeDefined();
+  });
+
   it("uses the English scope label and all-branches value", () => {
     const authStore = useAuthStore();
     setPreferredLocale("en");
@@ -98,7 +116,7 @@ describe("OfficeBranchSelect", () => {
     const wrapper = mount(OfficeBranchSelect);
     const trigger = wrapper.get('[data-testid="branch-scope-trigger"]');
 
-    expect(trigger.attributes("aria-label")).toBe("Branch Scope");
+    expect(trigger.attributes("aria-label")).toBe("Branch Scope: All Branches");
     expect(trigger.text()).toContain("All Branches");
   });
 
@@ -113,6 +131,31 @@ describe("OfficeBranchSelect", () => {
     const branchStore = useBranchStore();
     expect(branchStore.selected).toBe("SUB");
     expect(routerReplace).toHaveBeenCalledTimes(1);
+  });
+
+  it("exposes listbox keyboard navigation with a selected option state", async () => {
+    const wrapper = mount(OfficeBranchSelect);
+    const trigger = wrapper.get('[data-testid="branch-scope-trigger"]');
+
+    await trigger.trigger("click");
+    const listbox = wrapper.get('[role="listbox"]');
+    const options = wrapper.findAll('[role="option"]');
+    expect(options).toHaveLength(2);
+    expect(options[0].attributes("aria-selected")).toBe("true");
+
+    await listbox.trigger("keydown", { key: "ArrowDown" });
+    expect(trigger.attributes("aria-activedescendant")).toBe(options[1].attributes("id"));
+    await listbox.trigger("keydown", { key: "Enter" });
+    expect(useBranchStore().selected).toBe("SUB");
+  });
+
+  it("keeps the picker and viewport-safe listbox width classes", async () => {
+    const wrapper = mount(OfficeBranchSelect);
+    expect(wrapper.classes()).toEqual(expect.arrayContaining(["max-w-full", "md:max-w-[300px]"]));
+
+    await wrapper.get('[data-testid="branch-scope-trigger"]').trigger("click");
+    const listbox = wrapper.get('[role="listbox"]');
+    expect(listbox.classes()).toEqual(expect.arrayContaining(["w-[380px]", "max-w-[calc(100vw-2rem)]"]));
   });
 
   it("supports type-to-search selection", async () => {
@@ -237,7 +280,7 @@ describe("OfficeBranchSelect", () => {
 
     const wrapper = mount(OfficeBranchSelect);
     const trigger = wrapper.get('[data-testid="branch-scope-trigger"]');
-    expect(trigger.attributes("aria-label")).toBe("Şube Kapsamı");
+    expect(trigger.attributes("aria-label")).toBe("Şube Kapsamı: Tüm Şubeler");
     expect(trigger.text()).toContain("Tüm Şubeler");
     expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
     await wrapper.get('[data-testid="branch-scope-trigger"]').trigger("click");

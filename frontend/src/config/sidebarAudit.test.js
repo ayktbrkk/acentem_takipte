@@ -50,6 +50,21 @@ describe("sidebar page audit guardrails", () => {
     expectTranslationParity("common", COMMON_TRANSLATIONS);
   });
 
+  it("keeps shell notice copy in the canonical bilingual catalog", () => {
+    expect(SIDEBAR_TRANSLATIONS.tr.scopeRefreshNotice).toBe("Erişim yetkileriniz güncellendi. Güncel yetkilerle devam etmek için sayfayı yenileyin.");
+    expect(SIDEBAR_TRANSLATIONS.en.scopeRefreshNotice).toBe("Your access permissions have been updated. Refresh to continue with the latest permissions.");
+    expect(SIDEBAR_TRANSLATIONS.tr.emergencyAccessNotice).toBe("DİKKAT: {beneficiary} kullanıcısına {scope} için acil erişim yetkisi verildi.");
+    expect(SIDEBAR_TRANSLATIONS.en.emergencyAccessNotice).toBe("NOTICE: Emergency access granted to {beneficiary} for {scope}.");
+  });
+
+  it("keeps shell realtime and mobile isolation teardown contracts explicit", () => {
+    const appSource = readSource("platform/shell/App.vue");
+    expect(appSource).toContain("let emergencyAccessHandler = null");
+    expect(appSource).toContain('realtime.off("at_emergency_access_granted", emergencyAccessHandler)');
+    expect(appSource).toContain(':inert="uiStore.sidebarOpen"');
+    expect(appSource).not.toContain("locale === 'tr'");
+  });
+
   it("uses domain-correct TR and EN insurance terms for audited shell links", () => {
     expect(SIDEBAR_TRANSLATIONS.tr.policies).toBe("Poliçeler");
     expect(SIDEBAR_TRANSLATIONS.en.policies).toBe("Policies");

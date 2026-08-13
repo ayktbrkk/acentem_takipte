@@ -13,7 +13,7 @@
         :class="isLocked
           ? 'cursor-not-allowed opacity-80'
           : 'focus:outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-brand-400'"
-        :aria-label="t('scope')"
+        :aria-label="[t('scope'), selectedLabel].filter(Boolean).join(': ')"
         :aria-haspopup="isLocked ? undefined : 'listbox'"
         :aria-expanded="isOpen ? 'true' : 'false'"
         :aria-controls="isOpen ? listboxId : undefined"
@@ -62,7 +62,7 @@
       v-if="isOpen && !isLocked"
       :id="listboxId"
       :style="panelStyle"
-      class="absolute right-0 z-40 flex w-[380px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10"
+      class="absolute right-0 z-40 flex w-[380px] max-w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10"
       :class="openDirection === 'up' ? 'bottom-full mb-2' : 'top-[calc(100%+0.5rem)]'"
       role="listbox"
       tabindex="-1"
