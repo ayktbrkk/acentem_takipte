@@ -7,6 +7,7 @@
       :class="props.collapsed ? 'justify-center' : ''"
       type="button"
       aria-haspopup="menu"
+      aria-controls="sidebar-profile-menu-surface"
       :aria-expanded="menuOpen ? 'true' : 'false'"
       :aria-label="menuOpen ? t('closeProfileMenu') : t('openProfileMenu')"
       @click="toggleMenu"
@@ -33,6 +34,7 @@
         v-if="menuOpen"
         ref="menuSurfaceRef"
         data-testid="sidebar-profile-menu"
+        id="sidebar-profile-menu-surface"
         :data-placement="menuPlacement"
         class="fixed z-40 max-h-[calc(100vh-1rem)] w-[min(18rem,calc(100vw-1rem))] overflow-y-auto rounded-2xl border border-slate-200 bg-white py-2 shadow-lg shadow-slate-900/10"
         :style="menuStyle"
@@ -68,12 +70,24 @@
         </button>
       </div>
 
-      <div class="border-t border-slate-100 px-2 pt-2">
+      <div data-testid="profile-account-actions" class="border-t border-slate-100 px-2 pt-2">
         <button
           v-for="item in accountMenuItems"
           :key="item.key"
           class="block w-full rounded-lg px-2 py-2 text-left text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
           :class="item.destructive ? 'text-at-red-700 hover:bg-at-red-50' : 'text-slate-800 hover:bg-slate-50'"
+          type="button"
+          role="menuitem"
+          @click="runAccountAction(item.action)"
+        >
+          {{ item.label }}
+        </button>
+      </div>
+      <div data-testid="profile-logout-actions" class="mt-1 border-t border-slate-100 px-2 pt-2">
+        <button
+          v-for="item in logoutMenuItems"
+          :key="item.key"
+          class="block w-full rounded-lg px-2 py-2 text-left text-sm text-at-red-700 transition hover:bg-at-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
           type="button"
           role="menuitem"
           @click="runAccountAction(item.action)"
@@ -142,6 +156,8 @@ const branchLabel = computed(() => {
 const accountMenuItems = computed(() => [
   { key: "account", label: t("account"), action: "account" },
   { key: "desk", label: t("desk"), action: "desk" },
+]);
+const logoutMenuItems = computed(() => [
   { key: "logout", label: t("logout"), action: "logout", destructive: true },
 ]);
 

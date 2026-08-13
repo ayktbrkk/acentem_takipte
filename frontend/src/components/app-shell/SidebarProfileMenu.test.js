@@ -93,11 +93,13 @@ describe("Sidebar profile menu contract", () => {
 
     expect(trigger.attributes("aria-haspopup")).toBe("menu");
     expect(trigger.attributes("aria-expanded")).toBe("false");
+    expect(trigger.attributes("aria-controls")).toBe("sidebar-profile-menu-surface");
     expect(trigger.find('[data-testid="profile-trigger-active-branch"]').text()).toContain("AT Sigorta");
     await trigger.trigger("click");
 
     const profileMenu = findProfileMenu();
     expect(profileMenu.exists()).toBe(true);
+    expect(profileMenu.attributes("id")).toBe("sidebar-profile-menu-surface");
     expect(profileMenu.attributes("role")).toBe("menu");
     expect(profileMenu.text()).toContain("Aykut Yılmaz");
     expect(profileMenu.text()).toContain("Rol");
@@ -107,6 +109,12 @@ describe("Sidebar profile menu contract", () => {
     expect(profileMenu.find('[data-testid="profile-mobile-language"]').exists()).toBe(false);
     expect(profileMenu.element.querySelector('[data-testid="branch-scope-trigger"]')).toBe(null);
     expect(profileMenu.text()).toContain("Çıkış Yap");
+    expect(profileMenu.find('[data-testid="profile-account-actions"]').exists()).toBe(true);
+    expect(profileMenu.find('[data-testid="profile-logout-actions"]').exists()).toBe(true);
+    expect(profileMenu.find('[data-testid="profile-account-actions"]').findAll('[role="menuitem"]')).toHaveLength(2);
+    expect(profileMenu.find('[data-testid="profile-logout-actions"]').findAll('[role="menuitem"]')).toHaveLength(1);
+    expect(profileMenu.find('[data-testid="profile-logout-actions"]').classes()).toContain("border-t");
+    expect(profileMenu.find('[data-testid="profile-logout-actions"] [role="menuitem"]').classes()).toContain("text-at-red-700");
     expect(profileMenu.find('[data-testid="profile-summary-user"]').text()).toBe("Aykut Yılmaz");
     expect(profileMenu.find('[data-testid="profile-summary-role"]').text()).toContain("AT Yönetici");
     const activeBranchSummary = profileMenu.find('[data-testid="profile-summary-active-branch"]');
@@ -296,6 +304,42 @@ describe("Sidebar profile menu contract", () => {
     expect(profileMenu.text()).toContain("Hesabım");
     expect(profileMenu.text()).toContain("Desk'i Aç");
     expect(profileMenu.text()).toContain("Çıkış Yap");
+  });
+
+  it("keeps the mobile profile trigger outside the drawer scroll region and the menu outside clipping ancestors", async () => {
+    const aside = document.createElement("aside");
+    const nav = document.createElement("nav");
+    const footer = document.createElement("footer");
+    nav.className = "overflow-y-auto";
+    nav.style.height = "100px";
+    nav.innerHTML = "<div style=\"height: 600px\"></div>";
+    aside.append(nav, footer);
+    document.body.append(aside);
+
+    const wrapper = mountSidebar({ attachTo: footer, props: { mobile: true } });
+    const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
+    nav.scrollTop = 320;
+
+    expect(nav.scrollTop).toBe(320);
+    expect(nav.contains(trigger.element)).toBe(false);
+    expect(footer.contains(trigger.element)).toBe(true);
+    expect(trigger.isVisible()).toBe(true);
+    expect(trigger.element.disabled).toBe(false);
+
+    await trigger.trigger("click");
+    const profileMenu = findProfileMenu();
+    const ancestors = [];
+    let ancestor = profileMenu.element.parentElement;
+    while (ancestor && ancestor !== document.body) {
+      ancestors.push(ancestor);
+      ancestor = ancestor.parentElement;
+    }
+
+    expect(profileMenu.element.parentElement).toBe(document.body);
+    expect(profileMenu.element.closest("aside")).toBe(null);
+    expect(ancestors.some((node) => node.classList.contains("overflow-y-auto"))).toBe(false);
+    expect(ancestors.some((node) => node.classList.contains("overflow-auto"))).toBe(false);
+    aside.remove();
   });
 
   it.each([
