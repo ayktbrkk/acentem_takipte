@@ -295,7 +295,7 @@ describe("Topbar shell contract", () => {
     expect(mediaQuery.removeListener).toHaveBeenCalledWith(listener);
   });
 
-  it.each(["desktop", "mobile"])("uses roving tabindex and leaves the %s language menu on Tab", async (surface) => {
+  it.each(["desktop", "mobile"])("exposes roving tabindex and does not prevent Tab in the %s language menu", async (surface) => {
     const authStore = useAuthStore();
     authStore.applyContext({ locale: "tr", user: "Aykut", roles: ["AT Agent"] });
 
@@ -325,14 +325,9 @@ describe("Topbar shell contract", () => {
     expect(items().map((item) => item.attributes("tabindex"))).toEqual(["-1", "0"]);
     expect(document.activeElement).toBe(items()[1].element);
 
-    const nextFocusTarget = document.createElement("button");
-    document.body.appendChild(nextFocusTarget);
     items()[1].element.focus();
     const tabEvent = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
     items()[1].element.dispatchEvent(tabEvent);
     expect(tabEvent.defaultPrevented).toBe(false);
-    if (document.activeElement !== nextFocusTarget) nextFocusTarget.focus();
-    expect(document.activeElement).toBe(nextFocusTarget);
-    nextFocusTarget.remove();
   });
 });
