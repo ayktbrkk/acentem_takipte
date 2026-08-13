@@ -43,6 +43,14 @@ const OfficeBranchSelectStub = {
   template: `<div class="office-branch-select-stub">Office Branch Select</div>`,
 };
 
+let mountedWrappers = [];
+
+function mountSidebar(options) {
+  const wrapper = mount(Sidebar, options);
+  mountedWrappers.push(wrapper);
+  return wrapper;
+}
+
 describe("Sidebar localization", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -56,6 +64,9 @@ describe("Sidebar localization", () => {
   });
 
   afterEach(() => {
+    mountedWrappers.forEach((wrapper) => wrapper.unmount());
+    mountedWrappers = [];
+    document.querySelectorAll('[data-testid="sidebar-profile-menu"]').forEach((menu) => menu.remove());
     vi.unstubAllGlobals();
   });
 
@@ -68,7 +79,7 @@ describe("Sidebar localization", () => {
       roles: ["AT Agent"],
     });
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: {
         mobileOpen: false,
       },
@@ -93,6 +104,10 @@ describe("Sidebar localization", () => {
     expect(collapseToggles[0].attributes("title")).toBe("Menüyü daralt");
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     await wrapper.find('footer [data-testid="sidebar-profile-trigger"]').trigger("click");
+    const profileMenus = wrapper.findAll('[data-testid="sidebar-profile-menu"]');
+    expect(profileMenus).toHaveLength(1);
+    const profileMenu = profileMenus[0];
+    expect(profileMenu.find('[data-testid="profile-mobile-language"]').exists()).toBe(false);
     expect(wrapper.find('footer [data-testid="profile-mobile-language"]').exists()).toBe(false);
     expect(wrapper.text()).toContain("Acentem Takipte");
     expect(wrapper.find('p[title="Acentem Takipte"]').exists()).toBe(true);
@@ -117,7 +132,7 @@ describe("Sidebar localization", () => {
       removeEventListener: vi.fn(),
     }));
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: {
         mobileOpen: true,
       },
@@ -137,6 +152,8 @@ describe("Sidebar localization", () => {
     expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     await wrapper.find('footer [data-testid="sidebar-profile-trigger"]').trigger("click");
+    const profileMenus = wrapper.findAll('[data-testid="sidebar-profile-menu"]');
+    expect(profileMenus).toHaveLength(1);
     expect(wrapper.find('footer [data-testid="profile-mobile-language"]').exists()).toBe(false);
   });
 
@@ -150,7 +167,7 @@ describe("Sidebar localization", () => {
     };
     vi.stubGlobal("matchMedia", vi.fn(() => mediaQuery));
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: { mobileOpen: false },
       global: {
         directives: { prefetch: {} },
@@ -176,7 +193,7 @@ describe("Sidebar localization", () => {
     };
     vi.stubGlobal("matchMedia", vi.fn(() => mediaQuery));
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: { mobileOpen: false },
       global: {
         directives: { prefetch: {} },
@@ -201,7 +218,7 @@ describe("Sidebar localization", () => {
       roles: ["System Manager"],
     });
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: {
         mobileOpen: false,
       },
@@ -230,7 +247,7 @@ describe("Sidebar localization", () => {
       roles: ["AT Agent"],
     });
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: {
         mobileOpen: false,
       },
@@ -265,7 +282,7 @@ describe("Sidebar localization", () => {
       roles: ["AT Manager"],
     });
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: {
         mobileOpen: false,
       },
@@ -400,7 +417,7 @@ describe("Sidebar localization", () => {
       roles: ["AT Manager"],
     });
 
-    const wrapper = mount(Sidebar, {
+    const wrapper = mountSidebar({
       props: {
         mobileOpen: false,
       },
