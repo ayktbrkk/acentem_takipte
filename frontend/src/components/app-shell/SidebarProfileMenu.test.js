@@ -13,9 +13,6 @@ const PROFILE_MENU_TRANSLATIONS = {
     profileMenu: "Profil menüsü",
     role: "Rol",
     activeBranch: "Aktif şube",
-    language: "Dil",
-    turkish: "Türkçe",
-    english: "English",
     openProfileMenu: "Profil menüsünü aç",
     closeProfileMenu: "Profil menüsünü kapat",
     account: "Hesabım",
@@ -26,9 +23,6 @@ const PROFILE_MENU_TRANSLATIONS = {
     profileMenu: "Profile menu",
     role: "Role",
     activeBranch: "Active branch",
-    language: "Language",
-    turkish: "Türkçe",
-    english: "English",
     openProfileMenu: "Open profile menu",
     closeProfileMenu: "Close profile menu",
     account: "My Account",
@@ -248,6 +242,35 @@ describe("Sidebar profile menu contract", () => {
     document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await wrapper.vm.$nextTick();
     expect(findProfileMenu().exists()).toBe(false);
+
+    await trigger.trigger("click");
+    await trigger.trigger("click");
+    expect(findProfileMenu().exists()).toBe(false);
+    expect(document.activeElement).toBe(trigger.element);
+  });
+
+  it("returns focus for a non-focusable outside click without stealing focus from another control", async () => {
+    const wrapper = mountSidebar();
+    const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
+
+    await trigger.trigger("click");
+    document.body.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    await wrapper.vm.$nextTick();
+
+    expect(findProfileMenu().exists()).toBe(false);
+    expect(document.activeElement).toBe(trigger.element);
+
+    await trigger.trigger("click");
+    const externalControl = document.createElement("button");
+    externalControl.type = "button";
+    document.body.append(externalControl);
+    externalControl.focus();
+    externalControl.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    await wrapper.vm.$nextTick();
+
+    expect(findProfileMenu().exists()).toBe(false);
+    expect(document.activeElement).toBe(externalControl);
+    externalControl.remove();
   });
 
   it("moves focus through the menu when no item is currently focused", async () => {

@@ -293,12 +293,17 @@ function focusFirstMenuItem() {
   menuSurfaceRef.value?.querySelector('[role="menuitem"]')?.focus();
 }
 
+function isFocusableTarget(target) {
+  return target instanceof Element
+    && Boolean(target.closest("a,button,input,select,textarea,[tabindex]:not([tabindex='-1'])"));
+}
+
 function handleDocumentClick(event) {
   if (
     menuOpen.value
     && !menuRef.value?.contains(event.target)
     && !menuSurfaceRef.value?.contains(event.target)
-  ) closeMenu();
+  ) closeMenu(!isFocusableTarget(event.target));
 }
 
 function handleKeydown(event) {
