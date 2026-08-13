@@ -48,6 +48,11 @@ function diagnostics(page, testInfo) {
           const original = sourceElements[index];
           const current = cloneElements[index];
           if (!original || !current) continue;
+          if (current instanceof HTMLInputElement || current instanceof HTMLTextAreaElement) current.value = "";
+          if (current instanceof HTMLSelectElement) {
+            current.selectedIndex = -1;
+            current.value = "";
+          }
           for (const attribute of [...current.attributes]) current.removeAttribute(attribute.name);
           const rect = original.getBoundingClientRect();
           current.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px;overflow:hidden;background:#fff;background-image:none;color:#111;box-sizing:border-box;border:1px solid #e5e7eb`;
@@ -127,21 +132,39 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId) {
   await page.keyboard.press("ArrowUp");
   await expect(items.first()).toBeFocused();
   const focusOrder = await page.evaluate(() => {
-    const visible = (element) => {
+    const tabbable = (element) => {
       const style = getComputedStyle(element);
-      return style.display !== "none" && style.visibility !== "hidden" && element.getClientRects().length > 0;
+      return !element.matches("[disabled],[aria-disabled='true'],[inert]")
+        && element.tabIndex >= 0
+        && style.display !== "none"
+        && style.visibility !== "hidden"
+        && element.getClientRects().length > 0;
     };
-    const focusables = [...document.querySelectorAll("button:not([disabled]),a[href],input:not([disabled])")].filter(visible);
+    const focusables = [...document.querySelectorAll("button,a[href],input,textarea,select,[tabindex]")].filter(tabbable);
     const current = focusables.indexOf(document.activeElement);
-    return { current, next: current + 1 < focusables.length ? current + 1 : null };
+    const next = current + 1 < focusables.length ? focusables[current + 1] : null;
+    return {
+      current,
+      nextToken: next?.getAttribute("data-testid") || next?.id || next?.tagName || null,
+    };
   });
   await page.keyboard.press("Tab");
   const activeAfterTab = await page.evaluate(() => {
-    const visible = (element) => getComputedStyle(element).display !== "none" && element.getClientRects().length > 0;
-    return [...document.querySelectorAll("button:not([disabled]),a[href],input:not([disabled])")].filter(visible).indexOf(document.activeElement);
+    const tabbable = (element) => !element.matches("[disabled],[aria-disabled='true'],[inert]")
+      && element.tabIndex >= 0
+      && getComputedStyle(element).display !== "none"
+      && getComputedStyle(element).visibility !== "hidden"
+      && element.getClientRects().length > 0;
+    const focusables = [...document.querySelectorAll("button,a[href],input,textarea,select,[tabindex]")].filter(tabbable);
+    const active = document.activeElement;
+    return {
+      index: focusables.indexOf(active),
+      token: active?.getAttribute("data-testid") || active?.id || active?.tagName || null,
+    };
   });
-  if (focusOrder.next === null) expect(activeAfterTab).not.toBe(focusOrder.current);
-  else expect(activeAfterTab).toBe(focusOrder.next);
+  expect(focusOrder.nextToken).toBeTruthy();
+  expect(activeAfterTab.token).toBe(focusOrder.nextToken);
+  expect(activeAfterTab.index).not.toBe(focusOrder.current);
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
   await expect(trigger).toBeFocused();
@@ -290,6 +313,25 @@ test.describe("shell utility redesign audit", () => {
     await assertNoHorizontalOverflow(page, 390);
 
     const nav = aside.locator("nav");
+    const footer = aside.locator("footer");
+    const profileTrigger = page.getByTestId("sidebar-profile-trigger");
+    const initialReachability = await footer.evaluate((element) => {
+      const profile = element.querySelector('[data-testid="sidebar-profile-trigger"]');
+      const rect = (node) => {
+        const box = node.getBoundingClientRect();
+        return {
+          x: Math.round(box.x),
+          y: Math.round(box.y),
+          width: Math.round(box.width),
+          height: Math.round(box.height),
+          visible: Boolean(node.offsetWidth || node.offsetHeight || node.getClientRects().length),
+        };
+      };
+      return { footer: rect(element), profile: rect(profile) };
+    });
+    expect(initialReachability.footer.visible).toBe(true);
+    expect(initialReachability.profile.visible).toBe(true);
+
     const beforeScroll = await nav.evaluate((element) => ({
       scrollHeight: element.scrollHeight,
       clientHeight: element.clientHeight,
@@ -297,15 +339,28 @@ test.describe("shell utility redesign audit", () => {
     }));
     if (beforeScroll.scrollHeight > beforeScroll.clientHeight) {
       await nav.evaluate((element) => {
-        element.scrollTop = element.scrollHeight;
+        element.scrollTop = element.scrollHeight - element.clientHeight;
       });
-      const afterScroll = await nav.evaluate((element) => element.scrollTop);
-      expect(afterScroll).toBeGreaterThan(beforeScroll.scrollTop);
+      const afterScroll = await nav.evaluate((element) => ({
+        scrollTop: element.scrollTop,
+        maxScrollTop: element.scrollHeight - element.clientHeight,
+      }));
+      expect(afterScroll.maxScrollTop).toBeGreaterThan(0);
+      expect(afterScroll.scrollTop).toBeGreaterThanOrEqual(afterScroll.maxScrollTop - 1);
     } else {
-      expect(await nav.locator("a").count()).toBeGreaterThan(0);
+      expect(beforeScroll.scrollHeight).toBe(beforeScroll.clientHeight);
+      expect(initialReachability.profile.visible).toBe(true);
     }
-    const profileTrigger = page.getByTestId("sidebar-profile-trigger");
-    await profileTrigger.scrollIntoViewIfNeeded();
+    const finalReachability = await footer.evaluate((element) => {
+      const profile = element.querySelector('[data-testid="sidebar-profile-trigger"]');
+      const inViewport = (node) => {
+        const box = node.getBoundingClientRect();
+        return box.top >= 0 && box.left >= 0 && box.bottom <= innerHeight && box.right <= innerWidth;
+      };
+      return { footerInViewport: inViewport(element), profileInViewport: inViewport(profile) };
+    });
+    expect(finalReachability.footerInViewport).toBe(true);
+    expect(finalReachability.profileInViewport).toBe(true);
     await expect(profileTrigger).toBeVisible();
     await profileTrigger.click();
     const profileMenu = page.getByTestId("sidebar-profile-menu");
