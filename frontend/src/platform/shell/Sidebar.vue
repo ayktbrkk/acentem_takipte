@@ -15,7 +15,6 @@
       :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', effectiveCollapsed ? 'lg:w-[76px]' : 'lg:w-[240px]']"
       :role="mobileOpen && !isDesktopViewport ? 'dialog' : undefined"
       :aria-label="mobileOpen && !isDesktopViewport ? t('menu') : undefined"
-      :aria-owns="mobileOpen && !isDesktopViewport ? 'sidebar-profile-menu-surface' : undefined"
       :aria-modal="mobileOpen && !isDesktopViewport ? 'true' : undefined"
     >
       <div class="border-b border-slate-100 px-4 py-4">
@@ -203,8 +202,17 @@ function getMobileDrawerTabbables() {
   return [...drawerTabbables, ...profileTabbables].filter(isTabbable);
 }
 
+function isProfileMenuFocused() {
+  const profileMenu = document.querySelector('[data-testid="sidebar-profile-menu"]');
+  return profileMenu?.contains(document.activeElement) === true;
+}
+
 function handleMobileDrawerKeydown(event) {
   if (event.key === "Escape") {
+    if (isProfileMenuFocused()) {
+      event.preventDefault();
+      return;
+    }
     event.preventDefault();
     emit("close");
     return;
@@ -230,7 +238,7 @@ function handleMobileDrawerKeydown(event) {
 
 function removeMobileDrawerListener() {
   if (!mobileDrawerKeydownListener) return;
-  document.removeEventListener("keydown", mobileDrawerKeydownListener);
+  document.removeEventListener("keydown", mobileDrawerKeydownListener, true);
   mobileDrawerKeydownListener = null;
 }
 
@@ -240,7 +248,8 @@ function syncMobileDrawerListener() {
   if (typeof document === "undefined") return;
   if (shouldListen && !mobileDrawerKeydownListener) {
     mobileDrawerKeydownListener = handleMobileDrawerKeydown;
-    document.addEventListener("keydown", mobileDrawerKeydownListener);
+    // Observe nested teleported surfaces before their document listeners close them.
+    document.addEventListener("keydown", mobileDrawerKeydownListener, true);
   } else if (!shouldListen) {
     removeMobileDrawerListener();
   }

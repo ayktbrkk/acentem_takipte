@@ -139,7 +139,7 @@ describe("Sidebar localization", () => {
     expect(wrapper.find("aside").attributes("id")).toBe("mobile-sidebar-drawer");
     expect(wrapper.find("aside").attributes("role")).toBe("dialog");
     expect(wrapper.find("aside").attributes("aria-label")).toBe("Menu");
-    expect(wrapper.find("aside").attributes("aria-owns")).toBe("sidebar-profile-menu-surface");
+    expect(wrapper.find("aside").attributes("aria-owns")).toBeUndefined();
     trigger.remove();
   });
 
@@ -178,6 +178,51 @@ describe("Sidebar localization", () => {
 
     expect(wrapper.emitted("close")).toHaveLength(1);
     expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("closes only the topmost profile menu when Escape is pressed inside it", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
+    await trigger.trigger("click");
+    const profileMenu = document.body.querySelector('[data-testid="sidebar-profile-menu"]');
+    const menuItem = profileMenu.querySelector('[role="menuitem"]');
+    menuItem.focus();
+
+    const event = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+    await wrapper.vm.$nextTick();
+
+    expect(document.body.querySelector('[data-testid="sidebar-profile-menu"]')).toBe(null);
+    expect(wrapper.emitted("close")).toBeUndefined();
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("does not expose a dangling profile menu relationship while closed", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    expect(wrapper.find("aside").attributes("aria-owns")).toBeUndefined();
+    expect(document.getElementById("sidebar-profile-menu-surface")).toBe(null);
+
+    await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
+    expect(wrapper.find('[data-testid="sidebar-profile-trigger"]').attributes("aria-controls"))
+      .toBe("sidebar-profile-menu-surface");
+    expect(document.getElementById("sidebar-profile-menu-surface")).not.toBe(null);
   });
 
   it("wraps Tab from the last mobile drawer control to the first", async () => {
