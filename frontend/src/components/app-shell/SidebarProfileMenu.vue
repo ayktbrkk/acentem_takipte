@@ -30,8 +30,11 @@
 
     <div
       v-if="menuOpen"
+      ref="menuSurfaceRef"
       data-testid="sidebar-profile-menu"
-      class="absolute bottom-[calc(100%+0.75rem)] left-0 z-40 w-[min(18rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-lg shadow-slate-900/10"
+      :data-placement="menuPlacement"
+      class="fixed z-40 w-[min(18rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-lg shadow-slate-900/10"
+      :style="menuStyle"
       role="menu"
       :aria-label="t('profileMenu')"
     >
@@ -122,8 +125,13 @@ const props = defineProps({
 const menuOpen = ref(false);
 const menuRef = ref(null);
 const triggerRef = ref(null);
+const menuSurfaceRef = ref(null);
 const retryRef = ref(null);
 const logoutError = ref("");
+const menuStyle = ref({});
+const menuPlacement = ref("upward");
+const VIEWPORT_INSET = 8;
+const MENU_GAP = 12;
 
 function t(key) {
   return translateText(key, authStore.locale);
@@ -166,7 +174,11 @@ function toggleMenu() {
   }
   logoutError.value = "";
   menuOpen.value = true;
-  nextTick(focusFirstMenuItem);
+  nextTick(() => {
+    updateMenuPlacement();
+    focusFirstMenuItem();
+  });
+  addPlacementListeners();
 }
 
 function focusTrigger() {
@@ -175,7 +187,73 @@ function focusTrigger() {
 
 function closeMenu(restoreFocus = false) {
   menuOpen.value = false;
+  menuStyle.value = {};
+  menuPlacement.value = "upward";
+  removePlacementListeners();
   if (restoreFocus) focusTrigger();
+}
+
+function viewportSize() {
+  const viewport = window.visualViewport;
+  return {
+    width: viewport?.width || window.innerWidth,
+    height: viewport?.height || window.innerHeight,
+    offsetLeft: viewport?.offsetLeft || 0,
+    offsetTop: viewport?.offsetTop || 0,
+  };
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), Math.max(min, max));
+}
+
+function updateMenuPlacement() {
+  if (!menuOpen.value || !triggerRef.value || !menuSurfaceRef.value) return;
+
+  const anchor = triggerRef.value.getBoundingClientRect();
+  const surface = menuSurfaceRef.value.getBoundingClientRect();
+  const viewport = viewportSize();
+  const minLeft = viewport.offsetLeft + VIEWPORT_INSET;
+  const maxLeft = viewport.offsetLeft + viewport.width - surface.width - VIEWPORT_INSET;
+  const minTop = viewport.offsetTop + VIEWPORT_INSET;
+  const maxTop = viewport.offsetTop + viewport.height - surface.height - VIEWPORT_INSET;
+  const isMobile = props.mobile || viewport.width < 768;
+  const placement = isMobile ? "mobile" : props.collapsed ? "lateral" : "upward";
+  menuPlacement.value = placement;
+
+  let left = anchor.left;
+  let top = anchor.top - surface.height - MENU_GAP;
+  if (placement === "lateral") {
+    left = anchor.right + MENU_GAP;
+    if (left > maxLeft) left = anchor.left - surface.width - MENU_GAP;
+    top = anchor.top;
+  } else if (placement === "mobile") {
+    top = anchor.bottom + MENU_GAP;
+    if (top > maxTop) top = anchor.top - surface.height - MENU_GAP;
+  }
+
+  menuStyle.value = {
+    left: `${clamp(left, minLeft, maxLeft)}px`,
+    top: `${clamp(top, minTop, maxTop)}px`,
+  };
+}
+
+function handleViewportChange() {
+  if (menuOpen.value) updateMenuPlacement();
+}
+
+function addPlacementListeners() {
+  window.addEventListener("resize", handleViewportChange);
+  window.addEventListener("scroll", handleViewportChange, true);
+  window.visualViewport?.addEventListener("resize", handleViewportChange);
+  window.visualViewport?.addEventListener("scroll", handleViewportChange);
+}
+
+function removePlacementListeners() {
+  window.removeEventListener("resize", handleViewportChange);
+  window.removeEventListener("scroll", handleViewportChange, true);
+  window.visualViewport?.removeEventListener("resize", handleViewportChange);
+  window.visualViewport?.removeEventListener("scroll", handleViewportChange);
 }
 
 function runAccountAction(action) {
@@ -260,5 +338,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleDocumentClick);
   document.removeEventListener("keydown", handleKeydown);
+  removePlacementListeners();
 });
 </script>
