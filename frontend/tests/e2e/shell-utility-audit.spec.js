@@ -111,7 +111,26 @@ async function assertNoHorizontalOverflow(page, width) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
 }
 
-async function assertLanguageMenu(page, triggerTestId, menuTestId) {
+async function readShellLocaleState(page, includeProfile = false) {
+  const header = page.locator("header.at-shell-topbar");
+  const state = {
+    section: (await header.locator("p").nth(0).innerText()).trim(),
+    pageTitle: (await header.locator("p").nth(1).innerText()).trim(),
+    sidebar: (await page.locator("aside nav").innerText()).trim(),
+    profileRole: null,
+  };
+  if (includeProfile) {
+    const profileTrigger = page.getByTestId("sidebar-profile-trigger");
+    await profileTrigger.click();
+    const profileMenu = page.getByTestId("sidebar-profile-menu");
+    await expect(profileMenu).toBeVisible();
+    state.profileRole = (await profileMenu.getByTestId("profile-summary-role").innerText()).trim();
+    await page.keyboard.press("Escape");
+  }
+  return state;
+}
+
+async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState = null) {
   const trigger = page.getByTestId(triggerTestId);
   await expect(trigger).toBeVisible();
   await trigger.click();
@@ -131,52 +150,13 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId) {
   await expect(items.last()).toBeFocused();
   await page.keyboard.press("ArrowUp");
   await expect(items.first()).toBeFocused();
-  const focusOrder = await page.evaluate(() => {
-    const tabbable = (element) => {
-      const style = getComputedStyle(element);
-      let ancestor = element.parentElement;
-      while (ancestor) {
-        if (ancestor.matches("[inert]") || ancestor.matches("fieldset[disabled]")) return false;
-        ancestor = ancestor.parentElement;
-      }
-      return !element.matches("[disabled],[aria-disabled='true']")
-        && element.tabIndex >= 0
-        && style.display !== "none"
-        && style.visibility !== "hidden"
-        && element.getClientRects().length > 0;
-    };
-    const focusables = [...document.querySelectorAll("button,a[href],input,textarea,select,[tabindex]")]
-      .filter(tabbable)
-      .sort((left, right) => (left.tabIndex || 0) - (right.tabIndex || 0));
-    const currentIndex = focusables.indexOf(document.activeElement);
-    return { currentIndex, nextIndex: currentIndex + 1 };
-  });
+  const externalTarget = page.locator("main button, main a[href], main input, main textarea, main select").first();
+  await expect(externalTarget).toBeVisible();
+  await externalTarget.evaluate((element) => element.setAttribute("data-testid", "shell-audit-tab-target"));
   await page.keyboard.press("Tab");
-  const activeAfterTab = await page.evaluate(({ currentIndex, nextIndex }) => {
-    const tabbable = (element) => {
-      let ancestor = element.parentElement;
-      while (ancestor) {
-        if (ancestor.matches("[inert]") || ancestor.matches("fieldset[disabled]")) return false;
-        ancestor = ancestor.parentElement;
-      }
-      return !element.matches("[disabled],[aria-disabled='true']")
-        && element.tabIndex >= 0
-        && getComputedStyle(element).display !== "none"
-        && getComputedStyle(element).visibility !== "hidden"
-        && element.getClientRects().length > 0;
-    };
-    const focusables = [...document.querySelectorAll("button,a[href],input,textarea,select,[tabindex]")]
-      .filter(tabbable)
-      .sort((left, right) => (left.tabIndex || 0) - (right.tabIndex || 0));
-    return {
-      exactNextElement: focusables[nextIndex] === document.activeElement,
-      currentIndex,
-      activeIndex: focusables.indexOf(document.activeElement),
-    };
-  }, focusOrder);
-  expect(activeAfterTab.exactNextElement).toBe(true);
-  expect(activeAfterTab.activeIndex).not.toBe(focusOrder.currentIndex);
+  await expect(page.getByTestId("shell-audit-tab-target")).toBeFocused();
   await expect(menu.locator(":focus")).toHaveCount(0);
+  await externalTarget.evaluate((element) => element.removeAttribute("data-testid"));
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
   await expect(trigger).toBeFocused();
@@ -186,10 +166,30 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId) {
   const initialLocaleLabel = (await menu.locator("[role='menuitemradio'][aria-checked='true']").innerText()).trim();
   const alternateItem = menu.locator("[role='menuitemradio'][aria-checked='false']").first();
   const alternateLocaleLabel = (await alternateItem.innerText()).trim();
+  const localeResponsePromise = page.waitForResponse(
+    (response) => response.url().includes("set_session_locale"),
+    { timeout: 3000 },
+  ).catch(() => null);
   await alternateItem.click();
+  const localeResponse = await localeResponsePromise;
   await expect(menu).toBeHidden();
   await expect(trigger).toContainText(alternateLocaleLabel);
   await expect(page.locator("header.at-shell-topbar")).toContainText(alternateLocaleLabel);
+  if (localeResponse) expect(localeResponse.ok()).toBe(true);
+  const observedLocale = await page.evaluate(() => {
+    const app = document.querySelector("#app");
+    const pinia = app?.__vue_app__?.config?.globalProperties?.$pinia;
+    const auth = pinia?._s?.get("auth");
+    return auth?.locale?.value || auth?.locale || null;
+  });
+  expect(localeResponse || observedLocale).toBeTruthy();
+  if (initialState) {
+    const alternateState = await readShellLocaleState(page, Boolean(initialState.profileRole));
+    expect(alternateState.section).not.toBe(initialState.section);
+    expect(alternateState.pageTitle).not.toBe(initialState.pageTitle);
+    expect(alternateState.sidebar).not.toBe(initialState.sidebar);
+    expect(alternateState.profileRole).not.toBe(initialState.profileRole);
+  }
 
   await trigger.click();
   await expect(menu).toBeVisible();
@@ -215,6 +215,12 @@ async function assertBranchListbox(page) {
   expect(initialValue).toBeTruthy();
   await expect(trigger).toHaveAttribute("aria-label", new RegExp(initialValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   await expect(listbox).toBeVisible();
+  const listboxBox = await listbox.boundingBox();
+  expect(listboxBox).not.toBeNull();
+  expect(listboxBox.x).toBeGreaterThanOrEqual(0);
+  expect(listboxBox.y).toBeGreaterThanOrEqual(0);
+  expect(listboxBox.x + listboxBox.width).toBeLessThanOrEqual(await page.evaluate(() => innerWidth));
+  expect(listboxBox.y + listboxBox.height).toBeLessThanOrEqual(await page.evaluate(() => innerHeight));
   await expect(page.getByTestId("branch-search-input")).toBeVisible();
   await expect(options).not.toHaveCount(0);
   await expect(listbox.locator("[aria-selected='true']")).toHaveCount(1);
@@ -234,12 +240,28 @@ async function assertBranchListbox(page) {
   await searchInput.fill(searchTerm);
   await expect(options).not.toHaveCount(0);
   expect((await options.first().innerText()).toLocaleLowerCase()).toContain(searchTerm.toLocaleLowerCase());
-  await options.first().click();
+  const selectedOption = options.first();
+  const selectedOptionName = (await selectedOption.getAttribute("aria-label")) || (await selectedOption.locator(".branch-option-label").innerText()).trim();
+  const selectedOptionValue = await selectedOption.getAttribute("data-testid");
+  expect(selectedOptionName).toBeTruthy();
+  await selectedOption.click();
   await expect(listbox).toBeHidden();
   const updatedValue = await value.getAttribute("title");
   const updatedName = await trigger.getAttribute("aria-label");
-  expect(updatedValue || updatedName).toBeTruthy();
+  const updatedText = await trigger.innerText();
+  expect(`${updatedValue} ${updatedName} ${updatedText}`).toContain(selectedOptionName);
   expect(updatedValue !== initialValue || updatedName !== initialValue).toBe(true);
+  if (selectedOptionValue && selectedOptionValue !== "branch-option-all") {
+    const branchState = await page.evaluate(() => {
+      const pinia = document.querySelector("#app")?.__vue_app__?.config?.globalProperties?.$pinia;
+      const branch = pinia?._s?.get("branch");
+      return { selected: branch?.selected, requestBranch: branch?.requestBranch };
+    });
+    if (branchState.selected || branchState.requestBranch) {
+      const branchName = selectedOptionValue.replace(/^branch-option-/, "");
+      expect(String(branchState.selected || branchState.requestBranch)).toBe(branchName);
+    }
+  }
   await trigger.click();
   await expect(listbox).toBeVisible();
   await page.keyboard.press("Escape");
@@ -282,7 +304,22 @@ async function assertTabletUtilityGeometry(page) {
   expect(boxes[0]?.height).toBeGreaterThan(0);
   expect(boxes[1]?.height).toBeGreaterThan(0);
   const [branchBox, languageBox] = boxes;
-  expect(branchBox.right <= languageBox.x || languageBox.right <= branchBox.x || branchBox.bottom <= languageBox.y || languageBox.bottom <= branchBox.y).toBe(true);
+  expect(
+    branchBox.x + branchBox.width <= languageBox.x
+      || languageBox.x + languageBox.width <= branchBox.x
+      || branchBox.y + branchBox.height <= languageBox.y
+      || languageBox.y + languageBox.height <= branchBox.y,
+  ).toBe(true);
+}
+
+async function assertProfileMenuInViewport(page) {
+  const menu = page.getByTestId("sidebar-profile-menu");
+  const box = await menu.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(await page.evaluate(() => innerWidth));
+  expect(box.y + box.height).toBeLessThanOrEqual(await page.evaluate(() => innerHeight));
 }
 
 test.describe("shell utility redesign audit", () => {
@@ -328,6 +365,7 @@ test.describe("shell utility redesign audit", () => {
     const profileMenu = page.getByTestId("sidebar-profile-menu");
     await expect(profileMenu).toBeVisible();
     await expect(profileMenu).toHaveCSS("position", "fixed");
+    await assertProfileMenuInViewport(page);
     await expect(profileMenu.locator("xpath=ancestor::aside")).toHaveCount(0);
     await expect(profileMenu.getByTestId("profile-summary-user")).toHaveText(/\S/);
     await expect(profileMenu.getByTestId("profile-summary-role")).toHaveText(/\S/);
@@ -350,8 +388,16 @@ test.describe("shell utility redesign audit", () => {
     await profileTrigger.click();
     await page.locator("main").click({ position: { x: 8, y: 8 } });
     await expect(profileMenu).toBeHidden();
+    await expect(profileTrigger).toBeFocused();
+    await profileTrigger.click();
+    const desktopLanguageTrigger = page.getByTestId("topbar-language-trigger");
+    await desktopLanguageTrigger.click();
+    await expect(profileMenu).toBeHidden();
+    await expect(desktopLanguageTrigger).toBeFocused();
+    await page.keyboard.press("Escape");
 
-    await assertLanguageMenu(page, "topbar-language-trigger", "topbar-language-menu");
+    const initialLocaleState = await readShellLocaleState(page, true);
+    await assertLanguageMenu(page, "topbar-language-trigger", "topbar-language-menu", initialLocaleState);
     await assertBranchListbox(page);
     await expect(page.getByTestId("mobile-language-trigger")).toBeHidden();
   });
@@ -365,6 +411,13 @@ test.describe("shell utility redesign audit", () => {
     await assertIndependentTabletUtilities(page);
     await page.setViewportSize({ width: 768, height: 1024 });
     await assertTabletUtilityGeometry(page);
+    await page.getByTestId("mobile-sidebar-trigger").click();
+    const tabletProfileTrigger = page.getByTestId("sidebar-profile-trigger");
+    await tabletProfileTrigger.click();
+    await expect(page.getByTestId("sidebar-profile-menu")).toBeVisible();
+    await assertProfileMenuInViewport(page);
+    await page.keyboard.press("Escape");
+    await page.getByTestId("mobile-sidebar-trigger").click();
     await assertNoHorizontalOverflow(page, 768);
   });
 
@@ -419,8 +472,11 @@ test.describe("shell utility redesign audit", () => {
     const finalReachability = await footer.evaluate((element) => {
       const profile = element.querySelector('[data-testid="sidebar-profile-trigger"]');
       const inViewport = (node) => {
-        const box = node.getBoundingClientRect();
-        return box.top >= 0 && box.left >= 0 && box.bottom <= innerHeight && box.right <= innerWidth;
+      const box = node.getBoundingClientRect();
+        return box.top >= 0
+          && box.left >= 0
+          && box.y + box.height <= innerHeight
+          && box.x + box.width <= innerWidth;
       };
       return { footerInViewport: inViewport(element), profileInViewport: inViewport(profile) };
     });
@@ -431,6 +487,7 @@ test.describe("shell utility redesign audit", () => {
     const profileMenu = page.getByTestId("sidebar-profile-menu");
     await expect(profileMenu).toBeVisible();
     await expect(profileMenu).toHaveCSS("position", "fixed");
+    await assertProfileMenuInViewport(page);
     await expect(profileMenu.locator("xpath=ancestor::aside")).toHaveCount(0);
     await expect(profileMenu.getByTestId("profile-mobile-language")).toHaveCount(0);
     await expect(profileMenu.getByTestId("branch-scope-trigger")).toHaveCount(0);
