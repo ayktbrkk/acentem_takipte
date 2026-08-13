@@ -66,7 +66,7 @@
               v-if="item.external"
               :href="item.to"
               :title="item.label"
-              class="group mx-2 mb-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900"
+              class="group mx-2 mb-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
               :class="linkClass(item, effectiveCollapsed)"
               @click="$emit('navigate')"
             >
@@ -96,7 +96,7 @@
               v-prefetch="item.to"
               :to="item.to"
               :title="item.label"
-              class="group mx-2 mb-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900"
+              class="group mx-2 mb-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
               :class="linkClass(item, effectiveCollapsed)"
               active-class="bg-brand-50 text-brand-700 font-medium border-l-2 border-brand-600 !rounded-l-none pl-[10px]"
               @click="$emit('navigate')"

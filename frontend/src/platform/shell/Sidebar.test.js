@@ -557,6 +557,14 @@ describe("Sidebar localization", () => {
     const activeLink = wrapper.get('nav a[aria-current="page"]');
     expect(activeLink.classes()).toContain("router-link-active");
     const activeHref = activeLink.attributes("href");
+    const focusClasses = [
+      "focus-visible:ring-2",
+      "focus-visible:ring-brand-500",
+      "focus-visible:outline-none",
+    ];
+    for (const link of wrapper.findAll("nav a")) {
+      for (const className of focusClasses) expect(link.classes()).toContain(className);
+    }
 
     await wrapper.find('[data-testid="sidebar-desktop-collapse-toggle"]').trigger("click");
     expect(aside.classes()).toContain("lg:w-[76px]");
@@ -565,6 +573,9 @@ describe("Sidebar localization", () => {
     const collapsedActiveLink = wrapper.get('nav a[aria-current="page"]');
     expect(collapsedActiveLink.classes()).toContain("router-link-active");
     expect(collapsedActiveLink.attributes("href")).toBe(activeHref);
+    for (const link of wrapper.findAll("nav a")) {
+      for (const className of focusClasses) expect(link.classes()).toContain(className);
+    }
   });
 
   it("renders nav icons when roles are present", () => {
