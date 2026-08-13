@@ -158,6 +158,7 @@ describe("Sidebar localization", () => {
 
     expect(wrapper.find('[data-testid="sidebar-brand-monogram"]').exists()).toBe(false);
     expect(wrapper.text()).toContain("Acentem Takipte");
+    expect(wrapper.find('[data-testid="mobile-sidebar-close"]').exists()).toBe(true);
     expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     await wrapper.find('footer [data-testid="sidebar-profile-trigger"]').trigger("click");

@@ -13,7 +13,7 @@
       <div class="border-b border-slate-100 px-4 py-4">
         <div class="mb-4 flex items-center justify-between lg:hidden">
           <p class="text-xs font-semibold tracking-[0.22em] text-slate-500">{{ upper(t("menu")) }}</p>
-          <ActionButton variant="secondary" size="xs" class="!px-2" :title="t('close')" @click="$emit('close')">
+          <ActionButton data-testid="mobile-sidebar-close" variant="secondary" size="xs" class="!px-2" :title="t('close')" @click="$emit('close')">
             X
           </ActionButton>
         </div>

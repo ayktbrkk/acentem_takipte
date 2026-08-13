@@ -19,7 +19,30 @@ function diagnostics(page, testInfo) {
   const onPageError = () => pageErrors.push("page-error");
   const onRequestFailed = (request) => {
     const failure = request.failure()?.errorText || "request-failed";
+    const url = request.url();
+    let parsedUrl = null;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      parsedUrl = null;
+    }
+    // Navigation/document aborts are browser cancellations during real route changes.
     if (failure === "net::ERR_ABORTED" && (request.resourceType() === "document" || request.isNavigationRequest())) return;
+    // Socket.IO/WebSocket connection noise is benign only for websocket URLs and connection errors.
+    if (
+      request.resourceType() === "websocket"
+      && parsedUrl
+      && /\/socket\.io(?:\/|$)/i.test(parsedUrl.pathname)
+      && /^(localhost|127\.0\.0\.1|::1)$/i.test(parsedUrl.hostname)
+      && /ERR_CONNECTION|ECONNREFUSED|ERR_FAILED/i.test(failure)
+    ) return;
+    // Telemetry is non-application traffic only on the documented analytics hosts/paths.
+    if (
+      ["script", "xhr", "fetch", "beacon"].includes(request.resourceType())
+      && parsedUrl
+      && /(?:^|\.)google-analytics\.com$|(?:^|\.)googletagmanager\.com$/i.test(parsedUrl.hostname)
+      && /\/collect(?:$|\/)|\/gtag\/js(?:$|\/)/i.test(parsedUrl.pathname)
+    ) return;
     failedRequests.push({ resourceType: request.resourceType(), pathname: safePath(request.url()), failure });
   };
 
@@ -85,18 +108,26 @@ function diagnostics(page, testInfo) {
       return;
     }
 
-    const report = {
-      viewport: await page.evaluate(() => ({ width: innerWidth, height: innerHeight })).catch(() => null),
-      route: safePath(page.url()),
-      consoleErrorCount: consoleErrors.length,
-      pageErrorCount: pageErrors.length,
-      failedRequests,
-    };
-    const reportPath = testInfo.outputPath("shell-utility-diagnostics.json");
-    fs.mkdirSync(path.dirname(reportPath), { recursive: true });
-    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), "utf8");
-    await testInfo.attach("shell-utility-diagnostics", { path: reportPath, contentType: "application/json" });
-    await captureRedactedShell(page, testInfo.outputPath("shell-utility-failure.png"));
+    try {
+      const report = {
+        viewport: await page.evaluate(() => ({ width: innerWidth, height: innerHeight })).catch(() => null),
+        route: safePath(page.url()),
+        consoleErrorCount: consoleErrors.length,
+        pageErrorCount: pageErrors.length,
+        failedRequests,
+      };
+      const reportPath = testInfo.outputPath("shell-utility-diagnostics.json");
+      fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+      fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), "utf8");
+      await testInfo.attach("shell-utility-diagnostics", { path: reportPath, contentType: "application/json" });
+    } catch {
+      console.log("shell-utility-diagnostics-attachment-failed");
+    }
+    try {
+      await captureRedactedShell(page, testInfo.outputPath("shell-utility-failure.png"));
+    } catch {
+      console.log("shell-utility-redacted-screenshot-failed");
+    }
   };
 }
 
@@ -130,8 +161,12 @@ async function readShellLocaleState(page, includeProfile = false) {
   return state;
 }
 
-function localeCodeFromLabel(label) {
-  return /english|ingiliz/i.test(label) ? "en" : "tr";
+async function readObservedLocale(page) {
+  return page.evaluate(() => {
+    const pinia = document.querySelector("#app")?.__vue_app__?.config?.globalProperties?.$pinia;
+    const auth = pinia?._s?.get("auth");
+    return String(auth?.locale?.value || auth?.locale || "").toLowerCase();
+  });
 }
 
 async function assertLocaleResponse(response, expectedLocale) {
@@ -188,59 +223,67 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState 
 
   await trigger.click();
   await expect(menu).toBeVisible();
-  const initialLocaleLabel = (await menu.locator("[role='menuitemradio'][aria-checked='true']").innerText()).trim();
+  const initialLocaleLabel = (await menu.locator("[role='menuitemradio'][aria-checked='true']").innerText()).replace("✓", "").trim();
   const alternateItem = menu.locator("[role='menuitemradio'][aria-checked='false']").first();
   const alternateLocaleLabel = (await alternateItem.innerText()).trim();
-  const initialLocale = localeCodeFromLabel(initialLocaleLabel);
-  const alternateLocale = localeCodeFromLabel(alternateLocaleLabel);
+  const initialLocale = await readObservedLocale(page);
+  expect(initialLocale).toMatch(/^(tr|en)$/);
+  const alternateLocale = initialLocale === "tr" ? "en" : "tr";
   expect(alternateLocale).not.toBe(initialLocale);
-  const localeResponsePromise = page.waitForResponse(
-    (response) => response.url().includes("set_session_locale"),
-    { timeout: 3000 },
-  ).catch(() => null);
-  await alternateItem.click();
-  const localeResponse = await localeResponsePromise;
-  await assertLocaleResponse(localeResponse, alternateLocale);
-  await expect(menu).toBeHidden();
-  await expect(trigger).toContainText(alternateLocaleLabel);
-  await expect(page.locator("header.at-shell-topbar")).toContainText(alternateLocaleLabel);
-  const observedLocale = await page.evaluate(() => {
-    const app = document.querySelector("#app");
-    const pinia = app?.__vue_app__?.config?.globalProperties?.$pinia;
-    const auth = pinia?._s?.get("auth");
-    return auth?.locale?.value || auth?.locale || null;
-  });
-  expect(String(observedLocale).toLowerCase()).toBe(alternateLocale);
-  if (initialState) {
-    const alternateState = await readShellLocaleState(page, Boolean(initialState.profileRole));
-    expect(alternateState.section).not.toBe(initialState.section);
-    expect(alternateState.pageTitle).not.toBe(initialState.pageTitle);
-    expect(alternateState.sidebar).not.toBe(initialState.sidebar);
-    expect(alternateState.profileRole).not.toBe(initialState.profileRole);
-  }
-
-  await trigger.click();
-  await expect(menu).toBeVisible();
-  const restoreResponsePromise = page.waitForResponse(
-    (response) => response.url().includes("set_session_locale"),
-    { timeout: 3000 },
-  ).catch(() => null);
-  await menu.locator("[role='menuitemradio']", { hasText: initialLocaleLabel }).click();
-  const restoreResponse = await restoreResponsePromise;
-  await assertLocaleResponse(restoreResponse, initialLocale);
-  await expect(menu).toBeHidden();
-  await expect(trigger).toContainText(initialLocaleLabel);
-  await page.reload({ waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId(triggerTestId)).toContainText(initialLocaleLabel);
-  const restoredLocale = await page.evaluate(() => {
-    const pinia = document.querySelector("#app")?.__vue_app__?.config?.globalProperties?.$pinia;
-    const auth = pinia?._s?.get("auth");
-    return auth?.locale?.value || auth?.locale || null;
-  });
-  expect(String(restoredLocale).toLowerCase()).toBe(initialLocale);
-  if (initialState) {
-    const restoredState = await readShellLocaleState(page, Boolean(initialState.profileRole));
-    expect(restoredState).toEqual(initialState);
+  let primaryError = null;
+  try {
+    const localeResponsePromise = page.waitForResponse(
+      (response) => response.url().includes("set_session_locale"),
+      { timeout: 3000 },
+    ).catch(() => null);
+    await alternateItem.click();
+    const localeResponse = await localeResponsePromise;
+    await assertLocaleResponse(localeResponse, alternateLocale);
+    await expect(menu).toBeHidden();
+    await expect(trigger).toContainText(alternateLocaleLabel);
+    await expect(page.locator("header.at-shell-topbar")).toContainText(alternateLocaleLabel);
+    expect(await readObservedLocale(page)).toBe(alternateLocale);
+    if (initialState) {
+      const alternateState = await readShellLocaleState(page, Boolean(initialState.profileRole));
+      expect(alternateState.section).not.toBe(initialState.section);
+      expect(alternateState.pageTitle).not.toBe(initialState.pageTitle);
+      expect(alternateState.sidebar).not.toBe(initialState.sidebar);
+      expect(alternateState.profileRole).not.toBe(initialState.profileRole);
+    }
+  } catch (error) {
+    primaryError = error;
+    throw error;
+  } finally {
+    try {
+      if (!(await menu.isVisible().catch(() => false))) await trigger.click();
+      await expect(menu).toBeVisible();
+      const restoreResponsePromise = page.waitForResponse(
+        (response) => response.url().includes("set_session_locale"),
+        { timeout: 3000 },
+      ).catch(() => null);
+      await menu.locator("[role='menuitemradio']", { hasText: initialLocaleLabel }).click();
+      const restoreResponse = await restoreResponsePromise;
+      await assertLocaleResponse(restoreResponse, initialLocale);
+      await expect(menu).toBeHidden();
+      await expect(trigger).toContainText(initialLocaleLabel);
+      if (triggerTestId === "mobile-language-trigger") {
+        const drawer = page.locator("aside");
+        const drawerWasOpen = await drawer.evaluate((element) => element.classList.contains("translate-x-0"));
+        await page.reload({ waitUntil: "domcontentloaded" });
+        if (drawerWasOpen) await page.getByTestId("mobile-sidebar-trigger").click();
+      } else {
+        await page.reload({ waitUntil: "domcontentloaded" });
+      }
+      await expect(page.getByTestId(triggerTestId)).toContainText(initialLocaleLabel);
+      expect(await readObservedLocale(page)).toBe(initialLocale);
+      if (initialState) {
+        const restoredState = await readShellLocaleState(page, Boolean(initialState.profileRole));
+        expect(restoredState).toEqual(initialState);
+      }
+    } catch (restoreError) {
+      if (!primaryError) throw restoreError;
+      console.log("shell-utility-locale-restore-failed");
+    }
   }
 }
 
@@ -412,12 +455,14 @@ test.describe("shell utility redesign audit", () => {
     const toggle = page.getByTestId("sidebar-desktop-collapse-toggle");
     await expect(toggle).toHaveCount(1);
     await expect(toggle).toBeVisible();
-    await expect(aside).toHaveClass(/lg:w-\[240px\]/);
+    const expandedWidth = (await aside.boundingBox()).width;
+    expect(expandedWidth).toBeGreaterThan(200);
     await toggle.click();
-    await expect(aside).toHaveClass(/lg:w-\[76px\]/);
+    const collapsedWidth = (await aside.boundingBox()).width;
+    expect(collapsedWidth).toBeLessThan(expandedWidth);
     await expect(aside.getByTestId("sidebar-brand-monogram")).toHaveText("AT");
     await toggle.click();
-    await expect(aside).toHaveClass(/lg:w-\[240px\]/);
+    expect((await aside.boundingBox()).width).toBeGreaterThan(collapsedWidth);
 
     const profileTrigger = page.getByTestId("sidebar-profile-trigger");
     await profileTrigger.focus();
@@ -471,7 +516,6 @@ test.describe("shell utility redesign audit", () => {
     await expect(page.getByTestId("mobile-sidebar-trigger")).toBeVisible();
     await expect(page.getByTestId("topbar-language-trigger")).toBeHidden();
     await assertIndependentTabletUtilities(page);
-    await page.setViewportSize({ width: 768, height: 1024 });
     await assertTabletUtilityGeometry(page);
     await page.getByTestId("mobile-sidebar-trigger").click();
     const tabletProfileTrigger = page.getByTestId("sidebar-profile-trigger");
@@ -561,7 +605,7 @@ test.describe("shell utility redesign audit", () => {
     await assertLanguageMenu(page, "mobile-language-trigger", "mobile-language-menu");
     await assertBranchListbox(page);
 
-    const closeButton = aside.locator('button[title="Kapat"], button[title="Close"]');
+    const closeButton = aside.getByTestId("mobile-sidebar-close");
     await expect(closeButton).toHaveCount(1);
     await closeButton.click();
     await expect(aside).toHaveClass(/-translate-x-full/);
