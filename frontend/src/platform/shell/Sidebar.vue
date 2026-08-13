@@ -9,8 +9,10 @@
       @click="$emit('close')"
     />
     <aside
+      ref="mobileDrawer"
       class="fixed inset-y-0 left-0 z-40 flex h-screen w-[220px] shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 motion-reduce:transition-none lg:static lg:z-0"
       :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', effectiveCollapsed ? 'lg:w-[76px]' : 'lg:w-[240px]']"
+      :aria-modal="mobileOpen && !isDesktopViewport ? 'true' : undefined"
     >
       <div class="border-b border-slate-100 px-4 py-4">
         <div class="mb-4 flex items-center justify-between lg:hidden">
@@ -147,7 +149,7 @@ const props = defineProps({
   },
 });
 
-defineEmits(["close", "navigate"]);
+const emit = defineEmits(["close", "navigate"]);
 
 const {
   t,
@@ -162,8 +164,11 @@ const {
 
 const isDesktopViewport = shallowRef(false);
 const effectiveCollapsed = computed(() => isCollapsed.value && isDesktopViewport.value);
+const mobileDrawer = shallowRef(null);
+let isMounted = false;
 let desktopMediaQuery = null;
 let desktopMediaQueryListenerMode = null;
+let mobileDrawerKeydownListener = null;
 
 function focusMobileCloseControl() {
   document.querySelector('[data-testid="mobile-sidebar-close"]')?.focus();
@@ -172,6 +177,59 @@ function focusMobileCloseControl() {
 function restoreMobileSidebarTriggerFocus() {
   const trigger = document.querySelector('[data-testid="mobile-sidebar-trigger"]');
   if (trigger instanceof HTMLElement && document.contains(trigger)) trigger.focus();
+}
+
+function isTabbable(element) {
+  if (!(element instanceof HTMLElement) || element.hidden || element.getAttribute("aria-hidden") === "true") return false;
+  if (element.hasAttribute("disabled") || element.closest("fieldset:disabled")) return false;
+  const styles = window.getComputedStyle(element);
+  if (styles.display === "none" || styles.visibility === "hidden") return false;
+  return element.tabIndex >= 0;
+}
+
+function getMobileDrawerTabbables() {
+  const drawer = mobileDrawer.value;
+  if (!drawer) return [];
+  return [...drawer.querySelectorAll("button, a[href], input, select, textarea, [tabindex]")].filter(isTabbable);
+}
+
+function handleMobileDrawerKeydown(event) {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    emit("close");
+    return;
+  }
+  if (event.key !== "Tab") return;
+
+  const tabbables = getMobileDrawerTabbables();
+  if (!tabbables.length) return;
+  const currentIndex = tabbables.indexOf(document.activeElement);
+  if (currentIndex === -1) return;
+  if (!event.shiftKey && currentIndex === tabbables.length - 1) {
+    event.preventDefault();
+    tabbables[0].focus();
+  } else if (event.shiftKey && currentIndex === 0) {
+    event.preventDefault();
+    tabbables[tabbables.length - 1].focus();
+  }
+}
+
+function removeMobileDrawerListener() {
+  if (!mobileDrawerKeydownListener) return;
+  document.removeEventListener("keydown", mobileDrawerKeydownListener);
+  mobileDrawerKeydownListener = null;
+}
+
+function syncMobileDrawerListener() {
+  if (!isMounted) return;
+  const shouldListen = props.mobileOpen && !isDesktopViewport.value;
+  if (typeof document === "undefined") return;
+  if (shouldListen && !mobileDrawerKeydownListener) {
+    mobileDrawerKeydownListener = handleMobileDrawerKeydown;
+    document.addEventListener("keydown", mobileDrawerKeydownListener);
+  } else if (!shouldListen) {
+    removeMobileDrawerListener();
+  }
 }
 
 watch(
@@ -186,6 +244,8 @@ watch(
   },
 );
 
+watch(() => [props.mobileOpen, isDesktopViewport.value], syncMobileDrawerListener, { immediate: true });
+
 function updateDesktopViewport(event) {
   isDesktopViewport.value = Boolean(event?.matches ?? desktopMediaQuery?.matches);
 }
@@ -195,6 +255,8 @@ onMounted(() => {
 
   desktopMediaQuery = window.matchMedia("(min-width: 1024px)");
   updateDesktopViewport();
+  isMounted = true;
+  syncMobileDrawerListener();
   if (typeof desktopMediaQuery.addEventListener === "function") {
     desktopMediaQueryListenerMode = "eventListener";
     desktopMediaQuery.addEventListener("change", updateDesktopViewport);
@@ -205,6 +267,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  isMounted = false;
+  removeMobileDrawerListener();
   if (!desktopMediaQuery) return;
   if (desktopMediaQueryListenerMode === "eventListener") {
     desktopMediaQuery.removeEventListener("change", updateDesktopViewport);

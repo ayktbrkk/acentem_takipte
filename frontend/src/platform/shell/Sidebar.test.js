@@ -138,6 +138,113 @@ describe("Sidebar localization", () => {
     expect(backdrop.attributes("aria-label")).toBe("Kapat");
     expect(backdrop.attributes("tabindex")).toBe("-1");
     expect(backdrop.classes()).toContain("focus-visible:ring-2");
+    expect(wrapper.find("aside").attributes("aria-modal")).toBe("true");
+  });
+
+  it("emits close when Escape is pressed in the open mobile drawer", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    const event = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+
+    expect(wrapper.emitted("close")).toHaveLength(1);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("wraps Tab from the last mobile drawer control to the first", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const controls = wrapper.findAll("aside button, aside a[href]");
+    const first = controls[0].element;
+    const last = controls[controls.length - 1].element;
+    last.focus();
+
+    const event = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+
+    expect(document.activeElement).toBe(first);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("wraps Shift+Tab from the first mobile drawer control to the last", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const controls = wrapper.findAll("aside button, aside a[href]");
+    const first = controls[0].element;
+    const last = controls[controls.length - 1].element;
+    first.focus();
+
+    const event = new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+
+    expect(document.activeElement).toBe(last);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("does not trap keyboard focus on desktop", async () => {
+    const focusTarget = addFocusTarget();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const last = wrapper.findAll("aside button, aside a[href]").at(-1).element;
+    last.focus();
+
+    const event = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+
+    expect(document.activeElement).toBe(last);
+    expect(event.defaultPrevented).toBe(false);
+    focusTarget.remove();
+  });
+
+  it("cleans up drawer listeners when it closes and unmounts", async () => {
+    stubMobileViewport();
+    const addEventListener = vi.spyOn(document, "addEventListener");
+    const removeEventListener = vi.spyOn(document, "removeEventListener");
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    await wrapper.setProps({ mobileOpen: true });
+    await wrapper.setProps({ mobileOpen: false });
+    wrapper.unmount();
+
+    expect(addEventListener.mock.calls.filter(([type, listener]) => type === "keydown" && listener.name === "handleMobileDrawerKeydown")).toHaveLength(1);
+    expect(removeEventListener.mock.calls.filter(([type, listener]) => type === "keydown" && listener.name === "handleMobileDrawerKeydown")).toHaveLength(1);
+    addEventListener.mockRestore();
+    removeEventListener.mockRestore();
   });
 
   it.each([
