@@ -130,7 +130,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, shallowRef } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, watch } from "vue";
 
 import ActionButton from "../ui/shell/ActionButton.vue";
 import SidebarProfileMenu from "../../components/app-shell/SidebarProfileMenu.vue";
@@ -162,6 +162,26 @@ const isDesktopViewport = shallowRef(false);
 const effectiveCollapsed = computed(() => isCollapsed.value && isDesktopViewport.value);
 let desktopMediaQuery = null;
 let desktopMediaQueryListenerMode = null;
+
+function focusMobileCloseControl() {
+  document.querySelector('[data-testid="mobile-sidebar-close"]')?.focus();
+}
+
+function restoreMobileSidebarTriggerFocus() {
+  const trigger = document.querySelector('[data-testid="mobile-sidebar-trigger"]');
+  if (trigger instanceof HTMLElement && document.contains(trigger)) trigger.focus();
+}
+
+watch(
+  () => props.mobileOpen,
+  (isOpen, wasOpen) => {
+    if (isOpen === wasOpen) return;
+    nextTick(() => {
+      if (isOpen) focusMobileCloseControl();
+      else restoreMobileSidebarTriggerFocus();
+    });
+  },
+);
 
 function updateDesktopViewport(event) {
   isDesktopViewport.value = Boolean(event?.matches ?? desktopMediaQuery?.matches);

@@ -60,6 +60,13 @@ function cleanupTeleportedMenus() {
   document.querySelectorAll('[data-testid="sidebar-profile-menu"]').forEach((menu) => menu.remove());
 }
 
+function addMobileSidebarTrigger() {
+  const trigger = document.createElement("button");
+  trigger.dataset.testid = "mobile-sidebar-trigger";
+  document.body.appendChild(trigger);
+  return trigger;
+}
+
 describe("Sidebar localization", () => {
   beforeEach(() => {
     cleanupTeleportedMenus();
@@ -78,6 +85,54 @@ describe("Sidebar localization", () => {
     mountedWrappers = [];
     cleanupTeleportedMenus();
     vi.unstubAllGlobals();
+  });
+
+  it("moves focus to the close control when the mobile drawer opens", async () => {
+    const trigger = addMobileSidebarTrigger();
+    useAuthStore().applyContext({ roles: ["AT Agent"] });
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    await wrapper.setProps({ mobileOpen: true });
+    await wrapper.vm.$nextTick();
+
+    expect(document.activeElement).toBe(wrapper.find('[data-testid="mobile-sidebar-close"]').element);
+    expect(document.activeElement).not.toBe(trigger);
+    trigger.remove();
+  });
+
+  it.each([
+    ["the close control", (wrapper) => wrapper.find('[data-testid="mobile-sidebar-close"]')],
+    ["the overlay", (wrapper) => wrapper.find("button.fixed.inset-0")],
+    ["navigation", (wrapper) => wrapper.find("nav a")],
+  ])("restores focus to the trigger after closing via %s", async (_source, findSource) => {
+    const trigger = addMobileSidebarTrigger();
+    useAuthStore().applyContext({ roles: ["AT Agent"] });
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    await wrapper.setProps({ mobileOpen: true });
+    await wrapper.vm.$nextTick();
+
+    await findSource(wrapper).trigger("click");
+    await wrapper.vm.$nextTick();
+    expect(wrapper.emitted("close") || wrapper.emitted("navigate")).toBeTruthy();
+
+    await wrapper.setProps({ mobileOpen: false });
+    await wrapper.vm.$nextTick();
+    expect(document.activeElement).toBe(trigger);
+    trigger.remove();
   });
 
   it("renders Turkish chrome labels when the locale is tr", async () => {

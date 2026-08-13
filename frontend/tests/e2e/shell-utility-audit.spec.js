@@ -667,6 +667,7 @@ test.describe("shell utility redesign audit", () => {
     await expect(aside).toHaveClass(/-translate-x-full/);
     await page.getByTestId("mobile-sidebar-trigger").click();
     await expect(aside).toHaveClass(/translate-x-0/);
+    await expect(page.getByTestId("mobile-sidebar-close")).toBeFocused();
     await assertNoHorizontalOverflow(page, 390);
 
     const nav = aside.locator("nav");
@@ -742,6 +743,7 @@ test.describe("shell utility redesign audit", () => {
     await expect(closeButton).toHaveCount(1);
     await closeButton.click();
     await expect(aside).toHaveClass(/-translate-x-full/);
+    await expect(page.getByTestId("mobile-sidebar-trigger")).toBeFocused();
     await assertNoHorizontalOverflow(page, 390);
   });
 });
