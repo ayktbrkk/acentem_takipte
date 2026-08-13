@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { expect, test } from "@playwright/test";
-import { ensureAuthenticated } from "./helpers/auth.js";
+import { ensureAuthenticated, pageRequest } from "./helpers/auth.js";
 
 function safePath(value) {
   const pathname = String(value || "").split(/[?#]/, 1)[0];
@@ -177,6 +177,18 @@ async function assertLocaleResponse(response, expectedLocale) {
   expect(String(persistedLocale).toLowerCase()).toBe(expectedLocale);
 }
 
+async function setSessionLocale(page, locale) {
+  const result = await pageRequest(
+    page,
+    "GET",
+    `/api/method/acentem_takipte.acentem_takipte.platform.api.session.set_session_locale?locale=${encodeURIComponent(locale)}`,
+  );
+  expect(result.ok).toBe(true);
+  const persistedLocale = result.json?.message?.locale || result.json?.locale || result.json?.message;
+  expect(String(persistedLocale).toLowerCase()).toBe(locale);
+  return result;
+}
+
 async function readBranchStoreState(page) {
   return page.evaluate(() => {
     const pinia = document.querySelector("#app")?.__vue_app__?.config?.globalProperties?.$pinia;
@@ -187,6 +199,10 @@ async function readBranchStoreState(page) {
       requestBranch: branch?.requestBranch ?? null,
     };
   });
+}
+
+async function readBranchRoute(page) {
+  return page.evaluate(() => new URL(window.location.href).searchParams.get("office_branch"));
 }
 
 async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState = null, testInfo) {
@@ -232,12 +248,10 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState 
   expect(alternateLocale).not.toBe(initialLocale);
   let primaryError = null;
   try {
-    const localeResponsePromise = page.waitForResponse(
-      (response) => response.url().includes("set_session_locale"),
-      { timeout: 3000 },
-    ).catch(() => null);
+    const localeRequestPromise = page.waitForRequest((request) => request.url().includes("set_session_locale"));
     await alternateItem.click();
-    const localeResponse = await localeResponsePromise;
+    const localeRequest = await localeRequestPromise;
+    const localeResponse = await localeRequest.response();
     await assertLocaleResponse(localeResponse, alternateLocale);
     await expect(menu).toBeHidden();
     await expect(trigger).toContainText(alternateLocaleLabel);
@@ -269,17 +283,7 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState 
           await page.reload({ waitUntil: "domcontentloaded" });
           if (drawerWasOpen) await page.getByTestId("mobile-sidebar-trigger").click();
         }
-        if (!(await menu.isVisible().catch(() => false))) await trigger.click();
-        await expect(menu).toBeVisible();
-        const restoreResponsePromise = page.waitForResponse(
-          (response) => response.url().includes("set_session_locale"),
-          { timeout: 3000 },
-        ).catch(() => null);
-        await menu.locator("[role='menuitemradio']", { hasText: initialLocaleLabel }).click();
-        const restoreResponse = await restoreResponsePromise;
-        await assertLocaleResponse(restoreResponse, initialLocale);
-        await expect(menu).toBeHidden();
-        await expect(trigger).toContainText(initialLocaleLabel);
+        await setSessionLocale(page, initialLocale);
         await page.reload({ waitUntil: "domcontentloaded" });
         if (drawerWasOpen) await page.getByTestId("mobile-sidebar-trigger").click();
         await expect(page.getByTestId(triggerTestId)).toContainText(initialLocaleLabel);
@@ -337,6 +341,13 @@ async function assertBranchListbox(page) {
   expect(initialValue).toBeTruthy();
   await expect(trigger).toHaveAttribute("aria-label", new RegExp(initialValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   await expect(listbox).toBeVisible();
+  const initialBranchState = await readBranchStoreState(page);
+  const initialSelectedOption = listbox.locator("[role='option'][aria-selected='true']");
+  await expect(initialSelectedOption).toHaveCount(1);
+  const initialOptionTestId = await initialSelectedOption.getAttribute("data-testid");
+  expect(initialOptionTestId, "Expected the initial branch selection to expose a stable option test id.").toBeTruthy();
+  const initialBranchRoute = await readBranchRoute(page);
+  const initialBranchUrl = await page.evaluate(() => window.location.pathname + window.location.search);
   const listboxBox = await listbox.boundingBox();
   expect(listboxBox).not.toBeNull();
   if (!listboxBox) throw new Error("Branch listbox has no rendered bounding box.");
@@ -399,6 +410,21 @@ async function assertBranchListbox(page) {
   await page.keyboard.press("Escape");
   await expect(listbox).toBeHidden();
   await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  await expect(listbox).toBeVisible();
+  const initialOption = listbox.getByTestId(initialOptionTestId);
+  await expect(initialOption, "Expected the initial branch option to remain available for restoration.").toHaveCount(1);
+  await initialOption.click();
+  await expect(listbox).toBeHidden();
+  if ((await readBranchRoute(page)) !== initialBranchRoute) {
+    await page.goto(initialBranchUrl, { waitUntil: "domcontentloaded" });
+  }
+  const restoredBranchState = await readBranchStoreState(page);
+  expect(restoredBranchState.present).toBe(initialBranchState.present);
+  expect(restoredBranchState.selected).toBe(initialBranchState.selected);
+  expect(restoredBranchState.requestBranch).toBe(initialBranchState.requestBranch);
+  expect(await readBranchRoute(page)).toBe(initialBranchRoute);
 }
 
 async function assertIndependentTabletUtilities(page, testInfo) {
