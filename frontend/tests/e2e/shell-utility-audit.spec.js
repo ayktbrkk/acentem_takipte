@@ -139,7 +139,8 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState 
   await expect(menu).toBeVisible();
   await expect(items).toHaveCount(2);
   expect(await items.evaluateAll((elements) => elements.every((element) => element.textContent.trim()))).toBe(true);
-  await expect(items.filter({ has: page.locator("[aria-checked='true']") })).toHaveCount(1);
+  const selectedItems = menu.locator("[role='menuitemradio'][aria-checked='true']");
+  await expect(selectedItems).toHaveCount(1);
 
   await expect(items.first()).toBeFocused();
   await page.keyboard.press("End");
@@ -172,10 +173,11 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState 
   ).catch(() => null);
   await alternateItem.click();
   const localeResponse = await localeResponsePromise;
+  expect(localeResponse).not.toBeNull();
+  expect(localeResponse.ok()).toBe(true);
   await expect(menu).toBeHidden();
   await expect(trigger).toContainText(alternateLocaleLabel);
   await expect(page.locator("header.at-shell-topbar")).toContainText(alternateLocaleLabel);
-  if (localeResponse) expect(localeResponse.ok()).toBe(true);
   const observedLocale = await page.evaluate(() => {
     const app = document.querySelector("#app");
     const pinia = app?.__vue_app__?.config?.globalProperties?.$pinia;
@@ -193,9 +195,22 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId, initialState 
 
   await trigger.click();
   await expect(menu).toBeVisible();
+  const restoreResponsePromise = page.waitForResponse(
+    (response) => response.url().includes("set_session_locale"),
+    { timeout: 3000 },
+  ).catch(() => null);
   await menu.locator("[role='menuitemradio']", { hasText: initialLocaleLabel }).click();
+  const restoreResponse = await restoreResponsePromise;
+  expect(restoreResponse).not.toBeNull();
+  expect(restoreResponse.ok()).toBe(true);
   await expect(menu).toBeHidden();
   await expect(trigger).toContainText(initialLocaleLabel);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId(triggerTestId)).toContainText(initialLocaleLabel);
+  if (initialState) {
+    const restoredState = await readShellLocaleState(page, Boolean(initialState.profileRole));
+    expect(restoredState).toEqual(initialState);
+  }
 }
 
 async function assertBranchListbox(page) {
@@ -217,6 +232,7 @@ async function assertBranchListbox(page) {
   await expect(listbox).toBeVisible();
   const listboxBox = await listbox.boundingBox();
   expect(listboxBox).not.toBeNull();
+  if (!listboxBox) throw new Error("Branch listbox has no rendered bounding box.");
   expect(listboxBox.x).toBeGreaterThanOrEqual(0);
   expect(listboxBox.y).toBeGreaterThanOrEqual(0);
   expect(listboxBox.x + listboxBox.width).toBeLessThanOrEqual(await page.evaluate(() => innerWidth));
@@ -251,19 +267,27 @@ async function assertBranchListbox(page) {
   const updatedText = await trigger.innerText();
   expect(`${updatedValue} ${updatedName} ${updatedText}`).toContain(selectedOptionName);
   expect(updatedValue !== initialValue || updatedName !== initialValue).toBe(true);
-  if (selectedOptionValue && selectedOptionValue !== "branch-option-all") {
-    const branchState = await page.evaluate(() => {
-      const pinia = document.querySelector("#app")?.__vue_app__?.config?.globalProperties?.$pinia;
-      const branch = pinia?._s?.get("branch");
-      return { selected: branch?.selected, requestBranch: branch?.requestBranch };
-    });
-    if (branchState.selected || branchState.requestBranch) {
+  await trigger.click();
+  await expect(listbox).toBeVisible();
+  const selectedOptionState = listbox.getByTestId(selectedOptionValue);
+  await expect(selectedOptionState).toHaveAttribute("aria-selected", "true");
+  const branchState = await page.evaluate(() => {
+    const pinia = document.querySelector("#app")?.__vue_app__?.config?.globalProperties?.$pinia;
+    const branch = pinia?._s?.get("branch");
+    return {
+      present: Boolean(branch),
+      selected: branch?.selected ?? null,
+      requestBranch: branch?.requestBranch ?? null,
+    };
+  });
+  if (branchState.present) {
+    if (selectedOptionValue === "branch-option-all") {
+      expect(branchState.selected === null || branchState.requestBranch === null).toBe(true);
+    } else {
       const branchName = selectedOptionValue.replace(/^branch-option-/, "");
       expect(String(branchState.selected || branchState.requestBranch)).toBe(branchName);
     }
   }
-  await trigger.click();
-  await expect(listbox).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(listbox).toBeHidden();
   await expect(trigger).toBeFocused();
@@ -304,6 +328,12 @@ async function assertTabletUtilityGeometry(page) {
   expect(boxes[0]?.height).toBeGreaterThan(0);
   expect(boxes[1]?.height).toBeGreaterThan(0);
   const [branchBox, languageBox] = boxes;
+  for (const box of boxes) {
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(await page.evaluate(() => innerWidth));
+    expect(box.y + box.height).toBeLessThanOrEqual(await page.evaluate(() => innerHeight));
+  }
   expect(
     branchBox.x + branchBox.width <= languageBox.x
       || languageBox.x + languageBox.width <= branchBox.x
