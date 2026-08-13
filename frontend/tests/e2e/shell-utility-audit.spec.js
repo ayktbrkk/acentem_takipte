@@ -134,40 +134,68 @@ async function assertLanguageMenu(page, triggerTestId, menuTestId) {
   const focusOrder = await page.evaluate(() => {
     const tabbable = (element) => {
       const style = getComputedStyle(element);
-      return !element.matches("[disabled],[aria-disabled='true'],[inert]")
+      let ancestor = element.parentElement;
+      while (ancestor) {
+        if (ancestor.matches("[inert]") || ancestor.matches("fieldset[disabled]")) return false;
+        ancestor = ancestor.parentElement;
+      }
+      return !element.matches("[disabled],[aria-disabled='true']")
         && element.tabIndex >= 0
         && style.display !== "none"
         && style.visibility !== "hidden"
         && element.getClientRects().length > 0;
     };
-    const focusables = [...document.querySelectorAll("button,a[href],input,textarea,select,[tabindex]")].filter(tabbable);
-    const current = focusables.indexOf(document.activeElement);
-    const next = current + 1 < focusables.length ? focusables[current + 1] : null;
-    return {
-      current,
-      nextToken: next?.getAttribute("data-testid") || next?.id || next?.tagName || null,
-    };
+    const focusables = [...document.querySelectorAll("button,a[href],input,textarea,select,[tabindex]")]
+      .filter(tabbable)
+      .sort((left, right) => (left.tabIndex || 0) - (right.tabIndex || 0));
+    const currentIndex = focusables.indexOf(document.activeElement);
+    return { currentIndex, nextIndex: currentIndex + 1 };
   });
   await page.keyboard.press("Tab");
-  const activeAfterTab = await page.evaluate(() => {
-    const tabbable = (element) => !element.matches("[disabled],[aria-disabled='true'],[inert]")
-      && element.tabIndex >= 0
-      && getComputedStyle(element).display !== "none"
-      && getComputedStyle(element).visibility !== "hidden"
-      && element.getClientRects().length > 0;
-    const focusables = [...document.querySelectorAll("button,a[href],input,textarea,select,[tabindex]")].filter(tabbable);
-    const active = document.activeElement;
-    return {
-      index: focusables.indexOf(active),
-      token: active?.getAttribute("data-testid") || active?.id || active?.tagName || null,
+  const activeAfterTab = await page.evaluate(({ currentIndex, nextIndex }) => {
+    const tabbable = (element) => {
+      let ancestor = element.parentElement;
+      while (ancestor) {
+        if (ancestor.matches("[inert]") || ancestor.matches("fieldset[disabled]")) return false;
+        ancestor = ancestor.parentElement;
+      }
+      return !element.matches("[disabled],[aria-disabled='true']")
+        && element.tabIndex >= 0
+        && getComputedStyle(element).display !== "none"
+        && getComputedStyle(element).visibility !== "hidden"
+        && element.getClientRects().length > 0;
     };
-  });
-  expect(focusOrder.nextToken).toBeTruthy();
-  expect(activeAfterTab.token).toBe(focusOrder.nextToken);
-  expect(activeAfterTab.index).not.toBe(focusOrder.current);
+    const focusables = [...document.querySelectorAll("button,a[href],input,textarea,select,[tabindex]")]
+      .filter(tabbable)
+      .sort((left, right) => (left.tabIndex || 0) - (right.tabIndex || 0));
+    return {
+      exactNextElement: focusables[nextIndex] === document.activeElement,
+      currentIndex,
+      activeIndex: focusables.indexOf(document.activeElement),
+    };
+  }, focusOrder);
+  expect(activeAfterTab.exactNextElement).toBe(true);
+  expect(activeAfterTab.activeIndex).not.toBe(focusOrder.currentIndex);
+  await expect(menu.locator(":focus")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
   await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  await expect(menu).toBeVisible();
+  const initialLocaleLabel = (await menu.locator("[role='menuitemradio'][aria-checked='true']").innerText()).trim();
+  const alternateItem = menu.locator("[role='menuitemradio'][aria-checked='false']").first();
+  const alternateLocaleLabel = (await alternateItem.innerText()).trim();
+  await alternateItem.click();
+  await expect(menu).toBeHidden();
+  await expect(trigger).toContainText(alternateLocaleLabel);
+  await expect(page.locator("header.at-shell-topbar")).toContainText(alternateLocaleLabel);
+
+  await trigger.click();
+  await expect(menu).toBeVisible();
+  await menu.locator("[role='menuitemradio']", { hasText: initialLocaleLabel }).click();
+  await expect(menu).toBeHidden();
+  await expect(trigger).toContainText(initialLocaleLabel);
 }
 
 async function assertBranchListbox(page) {
@@ -181,6 +209,11 @@ async function assertBranchListbox(page) {
   await trigger.click();
   const listbox = page.getByRole("listbox");
   const options = listbox.getByRole("option");
+  const value = trigger.locator("span[title]").last();
+  await expect(value).toHaveClass(/truncate/);
+  const initialValue = await value.getAttribute("title");
+  expect(initialValue).toBeTruthy();
+  await expect(trigger).toHaveAttribute("aria-label", new RegExp(initialValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   await expect(listbox).toBeVisible();
   await expect(page.getByTestId("branch-search-input")).toBeVisible();
   await expect(options).not.toHaveCount(0);
@@ -193,6 +226,22 @@ async function assertBranchListbox(page) {
   await expect(options.nth(1)).toBeFocused();
   await page.keyboard.press("ArrowUp");
   await expect(options.first()).toBeFocused();
+
+  const alternative = await options.evaluateAll((elements) => elements.find((element) => element.getAttribute("aria-selected") === "false")?.textContent?.trim() || "");
+  expect(alternative).toBeTruthy();
+  const searchTerm = alternative.split(/\s+/).find((part) => part.length > 1) || alternative;
+  const searchInput = page.getByTestId("branch-search-input");
+  await searchInput.fill(searchTerm);
+  await expect(options).not.toHaveCount(0);
+  expect((await options.first().innerText()).toLocaleLowerCase()).toContain(searchTerm.toLocaleLowerCase());
+  await options.first().click();
+  await expect(listbox).toBeHidden();
+  const updatedValue = await value.getAttribute("title");
+  const updatedName = await trigger.getAttribute("aria-label");
+  expect(updatedValue || updatedName).toBeTruthy();
+  expect(updatedValue !== initialValue || updatedName !== initialValue).toBe(true);
+  await trigger.click();
+  await expect(listbox).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(listbox).toBeHidden();
   await expect(trigger).toBeFocused();
@@ -220,6 +269,20 @@ async function assertIndependentTabletUtilities(page) {
   await expect(languageMenu).toBeHidden();
   await assertLanguageMenu(page, "mobile-language-trigger", "mobile-language-menu");
   await assertBranchListbox(page);
+}
+
+async function assertTabletUtilityGeometry(page) {
+  const branchTrigger = page.getByTestId("branch-scope-trigger");
+  const languageTrigger = page.getByTestId("mobile-language-trigger");
+  await expect(branchTrigger).toBeVisible();
+  await expect(languageTrigger).toBeVisible();
+  const boxes = await Promise.all([branchTrigger.boundingBox(), languageTrigger.boundingBox()]);
+  expect(boxes[0]?.width).toBeGreaterThan(0);
+  expect(boxes[1]?.width).toBeGreaterThan(0);
+  expect(boxes[0]?.height).toBeGreaterThan(0);
+  expect(boxes[1]?.height).toBeGreaterThan(0);
+  const [branchBox, languageBox] = boxes;
+  expect(branchBox.right <= languageBox.x || languageBox.right <= branchBox.x || branchBox.bottom <= languageBox.y || languageBox.bottom <= branchBox.y).toBe(true);
 }
 
 test.describe("shell utility redesign audit", () => {
@@ -300,6 +363,8 @@ test.describe("shell utility redesign audit", () => {
     await expect(page.getByTestId("mobile-sidebar-trigger")).toBeVisible();
     await expect(page.getByTestId("topbar-language-trigger")).toBeHidden();
     await assertIndependentTabletUtilities(page);
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await assertTabletUtilityGeometry(page);
     await assertNoHorizontalOverflow(page, 768);
   });
 
