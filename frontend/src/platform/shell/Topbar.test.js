@@ -101,13 +101,15 @@ describe("Topbar shell contract", () => {
     expect(trigger.exists()).toBe(true);
     expect(trigger.text()).toContain("Türkçe");
     expect(trigger.attributes("aria-haspopup")).toBe("menu");
-    expect(trigger.attributes("aria-controls")).toBe("topbar-language-menu");
+    expect(trigger.attributes("aria-controls")).toBeUndefined();
+    expect(trigger.attributes("aria-expanded")).toBe("false");
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
 
     await trigger.trigger("click");
     const menu = wrapper.find('[data-testid="topbar-language-menu"]');
     expect(menu.attributes("role")).toBe("menu");
     expect(menu.attributes("id")).toBe("topbar-language-menu");
+    expect(trigger.attributes("aria-controls")).toBe(menu.attributes("id"));
     expect(trigger.attributes("aria-expanded")).toBe("true");
     expect(menu.text()).toContain("English");
     expect(menu.find('[role="menuitemradio"][aria-checked="true"]').exists()).toBe(true);
@@ -139,6 +141,7 @@ describe("Topbar shell contract", () => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     await wrapper.vm.$nextTick();
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
+    expect(trigger.attributes("aria-controls")).toBeUndefined();
     expect(trigger.attributes("aria-expanded")).toBe("false");
     expect(document.activeElement).toBe(trigger.element);
 
@@ -169,7 +172,8 @@ describe("Topbar shell contract", () => {
 
     expect(trigger.exists()).toBe(true);
     expect(trigger.text()).toContain("Türkçe");
-    expect(trigger.attributes("aria-controls")).toBe("mobile-language-menu");
+    expect(trigger.attributes("aria-controls")).toBeUndefined();
+    expect(trigger.attributes("aria-expanded")).toBe("false");
     expect(trigger.element.contains(wrapper.find('[data-testid="branch-scope-trigger"]').element)).toBe(false);
     expect(wrapper.find('[data-testid="sidebar-profile-menu"]').exists()).toBe(false);
 
@@ -177,6 +181,7 @@ describe("Topbar shell contract", () => {
     const menu = wrapper.find('[data-testid="mobile-language-menu"]');
     expect(menu.attributes("role")).toBe("menu");
     expect(menu.attributes("id")).toBe("mobile-language-menu");
+    expect(trigger.attributes("aria-controls")).toBe(menu.attributes("id"));
     expect(trigger.attributes("aria-expanded")).toBe("true");
     expect(menu.find('[role="menuitemradio"][aria-checked="true"]').text()).toContain("Türkçe");
 
@@ -232,6 +237,7 @@ describe("Topbar shell contract", () => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     await wrapper.vm.$nextTick();
     expect(wrapper.find('[data-testid="mobile-language-menu"]').exists()).toBe(false);
+    expect(trigger.attributes("aria-controls")).toBeUndefined();
     expect(trigger.attributes("aria-expanded")).toBe("false");
     expect(document.activeElement).toBe(trigger.element);
   });

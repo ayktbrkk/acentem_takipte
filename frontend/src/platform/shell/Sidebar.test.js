@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
+import { ref } from "vue";
 
 import Sidebar from "./Sidebar.vue";
 import { useAuthStore } from "../state/authStore";
@@ -41,6 +42,15 @@ const RouterLinkStub = {
 
 const OfficeBranchSelectStub = {
   template: `<div class="office-branch-select-stub">Office Branch Select</div>`,
+};
+
+const MobileSidebarHost = {
+  components: { Sidebar },
+  template: `<button data-testid="mobile-sidebar-trigger" type="button" /><Sidebar :mobile-open="mobileOpen" @close="mobileOpen = false" />`,
+  setup() {
+    const mobileOpen = ref(true);
+    return { mobileOpen };
+  },
 };
 
 let mountedWrappers = [];
@@ -180,16 +190,16 @@ describe("Sidebar localization", () => {
     expect(event.defaultPrevented).toBe(true);
   });
 
-  it("closes only the topmost profile menu when Escape is pressed inside it", async () => {
+  it("closes stacked profile menu before drawer and restores trigger focus", async () => {
     stubMobileViewport();
-    const wrapper = mountSidebar({
+    const wrapper = mount(MobileSidebarHost, {
       attachTo: document.body,
-      props: { mobileOpen: true },
       global: {
         directives: { prefetch: {} },
         stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
       },
     });
+    mountedWrappers.push(wrapper);
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
     await trigger.trigger("click");
     const profileMenu = document.body.querySelector('[data-testid="sidebar-profile-menu"]');
@@ -201,8 +211,16 @@ describe("Sidebar localization", () => {
     await wrapper.vm.$nextTick();
 
     expect(document.body.querySelector('[data-testid="sidebar-profile-menu"]')).toBe(null);
-    expect(wrapper.emitted("close")).toBeUndefined();
+    expect(wrapper.find("aside").exists()).toBe(true);
     expect(event.defaultPrevented).toBe(true);
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find("aside").exists()).toBe(true);
+    expect(wrapper.find("aside").classes()).toContain("-translate-x-full");
+    expect(document.activeElement).toBe(document.querySelector('[data-testid="mobile-sidebar-trigger"]'));
   });
 
   it("does not expose a dangling profile menu relationship while closed", async () => {

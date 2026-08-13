@@ -7,7 +7,7 @@
       :class="props.collapsed ? 'justify-center' : ''"
       type="button"
       aria-haspopup="menu"
-      aria-controls="sidebar-profile-menu-surface"
+       :aria-controls="menuOpen ? 'sidebar-profile-menu-surface' : undefined"
       :aria-expanded="menuOpen ? 'true' : 'false'"
       :aria-label="menuOpen ? t('closeProfileMenu') : t('openProfileMenu')"
       @click="toggleMenu"

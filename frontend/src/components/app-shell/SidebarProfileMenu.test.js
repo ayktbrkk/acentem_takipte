@@ -93,13 +93,14 @@ describe("Sidebar profile menu contract", () => {
 
     expect(trigger.attributes("aria-haspopup")).toBe("menu");
     expect(trigger.attributes("aria-expanded")).toBe("false");
-    expect(trigger.attributes("aria-controls")).toBe("sidebar-profile-menu-surface");
+    expect(trigger.attributes("aria-controls")).toBeUndefined();
     expect(trigger.find('[data-testid="profile-trigger-active-branch"]').text()).toContain("AT Sigorta");
     await trigger.trigger("click");
 
     const profileMenu = findProfileMenu();
     expect(profileMenu.exists()).toBe(true);
     expect(profileMenu.attributes("id")).toBe("sidebar-profile-menu-surface");
+    expect(trigger.attributes("aria-controls")).toBe(profileMenu.attributes("id"));
     expect(profileMenu.attributes("role")).toBe("menu");
     expect(profileMenu.text()).toContain("Aykut Yılmaz");
     expect(profileMenu.text()).toContain("Rol");
@@ -244,6 +245,7 @@ describe("Sidebar profile menu contract", () => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     await wrapper.vm.$nextTick();
     expect(findProfileMenu().exists()).toBe(false);
+    expect(trigger.attributes("aria-controls")).toBeUndefined();
     expect(document.activeElement).toBe(trigger.element);
 
     await trigger.trigger("click");
