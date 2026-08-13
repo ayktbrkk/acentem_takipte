@@ -67,6 +67,7 @@ Thumbs.db
 .superpowers/
 .agents/
 skills-lock.json
+.worktrees/
 screenshots/
 scripts/check_*.py
 scripts/debug_*.py
