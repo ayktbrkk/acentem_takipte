@@ -70,7 +70,10 @@ describe("Topbar shell contract", () => {
     expect(wrapper.text()).toContain(pageTitle);
     expect(wrapper.text()).toContain(sectionLabel);
     expect(wrapper.find('[data-testid="branch-scope-trigger"]').exists()).toBe(true);
-    expect(wrapper.find('[data-testid="mobile-sidebar-trigger"]').exists()).toBe(true);
+    const mobileTrigger = wrapper.find('[data-testid="mobile-sidebar-trigger"]');
+    expect(mobileTrigger.exists()).toBe(true);
+    expect(mobileTrigger.attributes("aria-controls")).toBe("mobile-sidebar-drawer");
+    expect(mobileTrigger.attributes("aria-expanded")).toBe("false");
 
     expect(wrapper.find('button[aria-haspopup="menu"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
@@ -78,6 +81,14 @@ describe("Topbar shell contract", () => {
     expect(wrapper.find('[data-testid="branch-scope-trigger"]').element.contains(wrapper.find('[data-testid="topbar-language-trigger"]').element)).toBe(false);
     expect(wrapper.find('[data-testid="topbar-language-trigger"]').element.contains(wrapper.find('[data-testid="branch-scope-trigger"]').element)).toBe(false);
     expect(wrapper.find('[data-testid="sidebar-profile-menu"]').exists()).toBe(false);
+  });
+
+  it("exposes the open mobile drawer state on its trigger", () => {
+    const wrapper = mountTopbar({ props: { mobileSidebarOpen: true } });
+    const trigger = wrapper.find('[data-testid="mobile-sidebar-trigger"]');
+
+    expect(trigger.attributes("aria-controls")).toBe("mobile-sidebar-drawer");
+    expect(trigger.attributes("aria-expanded")).toBe("true");
   });
 
   it("owns the desktop language chip with the full current-language label", async () => {

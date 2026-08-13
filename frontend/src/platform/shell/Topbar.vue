@@ -6,6 +6,8 @@
           data-testid="mobile-sidebar-trigger"
           class="rounded-lg border border-slate-300 px-2 py-1 text-sm text-slate-700 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 lg:hidden"
           type="button"
+          aria-controls="mobile-sidebar-drawer"
+          :aria-expanded="mobileSidebarOpen ? 'true' : 'false'"
           @click="$emit('toggle-sidebar')"
         >
           {{ t("menu") }}
@@ -110,6 +112,13 @@ import { useAuthStore } from "../state/authStore";
 import { translateText, uppercaseText } from "@/platform/i18n";
 
 defineEmits(["toggle-sidebar"]);
+
+defineProps({
+  mobileSidebarOpen: {
+    type: Boolean,
+    default: false,
+  },
+});
 
 const route = useRoute();
 const authStore = useAuthStore();

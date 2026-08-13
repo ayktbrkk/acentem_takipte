@@ -122,6 +122,26 @@ describe("Sidebar localization", () => {
     trigger.remove();
   });
 
+  it("focuses the close control when mounted open on mobile without dialog semantics on desktop", async () => {
+    stubMobileViewport();
+    const trigger = addMobileSidebarTrigger();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    await wrapper.vm.$nextTick();
+
+    expect(document.activeElement).toBe(wrapper.find('[data-testid="mobile-sidebar-close"]').element);
+    expect(wrapper.find("aside").attributes("id")).toBe("mobile-sidebar-drawer");
+    expect(wrapper.find("aside").attributes("role")).toBe("dialog");
+    expect(wrapper.find("aside").attributes("aria-label")).toBe("Menu");
+    trigger.remove();
+  });
+
   it("keeps the mobile backdrop out of the tab order and gives it a localized label", async () => {
     stubMobileViewport();
     useAuthStore().applyContext({ locale: "tr", roles: ["AT Agent"] });
@@ -203,7 +223,42 @@ describe("Sidebar localization", () => {
     expect(event.defaultPrevented).toBe(true);
   });
 
+  it("wraps focus between the mobile drawer and its teleported profile menu", async () => {
+    stubMobileViewport();
+    const wrapper = mountSidebar({
+      attachTo: document.body,
+      props: { mobileOpen: true },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+    const drawerFirst = wrapper.find('[data-testid="mobile-sidebar-close"]').element;
+    const profileTrigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
+    await profileTrigger.trigger("click");
+    const profileMenu = document.body.querySelector('[data-testid="sidebar-profile-menu"]');
+    const profileItems = [...profileMenu.querySelectorAll('[role="menuitem"]')];
+    const profileLast = profileItems.at(-1);
+
+    profileLast.focus();
+    const forwardEvent = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(forwardEvent);
+    expect(document.activeElement).toBe(drawerFirst);
+    expect(forwardEvent.defaultPrevented).toBe(true);
+
+    drawerFirst.focus();
+    const backwardEvent = new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true });
+    document.dispatchEvent(backwardEvent);
+    expect(document.activeElement).toBe(profileLast);
+    expect(backwardEvent.defaultPrevented).toBe(true);
+  });
+
   it("does not trap keyboard focus on desktop", async () => {
+    vi.stubGlobal("matchMedia", () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
     const focusTarget = addFocusTarget();
     const wrapper = mountSidebar({
       attachTo: document.body,
@@ -213,6 +268,7 @@ describe("Sidebar localization", () => {
         stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
       },
     });
+    await wrapper.vm.$nextTick();
     const last = wrapper.findAll("aside button, aside a[href]").at(-1).element;
     last.focus();
 
@@ -221,6 +277,8 @@ describe("Sidebar localization", () => {
 
     expect(document.activeElement).toBe(last);
     expect(event.defaultPrevented).toBe(false);
+    expect(wrapper.find("aside").attributes("role")).toBeUndefined();
+    expect(wrapper.find("aside").attributes("aria-modal")).toBeUndefined();
     focusTarget.remove();
   });
 

@@ -10,8 +10,11 @@
     />
     <aside
       ref="mobileDrawer"
+      id="mobile-sidebar-drawer"
       class="fixed inset-y-0 left-0 z-40 flex h-screen w-[220px] shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 motion-reduce:transition-none lg:static lg:z-0"
       :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', effectiveCollapsed ? 'lg:w-[76px]' : 'lg:w-[240px]']"
+      :role="mobileOpen && !isDesktopViewport ? 'dialog' : undefined"
+      :aria-label="mobileOpen && !isDesktopViewport ? t('menu') : undefined"
       :aria-modal="mobileOpen && !isDesktopViewport ? 'true' : undefined"
     >
       <div class="border-b border-slate-100 px-4 py-4">
@@ -189,8 +192,14 @@ function isTabbable(element) {
 
 function getMobileDrawerTabbables() {
   const drawer = mobileDrawer.value;
-  if (!drawer) return [];
-  return [...drawer.querySelectorAll("button, a[href], input, select, textarea, [tabindex]")].filter(isTabbable);
+  const drawerTabbables = drawer
+    ? [...drawer.querySelectorAll("button, a[href], input, select, textarea, [tabindex]")]
+    : [];
+  const profileMenu = document.querySelector('[data-testid="sidebar-profile-menu"]');
+  const profileTabbables = profileMenu
+    ? [...profileMenu.querySelectorAll("button, a[href], input, select, textarea, [tabindex]")]
+    : [];
+  return [...drawerTabbables, ...profileTabbables].filter(isTabbable);
 }
 
 function handleMobileDrawerKeydown(event) {
@@ -242,6 +251,7 @@ watch(
       else restoreMobileSidebarTriggerFocus();
     });
   },
+  { immediate: true },
 );
 
 watch(() => [props.mobileOpen, isDesktopViewport.value], syncMobileDrawerListener, { immediate: true });
