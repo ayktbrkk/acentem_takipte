@@ -171,4 +171,35 @@ describe("Topbar shell contract", () => {
     expect(document.activeElement).toBe(trigger.element);
     wrapper.unmount();
   });
+
+  it("supports complete keyboard navigation on the separate mobile language surface", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({ locale: "tr", user: "Aykut", roles: ["AT Agent"] });
+
+    const wrapper = mountTopbar({ attachTo: document.body });
+    const trigger = wrapper.find('[data-testid="mobile-language-trigger"]');
+    await trigger.trigger("click");
+    await wrapper.vm.$nextTick();
+
+    const menu = wrapper.find('[data-testid="mobile-language-menu"]');
+    const items = menu.findAll('[role="menuitem"]');
+    expect(trigger.attributes("aria-expanded")).toBe("true");
+    expect(document.activeElement).toBe(items[0].element);
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+    expect(document.activeElement).toBe(items[1].element);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp" }));
+    expect(document.activeElement).toBe(items[0].element);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "End" }));
+    expect(document.activeElement).toBe(items[1].element);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Home" }));
+    expect(document.activeElement).toBe(items[0].element);
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('[data-testid="mobile-language-menu"]').exists()).toBe(false);
+    expect(trigger.attributes("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(trigger.element);
+    wrapper.unmount();
+  });
 });

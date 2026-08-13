@@ -8,26 +8,6 @@ import { useAuthStore } from "../../platform/state/authStore";
 import { useBranchStore } from "../../platform/state/branchStore";
 import { setPreferredLocale } from "../../platform/state/session";
 
-const resourceMock = vi.hoisted(() => {
-  const localeResource = {
-    submit: vi.fn(async ({ locale }) => ({ message: { locale } })),
-  };
-
-  return {
-    localeResource,
-    createResource: vi.fn((options = {}) => {
-      if (String(options.url || "").includes("set_session_locale")) {
-        return localeResource;
-      }
-      return { submit: vi.fn() };
-    }),
-  };
-});
-
-vi.mock("frappe-ui", () => ({
-  createResource: resourceMock.createResource,
-}));
-
 const PROFILE_MENU_TRANSLATIONS = {
   tr: {
     profileMenu: "Profil menüsü",
@@ -87,9 +67,6 @@ describe("Sidebar profile menu contract", () => {
   beforeEach(() => {
     removeTeleportedMenus();
     setActivePinia(createPinia());
-    resourceMock.createResource.mockClear();
-    resourceMock.localeResource.submit.mockReset();
-    resourceMock.localeResource.submit.mockImplementation(async ({ locale }) => ({ message: { locale } }));
     const authStore = useAuthStore();
     setPreferredLocale("tr");
     authStore.applyContext({
@@ -285,71 +262,17 @@ describe("Sidebar profile menu contract", () => {
     expect(document.activeElement).toBe(items[items.length - 1].element);
   });
 
-  it("switches to English through the profile menu and persists the locale", async () => {
-    const authStore = useAuthStore();
-    const setLocaleSpy = vi.spyOn(authStore, "setLocale");
-    resourceMock.localeResource.submit.mockClear();
-    const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
-
-    const wrapper = mountSidebar();
-    const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
-    expect(trigger.exists()).toBe(true);
-    trigger.element.focus();
-    await trigger.trigger("click");
-
-    const englishAction = findProfileMenu()
-       .findAll('[data-testid="profile-mobile-language"] [role="menuitem"]')
-      .find((item) => item.text().trim() === "English");
-    expect(englishAction).toBeTruthy();
-    await englishAction.trigger("click");
-
-    expect(setLocaleSpy).toHaveBeenCalledWith("en");
-    expect(authStore.locale).toBe("en");
-    expect(resourceMock.createResource).toHaveBeenCalledTimes(1);
-    expect(resourceMock.createResource).toHaveBeenCalledWith(
-      expect.objectContaining({
-        url: "acentem_takipte.acentem_takipte.platform.api.session.set_session_locale",
-      }),
-    );
-    expect(resourceMock.localeResource.submit).toHaveBeenCalledWith({ locale: "en" });
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(document.activeElement).toBe(trigger.element);
-  });
-
-  it("falls back to the session locale endpoint when resource persistence fails", async () => {
-    const authStore = useAuthStore();
-    const setLocaleSpy = vi.spyOn(authStore, "setLocale");
-    resourceMock.localeResource.submit.mockRejectedValue(new Error("Resource unavailable"));
-    const fetchMock = vi.fn().mockResolvedValue({
-      json: vi.fn().mockResolvedValue({ message: { locale: "en" } }),
-    });
-    vi.stubGlobal("fetch", fetchMock);
-
+  it("keeps the profile surface free of duplicate language controls", async () => {
     const wrapper = mountSidebar();
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
     expect(trigger.exists()).toBe(true);
     await trigger.trigger("click");
 
-    const englishAction = findProfileMenu()
-       .findAll('[data-testid="profile-mobile-language"] [role="menuitem"]')
-      .find((item) => item.text().trim() === "English");
-    expect(englishAction).toBeTruthy();
-    await englishAction.trigger("click");
-
-    expect(setLocaleSpy).toHaveBeenCalledWith("en");
-    expect(authStore.locale).toBe("en");
-    expect(resourceMock.localeResource.submit).toHaveBeenCalledWith({ locale: "en" });
-    await expect(resourceMock.localeResource.submit.mock.results[0].value).rejects.toThrow("Resource unavailable");
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/method/acentem_takipte.acentem_takipte.platform.api.session.set_session_locale?locale=en",
-      {
-        method: "GET",
-        credentials: "include",
-        headers: { Accept: "application/json" },
-      },
-    );
+    const profileMenu = findProfileMenu();
+    expect(profileMenu.find('[data-testid="profile-mobile-language"]').exists()).toBe(false);
+    expect(profileMenu.text()).toContain("Hesabım");
+    expect(profileMenu.text()).toContain("Desk'i Aç");
+    expect(profileMenu.text()).toContain("Çıkış Yap");
   });
 
   it.each([

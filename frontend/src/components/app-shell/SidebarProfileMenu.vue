@@ -68,24 +68,6 @@
         </button>
       </div>
 
-      <div v-if="props.mobile" data-testid="profile-mobile-language" class="px-2 py-2" role="group" :aria-label="t('language')">
-        <p class="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ t("language") }}</p>
-        <div class="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1">
-          <button
-            v-for="item in localeItems"
-            :key="item.locale"
-            class="rounded-md px-2 py-1.5 text-center text-xs font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            :class="authStore.locale === item.locale ? 'bg-white text-brand-700 shadow-sm' : ''"
-            type="button"
-            role="menuitem"
-            :aria-current="authStore.locale === item.locale ? 'true' : undefined"
-            @click="setLocale(item.locale)"
-          >
-            {{ item.label }}
-          </button>
-        </div>
-      </div>
-
       <div class="border-t border-slate-100 px-2 pt-2">
         <button
           v-for="item in accountMenuItems"
@@ -107,7 +89,6 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { translateText } from "@/platform/i18n";
-import { useLocalePreference } from "../../platform/composables/useLocalePreference";
 import { useAuthStore } from "../../platform/state/authStore";
 import { useBranchStore } from "../../platform/state/branchStore";
 import { SIDEBAR_ROLE_PRIORITY } from "../../platform/i18n/sidebar";
@@ -158,17 +139,11 @@ const branchLabel = computed(() => {
   if (selected) return String(selected).trim();
   return branchStore.canAccessAll ? t("allBranches") : t("notProvided");
 });
-const localeItems = computed(() => [
-  { locale: "tr", label: t("turkish") },
-  { locale: "en", label: t("english") },
-]);
 const accountMenuItems = computed(() => [
   { key: "account", label: t("account"), action: "account" },
   { key: "desk", label: t("desk"), action: "desk" },
   { key: "logout", label: t("logout"), action: "logout", destructive: true },
 ]);
-
-const { setLocale: persistLocale } = useLocalePreference();
 
 function toggleMenu() {
   if (menuOpen.value) {
@@ -312,11 +287,6 @@ async function logout() {
     await nextTick();
     retryRef.value?.focus();
   }
-}
-
-async function setLocale(locale) {
-  await persistLocale(locale);
-  closeMenu(true);
 }
 
 function focusFirstMenuItem() {
