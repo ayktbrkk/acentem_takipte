@@ -23,7 +23,12 @@ vi.mock("vue-router", () => ({
 
 const RouterLinkStub = {
   props: ["to", "title"],
-  template: `<a :href="typeof to === 'string' ? to : to?.path || '/'" :title="title"><slot /></a>`,
+  template: `<a
+    :href="typeof to === 'string' ? to : to?.path || '/'"
+    :title="title"
+    :class="{ 'router-link-active': to === '/dashboard' }"
+    :aria-current="to === '/dashboard' ? 'page' : undefined"
+  ><slot /></a>`,
 };
 
 const OfficeBranchSelectStub = {
@@ -321,11 +326,17 @@ describe("Sidebar localization", () => {
     const aside = wrapper.find("aside");
     expect(aside.classes()).toContain("lg:w-[240px]");
     expect(wrapper.findAll("nav a").length).toBeGreaterThan(0);
+    const activeLink = wrapper.get('nav a[aria-current="page"]');
+    expect(activeLink.classes()).toContain("router-link-active");
+    const activeHref = activeLink.attributes("href");
 
     await wrapper.find('[data-testid="sidebar-desktop-collapse-toggle"]').trigger("click");
     expect(aside.classes()).toContain("lg:w-[76px]");
     expect(wrapper.find('[data-testid="sidebar-brand-monogram"]').text()).toBe("AT");
     expect(wrapper.findAll("nav a").length).toBeGreaterThan(0);
+    const collapsedActiveLink = wrapper.get('nav a[aria-current="page"]');
+    expect(collapsedActiveLink.classes()).toContain("router-link-active");
+    expect(collapsedActiveLink.attributes("href")).toBe(activeHref);
   });
 
   it("renders nav icons when roles are present", () => {
