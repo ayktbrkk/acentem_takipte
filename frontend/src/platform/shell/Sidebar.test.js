@@ -124,7 +124,7 @@ describe("Sidebar localization", () => {
     expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
     await wrapper.find('footer [data-testid="sidebar-profile-trigger"]').trigger("click");
-    expect(wrapper.find('footer [data-testid="profile-mobile-language"]').exists()).toBe(true);
+    expect(wrapper.find('footer [data-testid="profile-mobile-language"]').exists()).toBe(false);
   });
 
   it("removes the modern media query listener with the matching API", () => {
@@ -291,6 +291,41 @@ describe("Sidebar localization", () => {
     expect(wrapper.findAll(`button[aria-label="${collapseLabel}"]`)).toHaveLength(1);
     expect(wrapper.find("footer").findAll(`button[aria-label="${collapseLabel}"]`)).toHaveLength(0);
     expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
+  });
+
+  it("keeps the desktop toggle, navigation scroll region, and profile footer outside that region", () => {
+    const wrapper = mount(Sidebar, {
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    expect(wrapper.findAll('[data-testid="sidebar-desktop-collapse-toggle"]')).toHaveLength(1);
+    expect(wrapper.findAll("nav.overflow-y-auto")).toHaveLength(1);
+    expect(wrapper.find("aside").classes()).not.toContain("overflow-y-auto");
+    expect(wrapper.find("nav").element.contains(wrapper.find("footer").element)).toBe(false);
+    expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
+  });
+
+  it("uses the 240px expanded and 76px collapsed rail contracts while preserving navigation", async () => {
+    const wrapper = mount(Sidebar, {
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    const aside = wrapper.find("aside");
+    expect(aside.classes()).toContain("lg:w-[240px]");
+    expect(wrapper.findAll("nav a").length).toBeGreaterThan(0);
+
+    await wrapper.find('[data-testid="sidebar-desktop-collapse-toggle"]').trigger("click");
+    expect(aside.classes()).toContain("lg:w-[76px]");
+    expect(wrapper.find('[data-testid="sidebar-brand-monogram"]').text()).toBe("AT");
+    expect(wrapper.findAll("nav a").length).toBeGreaterThan(0);
   });
 
   it("renders nav icons when roles are present", () => {

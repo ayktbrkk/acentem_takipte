@@ -60,6 +60,8 @@ describe("Topbar shell contract", () => {
     expect(wrapper.find('button[aria-haspopup="menu"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
     expect(wrapper.findAll("button").some((button) => ["TR", "EN"].includes(button.text().trim()))).toBe(false);
+    expect(wrapper.find('[data-testid="branch-scope-trigger"]').element.contains(wrapper.find('[data-testid="topbar-language-trigger"]').element)).toBe(false);
+    expect(wrapper.find('[data-testid="topbar-language-trigger"]').element.contains(wrapper.find('[data-testid="branch-scope-trigger"]').element)).toBe(false);
   });
 
   it("owns the desktop language chip with the full current-language label", async () => {
@@ -75,7 +77,11 @@ describe("Topbar shell contract", () => {
     expect(wrapper.find('[data-testid="topbar-language-menu"]').exists()).toBe(false);
 
     await trigger.trigger("click");
-    expect(wrapper.find('[data-testid="topbar-language-menu"]').text()).toContain("English");
+    const menu = wrapper.find('[data-testid="topbar-language-menu"]');
+    expect(menu.attributes("role")).toBe("menu");
+    expect(trigger.attributes("aria-expanded")).toBe("true");
+    expect(menu.text()).toContain("English");
+    expect(menu.find('[role="menuitem"][aria-selected="true"]').exists()).toBe(true);
   });
 
   it("keeps language-menu keyboard focus and close behavior consistent", async () => {

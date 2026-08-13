@@ -102,7 +102,7 @@ describe("Sidebar profile menu contract", () => {
     }
   });
 
-  it("renders the user, localized role, branch, mobile language, and logout actions", async () => {
+  it("renders the user, localized role, informational branch, and logout actions", async () => {
     const wrapper = mountSidebar();
     const trigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
 
@@ -122,13 +122,14 @@ describe("Sidebar profile menu contract", () => {
     expect(wrapper.text()).toContain("AT Yönetici");
     expect(wrapper.text()).toContain("Aktif şube");
     expect(wrapper.text()).toContain("AT Sigorta");
-    expect(profileMenu.find('[data-testid="profile-mobile-language"]').exists()).toBe(true);
-    expect(profileMenu.find('[data-testid="profile-mobile-language"]').text()).toContain("Türkçe");
-    expect(profileMenu.find('[data-testid="profile-mobile-language"]').text()).toContain("English");
+    expect(profileMenu.find('[data-testid="profile-mobile-language"]').exists()).toBe(false);
+    expect(profileMenu.find('[data-testid="branch-scope-trigger"]').exists()).toBe(false);
     expect(wrapper.text()).toContain("Çıkış Yap");
     expect(profileMenu.find('[data-testid="profile-summary-user"]').text()).toBe("Aykut Yılmaz");
     expect(profileMenu.find('[data-testid="profile-summary-role"]').text()).toContain("AT Yönetici");
     expect(profileMenu.find('[data-testid="profile-summary-active-branch"]').text()).toContain("AT Sigorta");
+    expect(profileMenu.find('[data-testid="profile-summary-active-branch"]').element.tagName).toBe("P");
+    expect(profileMenu.find('[data-testid="profile-summary-active-branch"]').attributes("role")).toBeUndefined();
   });
 
   it("renders localized role and active-branch labels in English", async () => {
