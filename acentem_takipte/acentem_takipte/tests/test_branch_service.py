@@ -36,6 +36,50 @@ def test_get_user_office_branches_returns_access_rows_for_normal_user():
     assert rows[0]["is_default"] == 1
 
 
+def test_at_manager_receives_managed_branch_and_descendants_without_manual_grant():
+    branch_rows = [
+        frappe._dict(
+            name="BR-MANAGER",
+            office_branch_name="Istanbul Merkez",
+            office_branch_code="IST",
+            city="Istanbul",
+            is_active=1,
+        ),
+        frappe._dict(
+            name="BR-CHILD",
+            office_branch_name="Ankara Sube",
+            office_branch_code="ANK",
+            city="Ankara",
+            is_active=1,
+        ),
+    ]
+
+    with patch.object(frappe, "get_roles", return_value=["AT Manager"]):
+        with patch.object(branch_service, "user_can_access_all_office_branches", return_value=False):
+            with patch.object(branch_service, "_get_user_branch_access_rows", return_value=[]):
+                with patch.object(
+                    branch_service,
+                    "_get_manager_branch_access_rows",
+                    return_value=[
+                        {
+                            "office_branch": "BR-MANAGER",
+                            "is_default": 1,
+                            "scope_mode": branch_service.DESCENDANT_SCOPE_MODE,
+                        }
+                    ],
+                ):
+                    with patch.object(
+                        branch_service,
+                        "_get_descendant_branch_names",
+                        return_value={"BR-MANAGER", "BR-CHILD"},
+                    ):
+                        with patch.object(branch_service.frappe, "get_all", return_value=branch_rows):
+                            rows = get_user_office_branches("manager@example.com")
+
+    assert [row["name"] for row in rows] == ["BR-MANAGER", "BR-CHILD"]
+    assert rows[0]["is_default"] == 1
+
+
 def test_get_default_office_branch_prefers_default_flag():
     with patch.object(
         branch_service,

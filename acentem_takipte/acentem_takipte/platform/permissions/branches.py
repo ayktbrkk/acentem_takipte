@@ -106,6 +106,9 @@ def get_user_office_branches(
         )
 
     access_rows = _get_user_branch_access_rows(user_id)
+    roles = set(frappe.get_roles(user_id) or [])
+    if "AT Manager" in roles:
+        access_rows = _merge_manager_branch_access(access_rows, _get_manager_branch_access_rows(user_id))
     if not access_rows:
         return []
 
@@ -148,6 +151,45 @@ def get_user_office_branches(
     for row in branch_rows:
         row["is_default"] = default_map.get(row.name, 0)
     return branch_rows
+
+
+def _get_manager_branch_access_rows(user_id: str) -> list[dict[str, Any]]:
+    """Derive descendant scope from the explicit manager_user branch relation."""
+    if not frappe.db.has_column("AT Office Branch", "manager_user"):
+        return []
+
+    rows = frappe.get_all(
+        "AT Office Branch",
+        filters={"manager_user": user_id, "is_active": 1},
+        fields=["name"],
+        order_by="office_branch_name asc",
+        limit_page_length=0,
+    )
+    return [
+        {
+            "office_branch": row.get("name"),
+            "scope_mode": DESCENDANT_SCOPE_MODE,
+            "is_default": 0,
+        }
+        for row in rows
+        if row.get("name")
+    ]
+
+
+def _merge_manager_branch_access(
+    access_rows: list[dict[str, Any]], manager_rows: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    merged = list(access_rows)
+    existing = {str(row.get("office_branch") or "").strip() for row in merged}
+    for row in manager_rows:
+        branch_name = str(row.get("office_branch") or "").strip()
+        if branch_name and branch_name not in existing:
+            merged.append(row)
+            existing.add(branch_name)
+
+    if merged and not any(int(row.get("is_default") or 0) for row in merged):
+        merged[0]["is_default"] = 1
+    return merged
 
 
 def _get_user_branch_access_rows(user_id: str) -> list[dict[str, Any]]:
