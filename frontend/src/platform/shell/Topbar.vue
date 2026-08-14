@@ -22,7 +22,7 @@
          <div class="order-2">
            <OfficeBranchSelect v-if="authStore.officeBranches.length || authStore.canAccessAllOfficeBranches" />
          </div>
-        <div ref="desktopLanguageMenuRef" class="relative z-50 order-1 hidden lg:block">
+        <div ref="desktopLanguageMenuRef" class="relative z-50 order-1 max-lg:hidden lg:block">
           <button
             data-testid="topbar-language-trigger"
              class="flex min-w-[124px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-left text-sm font-medium text-slate-700 shadow-sm shadow-slate-900/5 transition hover:border-brand-200 hover:bg-brand-50/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
