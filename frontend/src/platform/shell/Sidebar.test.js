@@ -861,6 +861,18 @@ describe("Sidebar localization", () => {
     expect(brandLayout.find('[data-testid="sidebar-brand-monogram"]').text()).toBe("AT");
   });
 
+  it("centers the expanded brand lockup vertically", () => {
+    const wrapper = mountSidebar({
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    expect(wrapper.find('[data-testid="sidebar-brand-layout"]').classes()).toContain("items-center");
+  });
+
   it("renders nav icons when roles are present", () => {
     const authStore = useAuthStore();
     authStore.applyContext({

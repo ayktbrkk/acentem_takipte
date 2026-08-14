@@ -20,7 +20,7 @@
       <div
         data-testid="sidebar-brand-header"
         class="border-b border-slate-100"
-        :class="effectiveCollapsed ? 'px-2 py-2' : 'px-4 py-4'"
+        :class="effectiveCollapsed ? 'px-2 py-2' : 'px-4 py-3'"
       >
         <div class="mb-4 flex items-center justify-between lg:hidden">
           <p class="text-xs font-semibold tracking-[0.22em] text-slate-500">{{ upper(t("menu")) }}</p>
@@ -29,7 +29,11 @@
           </ActionButton>
         </div>
 
-        <div data-testid="sidebar-brand-layout" class="flex items-start gap-3" :class="effectiveCollapsed ? 'flex-col items-center gap-2' : ''">
+        <div
+          data-testid="sidebar-brand-layout"
+          class="flex gap-3"
+          :class="effectiveCollapsed ? 'flex-col items-center gap-2' : 'items-center'"
+        >
           <div class="min-w-0 flex-1">
             <p v-if="!effectiveCollapsed" class="truncate text-[15px] font-semibold leading-5 tracking-[-0.01em] text-slate-900" :title="t('brand')">
               {{ t("brand") }}
