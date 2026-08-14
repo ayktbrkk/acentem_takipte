@@ -22,11 +22,14 @@
         class="border-b border-slate-100"
         :class="effectiveCollapsed ? 'px-2 py-2' : 'px-4 py-3'"
       >
-        <div class="mb-4 flex items-center justify-between lg:hidden">
+        <div class="mb-4 flex items-center justify-between gap-2 lg:hidden">
           <p class="text-xs font-semibold tracking-[0.22em] text-slate-500">{{ upper(t("menu")) }}</p>
-          <ActionButton data-testid="mobile-sidebar-close" variant="secondary" size="xs" class="!px-2" :title="t('close')" @click="$emit('close')">
-            X
-          </ActionButton>
+          <div class="flex items-center gap-2">
+            <SidebarLanguageControl />
+            <ActionButton data-testid="mobile-sidebar-close" variant="secondary" size="xs" class="!px-2" :title="t('close')" @click="$emit('close')">
+              X
+            </ActionButton>
+          </div>
         </div>
 
         <div
@@ -148,6 +151,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, watch } from "vue";
 
 import ActionButton from "../ui/shell/ActionButton.vue";
+import SidebarLanguageControl from "../../components/app-shell/SidebarLanguageControl.vue";
 import SidebarProfileMenu from "../../components/app-shell/SidebarProfileMenu.vue";
 import IconLucidePanelLeftClose from '~icons/lucide/panel-left-close';
 import IconLucidePanelLeftOpen from '~icons/lucide/panel-left-open';

@@ -297,7 +297,7 @@ describe("Sidebar localization", () => {
         stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
       },
     });
-    const drawerFirst = wrapper.find('[data-testid="mobile-sidebar-close"]').element;
+    const drawerFirst = wrapper.find('[data-testid="mobile-sidebar-language-trigger"]').element;
     const profileTrigger = wrapper.find('[data-testid="sidebar-profile-trigger"]');
     await profileTrigger.trigger("click");
     const profileMenu = document.body.querySelector('[data-testid="sidebar-profile-menu"]');
@@ -569,6 +569,8 @@ describe("Sidebar localization", () => {
     expect(wrapper.find('[data-testid="mobile-sidebar-close"]').exists()).toBe(true);
     expect(wrapper.findAll("nav a p").length).toBeGreaterThan(0);
     expect(wrapper.find('footer [data-testid="sidebar-profile-trigger"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="mobile-sidebar-language-trigger"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="mobile-sidebar-language-trigger"]').element.closest('[data-testid="sidebar-profile-menu"]')).toBe(null);
     await wrapper.find('footer [data-testid="sidebar-profile-trigger"]').trigger("click");
     expect(findLatestProfileMenu()).not.toBe(null);
     expect(wrapper.find('footer [data-testid="profile-mobile-language"]').exists()).toBe(false);
