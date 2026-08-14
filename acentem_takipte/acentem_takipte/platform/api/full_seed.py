@@ -142,6 +142,65 @@ def _upsert_by_field(
     return _insert(doctype, payload)
 
 
+CORE_OFFICE_BRANCH_DEFS = (
+    {
+        "office_branch_name": "Istanbul Merkez",
+        "office_branch_code": "IST",
+        "city": "Istanbul",
+        "is_head_office": 1,
+        "is_active": 1,
+    },
+    {
+        "office_branch_name": "Ankara Sube",
+        "office_branch_code": "ANK",
+        "city": "Ankara",
+        "is_head_office": 0,
+        "parent_office_branch": "Istanbul Merkez",
+        "is_active": 1,
+    },
+    {
+        "office_branch_name": "Izmir Sube",
+        "office_branch_code": "IZM",
+        "city": "Izmir",
+        "is_head_office": 0,
+        "parent_office_branch": "Istanbul Merkez",
+        "is_active": 1,
+    },
+    {
+        "office_branch_name": "Bursa Sube",
+        "office_branch_code": "BRS",
+        "city": "Bursa",
+        "is_head_office": 0,
+        "parent_office_branch": "Istanbul Merkez",
+        "is_active": 1,
+    },
+    {
+        "office_branch_name": "Antalya Sube",
+        "office_branch_code": "ANT",
+        "city": "Antalya",
+        "is_head_office": 0,
+        "parent_office_branch": "Istanbul Merkez",
+        "is_active": 1,
+    },
+)
+
+
+def ensure_core_office_branches() -> dict[str, Any]:
+    """Upsert the production office-branch catalog without touching other data."""
+    branch_names: dict[str, str] = {}
+    for payload in CORE_OFFICE_BRANCH_DEFS:
+        doc = _upsert_by_field(
+            "AT Office Branch",
+            "office_branch_name",
+            payload["office_branch_name"],
+            payload,
+        )
+        branch_names[payload["office_branch_name"]] = doc.name
+
+    frappe.db.commit()
+    return {"count": len(branch_names), "branches": branch_names}
+
+
 # ── Main Seed Function ────────────────────────────────────────────────────
 
 
