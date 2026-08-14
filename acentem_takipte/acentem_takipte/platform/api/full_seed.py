@@ -189,6 +189,23 @@ def ensure_core_office_branches() -> dict[str, Any]:
     """Upsert the production office-branch catalog without touching other data."""
     branch_names: dict[str, str] = {}
     for payload in CORE_OFFICE_BRANCH_DEFS:
+        if payload.get("parent_office_branch"):
+            continue
+        doc = _upsert_by_field(
+            "AT Office Branch",
+            "office_branch_name",
+            payload["office_branch_name"],
+            payload,
+        )
+        branch_names[payload["office_branch_name"]] = doc.name
+
+    for payload in CORE_OFFICE_BRANCH_DEFS:
+        parent_label = payload.get("parent_office_branch")
+        if parent_label:
+            payload = {
+                **payload,
+                "parent_office_branch": branch_names[parent_label],
+            }
         doc = _upsert_by_field(
             "AT Office Branch",
             "office_branch_name",
