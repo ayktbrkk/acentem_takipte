@@ -20,7 +20,7 @@
 
       <div class="flex w-full flex-wrap items-center justify-end gap-2 md:w-auto md:gap-3">
         <OfficeBranchSelect v-if="authStore.officeBranches.length || authStore.canAccessAllOfficeBranches" />
-        <div ref="desktopLanguageMenuRef" class="relative hidden lg:block">
+        <div ref="desktopLanguageMenuRef" class="relative z-50 hidden lg:block">
           <button
             data-testid="topbar-language-trigger"
              class="flex min-w-[124px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-left text-sm font-medium text-slate-700 shadow-sm shadow-slate-900/5 transition hover:border-brand-200 hover:bg-brand-50/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
@@ -63,7 +63,7 @@
             </button>
           </div>
         </div>
-        <div ref="mobileLanguageMenuRef" class="relative ml-auto lg:hidden">
+        <div ref="mobileLanguageMenuRef" class="relative z-50 ml-auto lg:hidden">
           <button
             data-testid="mobile-language-trigger"
              class="flex min-w-[124px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-left text-sm font-medium text-slate-700 shadow-sm shadow-slate-900/5 transition hover:border-brand-200 hover:bg-brand-50/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
