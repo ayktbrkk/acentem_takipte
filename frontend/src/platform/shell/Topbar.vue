@@ -23,7 +23,7 @@
         <div ref="desktopLanguageMenuRef" class="relative hidden lg:block">
           <button
             data-testid="topbar-language-trigger"
-            class="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+             class="flex min-w-[124px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-left text-sm font-medium text-slate-700 shadow-sm shadow-slate-900/5 transition hover:border-brand-200 hover:bg-brand-50/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             type="button"
             aria-haspopup="menu"
              :aria-controls="languageMenuOpen && activeLanguageSurface === 'desktop' ? 'topbar-language-menu' : undefined"
@@ -31,8 +31,13 @@
             :aria-label="languageMenuOpen && activeLanguageSurface === 'desktop' ? t('closeLanguageMenu') : t('openLanguageMenu')"
             @click="toggleLanguageMenu('desktop')"
           >
-            <IconLucideGlobe2 class="h-4 w-4 text-slate-500" />
-            <span>{{ currentLanguageLabel }}</span>
+             <IconLucideGlobe2 class="h-4 w-4 shrink-0 text-brand-600" />
+             <span class="min-w-0 flex-1">
+               <span data-testid="topbar-language-label" class="block text-[9px] font-semibold uppercase tracking-[0.14em] leading-3 text-slate-400">
+                 {{ t("language") }}
+               </span>
+               <span class="mt-0.5 block truncate text-xs font-semibold leading-4 text-slate-800">{{ currentLanguageLabel }}</span>
+             </span>
           </button>
           <div
             v-if="languageMenuOpen && activeLanguageSurface === 'desktop'"
@@ -61,7 +66,7 @@
         <div ref="mobileLanguageMenuRef" class="relative ml-auto lg:hidden">
           <button
             data-testid="mobile-language-trigger"
-            class="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+             class="flex min-w-[124px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-left text-sm font-medium text-slate-700 shadow-sm shadow-slate-900/5 transition hover:border-brand-200 hover:bg-brand-50/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             type="button"
             aria-haspopup="menu"
              :aria-controls="languageMenuOpen && activeLanguageSurface === 'mobile' ? 'mobile-language-menu' : undefined"
@@ -69,8 +74,13 @@
             :aria-label="languageMenuOpen && activeLanguageSurface === 'mobile' ? t('closeLanguageMenu') : t('openLanguageMenu')"
             @click="toggleLanguageMenu('mobile')"
           >
-            <IconLucideGlobe2 class="h-4 w-4 text-slate-500" />
-            <span>{{ currentLanguageLabel }}</span>
+             <IconLucideGlobe2 class="h-4 w-4 shrink-0 text-brand-600" />
+             <span class="min-w-0 flex-1">
+               <span data-testid="topbar-language-label" class="block text-[9px] font-semibold uppercase tracking-[0.14em] leading-3 text-slate-400">
+                 {{ t("language") }}
+               </span>
+               <span class="mt-0.5 block truncate text-xs font-semibold leading-4 text-slate-800">{{ currentLanguageLabel }}</span>
+             </span>
           </button>
           <div
             v-if="languageMenuOpen && activeLanguageSurface === 'mobile'"

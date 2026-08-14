@@ -100,6 +100,8 @@ describe("Topbar shell contract", () => {
 
     expect(trigger.exists()).toBe(true);
     expect(trigger.text()).toContain("Türkçe");
+    expect(trigger.find('[data-testid="topbar-language-label"]').text()).toBe("Dil");
+    expect(trigger.classes()).toContain("min-w-[124px]");
     expect(trigger.attributes("aria-haspopup")).toBe("menu");
     expect(trigger.attributes("aria-controls")).toBeUndefined();
     expect(trigger.attributes("aria-expanded")).toBe("false");
