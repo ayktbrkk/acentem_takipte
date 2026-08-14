@@ -178,6 +178,25 @@ describe("Sidebar profile menu contract", () => {
     expect(findProfileMenu().attributes("style")).toContain("width: 204px");
   });
 
+  it("fits the expanded profile surface inside the sidebar rail", async () => {
+    vi.stubGlobal("requestAnimationFrame", (callback) => {
+      callback();
+      return 1;
+    });
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    const aside = document.createElement("aside");
+    aside.style.width = "240px";
+    const footer = document.createElement("footer");
+    aside.append(footer);
+    document.body.append(aside);
+
+    const wrapper = mountSidebar({ attachTo: footer, props: { collapsed: false, mobile: false } });
+    await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
+
+    expect(findProfileMenu().attributes("style")).toContain("width: 224px");
+    aside.remove();
+  });
+
   it("renders localized role and active-branch labels in English", async () => {
     const authStore = useAuthStore();
     authStore.setLocale("en");

@@ -836,6 +836,31 @@ describe("Sidebar localization", () => {
     }
   });
 
+  it("uses a stacked brand header in the collapsed rail", async () => {
+    useAuthStore().applyContext({
+      locale: "en",
+      user: "Aykut",
+      userId: "aykut",
+      roles: ["System Manager"],
+    });
+
+    const wrapper = mountSidebar({
+      props: { mobileOpen: false },
+      global: {
+        directives: { prefetch: {} },
+        stubs: { RouterLink: RouterLinkStub, OfficeBranchSelect: OfficeBranchSelectStub },
+      },
+    });
+
+    await wrapper.find('[data-testid="sidebar-desktop-collapse-toggle"]').trigger("click");
+    const brandHeader = wrapper.find('[data-testid="sidebar-brand-header"]');
+    const brandLayout = brandHeader.find('[data-testid="sidebar-brand-layout"]');
+
+    expect(brandHeader.exists()).toBe(true);
+    expect(brandLayout.classes()).toContain("flex-col");
+    expect(brandLayout.find('[data-testid="sidebar-brand-monogram"]').text()).toBe("AT");
+  });
+
   it("renders nav icons when roles are present", () => {
     const authStore = useAuthStore();
     authStore.applyContext({

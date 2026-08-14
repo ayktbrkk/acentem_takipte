@@ -17,7 +17,11 @@
       :aria-label="mobileOpen && !isDesktopViewport ? t('menu') : undefined"
       :aria-modal="mobileOpen && !isDesktopViewport ? 'true' : undefined"
     >
-      <div class="border-b border-slate-100 px-4 py-4">
+      <div
+        data-testid="sidebar-brand-header"
+        class="border-b border-slate-100"
+        :class="effectiveCollapsed ? 'px-2 py-2' : 'px-4 py-4'"
+      >
         <div class="mb-4 flex items-center justify-between lg:hidden">
           <p class="text-xs font-semibold tracking-[0.22em] text-slate-500">{{ upper(t("menu")) }}</p>
           <ActionButton data-testid="mobile-sidebar-close" variant="secondary" size="xs" class="!px-2" :title="t('close')" @click="$emit('close')">
@@ -25,15 +29,15 @@
           </ActionButton>
         </div>
 
-        <div class="flex items-start gap-3">
+        <div data-testid="sidebar-brand-layout" class="flex items-start gap-3" :class="effectiveCollapsed ? 'flex-col items-center gap-2' : ''">
           <div class="min-w-0 flex-1">
-            <p v-if="!effectiveCollapsed" class="truncate text-sm font-medium text-slate-900" :title="t('brand')">
+            <p v-if="!effectiveCollapsed" class="truncate text-[15px] font-semibold leading-5 tracking-[-0.01em] text-slate-900" :title="t('brand')">
               {{ t("brand") }}
             </p>
             <template v-else>
               <p
                 data-testid="sidebar-brand-monogram"
-                class="mt-2 text-center text-xs font-semibold text-slate-700"
+                class="grid h-8 w-8 place-items-center rounded-lg bg-brand-50 text-xs font-bold tracking-wide text-brand-700"
                 role="img"
                 :aria-label="t('brand')"
                 :title="t('brand')"

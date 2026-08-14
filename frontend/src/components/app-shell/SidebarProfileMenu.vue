@@ -216,6 +216,13 @@ function updateMenuPlacement() {
   const isMobile = props.mobile || viewport.width < 768;
   const placement = isMobile ? "mobile" : props.collapsed ? "lateral" : "upward";
   menuPlacement.value = placement;
+  const sidebar = triggerRef.value.closest("aside");
+  const sidebarWidth = sidebar
+    ? sidebar.getBoundingClientRect().width || Number.parseFloat(window.getComputedStyle(sidebar).width) || 0
+    : 0;
+  const availableWidth = !props.collapsed && sidebarWidth
+    ? sidebarWidth - VIEWPORT_INSET * 2
+    : viewport.width - VIEWPORT_INSET * 2;
 
   let left = anchor.left;
   let top = anchor.top - surface.height - MENU_GAP;
@@ -229,7 +236,7 @@ function updateMenuPlacement() {
   }
 
   menuStyle.value = {
-    width: `${Math.min(MENU_WIDTH, Math.max(0, viewport.width - VIEWPORT_INSET * 2))}px`,
+    width: `${Math.min(MENU_WIDTH, Math.max(0, availableWidth))}px`,
     left: `${clamp(left, minLeft, maxLeft)}px`,
     top: `${clamp(top, minTop, maxTop)}px`,
     maxHeight: `${Math.max(0, viewport.height - VIEWPORT_INSET * 2)}px`,
