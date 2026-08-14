@@ -218,6 +218,86 @@ def ensure_core_office_branches() -> dict[str, Any]:
     return {"count": len(branch_names), "branches": branch_names}
 
 
+def ensure_demo_scope_entities(user: str = "sk@kipsigorta.com") -> dict[str, Any]:
+    """Create a small, non-destructive sales-scope example for the core branch."""
+    branch_name = frappe.db.get_value(
+        "AT Office Branch",
+        {"office_branch_name": "Istanbul Merkez"},
+        "name",
+    )
+    if not branch_name:
+        frappe.throw("Istanbul Merkez office branch is required before creating demo scope entities.")
+
+    root = _upsert_by_field(
+        "AT Sales Entity",
+        "full_name",
+        "Istanbul Merkez Agency",
+        {
+            "full_name": "Istanbul Merkez Agency",
+            "entity_type": "Agency",
+            "office_branch": branch_name,
+            "parent_entity": None,
+            "is_root": 1,
+            "commission_share_pct": 100,
+            "is_active": 1,
+            "is_pool": 0,
+        },
+    )
+    pool = _upsert_by_field(
+        "AT Sales Entity",
+        "full_name",
+        "Istanbul Merkez Pool",
+        {
+            "full_name": "Istanbul Merkez Pool",
+            "entity_type": "Agency",
+            "office_branch": branch_name,
+            "parent_entity": None,
+            "is_root": 0,
+            "commission_share_pct": 0,
+            "is_active": 1,
+            "is_pool": 1,
+        },
+    )
+    representative = _upsert_by_field(
+        "AT Sales Entity",
+        "full_name",
+        "Istanbul Field Representative",
+        {
+            "full_name": "Istanbul Field Representative",
+            "entity_type": "Representative",
+            "office_branch": branch_name,
+            "parent_entity": root.name,
+            "is_root": 0,
+            "commission_share_pct": 50,
+            "is_active": 1,
+            "is_pool": 0,
+        },
+    )
+
+    access_name = f"{user}::{representative.name}"
+    access = frappe.db.exists("AT User Sales Entity Access", access_name)
+    if access:
+        access_doc = frappe.get_doc("AT User Sales Entity Access", access_name)
+    else:
+        access_doc = frappe.new_doc("AT User Sales Entity Access")
+        access_doc.user = user
+        access_doc.sales_entity = representative.name
+    access_doc.scope_mode = "self_only"
+    access_doc.is_default = 1
+    access_doc.is_active = 1
+    access_doc.save(ignore_permissions=True)
+
+    frappe.db.commit()
+    return {
+        "branch": branch_name,
+        "root": root.name,
+        "pool": pool.name,
+        "representative": representative.name,
+        "user": user,
+        "access": access_doc.name,
+    }
+
+
 # ── Main Seed Function ────────────────────────────────────────────────────
 
 
