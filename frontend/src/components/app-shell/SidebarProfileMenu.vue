@@ -129,6 +129,7 @@ const menuStyle = ref({});
 const menuPlacement = ref("upward");
 const VIEWPORT_INSET = 8;
 const MENU_GAP = 12;
+const MENU_WIDTH = 288;
 let placementFrame = null;
 
 function t(key) {
@@ -228,6 +229,7 @@ function updateMenuPlacement() {
   }
 
   menuStyle.value = {
+    width: `${Math.min(MENU_WIDTH, Math.max(0, viewport.width - VIEWPORT_INSET * 2))}px`,
     left: `${clamp(left, minLeft, maxLeft)}px`,
     top: `${clamp(top, minTop, maxTop)}px`,
     maxHeight: `${Math.max(0, viewport.height - VIEWPORT_INSET * 2)}px`,

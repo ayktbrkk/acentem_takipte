@@ -154,6 +154,30 @@ describe("Sidebar profile menu contract", () => {
     expect(menu.classes()).toContain("overflow-y-auto");
   });
 
+  it("caps the profile surface width inside a narrow drawer viewport", async () => {
+    vi.stubGlobal("requestAnimationFrame", (callback) => {
+      callback();
+      return 1;
+    });
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    vi.spyOn(window, "innerWidth", "get").mockReturnValue(220);
+    vi.spyOn(window, "innerHeight", "get").mockReturnValue(491);
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function () {
+      if (this.matches('[data-testid="sidebar-profile-trigger"]')) {
+        return { left: 16, right: 204, top: 410, bottom: 450, width: 188, height: 40 };
+      }
+      if (this.matches('[data-testid="sidebar-profile-menu"]')) {
+        return { left: 0, right: 288, top: 0, bottom: 400, width: 288, height: 400 };
+      }
+      return { left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0 };
+    });
+
+    const wrapper = mountSidebar({ props: { mobile: true } });
+    await wrapper.find('[data-testid="sidebar-profile-trigger"]').trigger("click");
+
+    expect(findProfileMenu().attributes("style")).toContain("width: 204px");
+  });
+
   it("renders localized role and active-branch labels in English", async () => {
     const authStore = useAuthStore();
     authStore.setLocale("en");
