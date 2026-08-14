@@ -12,7 +12,7 @@ from acentem_takipte.acentem_takipte.utils.cache_keys import (
 )
 
 
-DESK_BRANCH_ADMIN_ROLES = {"System Manager", "Administrator"}
+DESK_BRANCH_ADMIN_ROLES = {"System Manager", "Administrator", "AT System Manager"}
 DEFAULT_SCOPE_MODE = "self_only"
 DESCENDANT_SCOPE_MODE = "self_and_descendants"
 

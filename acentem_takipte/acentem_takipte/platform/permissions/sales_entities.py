@@ -9,7 +9,7 @@ from frappe.utils import flt, getdate, today
 from acentem_takipte.acentem_takipte.platform.permissions import branches as branch_service
 
 
-DESK_ENTITY_ADMIN_ROLES = {"System Manager", "Administrator"}
+DESK_ENTITY_ADMIN_ROLES = {"System Manager", "Administrator", "AT System Manager"}
 DEFAULT_SCOPE_MODE = "self_only"
 DESCENDANT_SCOPE_MODE = "self_and_descendants"
 SCOPE_ENTITY_CACHE_KEY = "at_scope::{user}::sales_entities"

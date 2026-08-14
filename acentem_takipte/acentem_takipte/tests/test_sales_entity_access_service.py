@@ -40,6 +40,12 @@ if "frappe" not in sys.modules:
 import acentem_takipte.acentem_takipte.platform.permissions.sales_entities as sales_entity_service
 
 
+def test_at_system_manager_can_access_all_sales_entities(monkeypatch):
+    monkeypatch.setattr(sales_entity_service.frappe, "get_roles", lambda user=None: ["AT System Manager"])
+
+    assert sales_entity_service.user_can_access_all_sales_entities("manager@example.com") is True
+
+
 def test_get_allowed_sales_entity_names_expands_descendants(monkeypatch):
     monkeypatch.setattr(sales_entity_service, "user_can_access_all_sales_entities", lambda user=None: False)
     monkeypatch.setattr(sales_entity_service.frappe, "db", type("DB", (), {"exists": staticmethod(lambda *args, **kwargs: True)}))

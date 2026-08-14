@@ -18,6 +18,11 @@ def test_user_can_access_all_office_branches_for_system_manager():
         assert user_can_access_all_office_branches("manager@example.com") is True
 
 
+def test_user_can_access_all_office_branches_for_at_system_manager():
+    with patch.object(frappe, "get_roles", return_value=["AT System Manager"]):
+        assert user_can_access_all_office_branches("at-system-manager@example.com") is True
+
+
 def test_get_user_office_branches_returns_access_rows_for_normal_user():
     access_rows = [frappe._dict(office_branch="BR-1", is_default=1)]
     branch_rows = [frappe._dict(name="BR-1", office_branch_name="Istanbul", office_branch_code="IST", city="Istanbul", is_active=1)]
