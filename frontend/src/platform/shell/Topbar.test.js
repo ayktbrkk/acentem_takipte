@@ -80,6 +80,7 @@ describe("Topbar shell contract", () => {
     expect(wrapper.findAll("button").some((button) => ["TR", "EN"].includes(button.text().trim()))).toBe(false);
     expect(wrapper.find('[data-testid="branch-scope-trigger"]').element.contains(wrapper.find('[data-testid="topbar-language-trigger"]').element)).toBe(false);
     expect(wrapper.find('[data-testid="topbar-language-trigger"]').element.contains(wrapper.find('[data-testid="branch-scope-trigger"]').element)).toBe(false);
+    expect(wrapper.find('[data-testid="topbar-language-trigger"]').element.parentElement.classList.contains("order-1")).toBe(true);
     expect(wrapper.find('[data-testid="sidebar-profile-menu"]').exists()).toBe(false);
   });
 
